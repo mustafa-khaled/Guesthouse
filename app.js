@@ -35,17 +35,23 @@ app.use(
 // Set Security HTTP headers
 app.use(
   helmet.contentSecurityPolicy({
+    useDefaults: true,
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", 'ws://localhost:*'],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        'https://js.stripe.com',
+        'https://cdnjs.cloudflare.com',
+      ],
+      frameSrc: ["'self'", 'https://js.stripe.com'],
+      connectSrc: ["'self'", 'https://api.stripe.com', 'ws://localhost:*'],
+      imgSrc: ["'self'", 'data:', 'https://js.stripe.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ['https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:'],
     },
   }),
 );
-
 // Development logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));

@@ -26,7 +26,7 @@ const getCheckoutSession = catchAsync(async (req, res, next) => {
             description: tour.summary,
             images: [`https://www.natours.dev/img/tours/${tour.imageCover}`],
           },
-          unit_amount: tour.price * 100, // Amount in cents
+          unit_amount: tour.price * 100,
         },
         quantity: 1,
       },
