@@ -3,53 +3,59 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please tell us your name!'],
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide your email'],
-    unique: true,
-    lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email'],
-  },
-  photo: {
-    type: String,
-    default: 'default.jpg',
-  },
-  role: {
-    type: String,
-    enum: ['user', 'guide', 'lead-guide', 'admin'],
-    default: 'user',
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-    minlength: 8,
-    select: false,
-  },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Please confirm your password'],
-    validate: {
-      // This only works on CREATE and SAVE!!!
-      validator: function (el) {
-        return el === this.password;
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Please tell us your name!'],
+    },
+    email: {
+      type: String,
+      required: [true, 'Please provide your email'],
+      unique: true,
+      lowercase: true,
+      validate: [validator.isEmail, 'Please provide a valid email'],
+    },
+    photo: {
+      type: String,
+      default: 'default.jpg',
+    },
+    role: {
+      type: String,
+      enum: ['user', 'guide', 'lead-guide', 'admin'],
+      default: 'user',
+    },
+    password: {
+      type: String,
+      required: [true, 'Please provide a password'],
+      minlength: 8,
+      select: false,
+    },
+    passwordConfirm: {
+      type: String,
+      required: [true, 'Please confirm your password'],
+      validate: {
+        // This only works on CREATE and SAVE!!!
+        validator: function (el) {
+          return el === this.password;
+        },
+        message: 'Passwords are not the same!',
       },
-      message: 'Passwords are not the same!',
+    },
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
     },
   },
-  passwordChangedAt: Date,
-  passwordResetToken: String,
-  passwordResetExpires: Date,
-  active: {
-    type: Boolean,
-    default: true,
-    select: false,
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
-});
+);
 
 userSchema.pre('save', async function (next) {
   // Only run this function if password was actually modified
@@ -74,6 +80,13 @@ userSchema.pre(/^find/, function (next) {
   // this points to the current query
   this.find({ active: { $ne: false } });
   next();
+});
+
+// Virtual populate (connects User -> Booking -> Tour)
+userSchema.virtual('bookedTours', {
+  ref: 'Booking',
+  foreignField: 'user',
+  localField: '_id',
 });
 
 userSchema.methods.correctPassword = async function (
