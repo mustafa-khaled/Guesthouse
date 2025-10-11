@@ -78,14 +78,10 @@ const getMyTours = catchAsync(async (req, res, next) => {
     path: 'bookedTours',
     populate: {
       path: 'tour',
-      select:
-        'name duration maxGroupSize difficulty ratingsAverage price imageCover startDates slug description summary',
     },
   });
 
   const tours = userWithTours.bookedTours.map((booking) => booking.tour);
-
-  console.log(tours);
 
   res.status(200).render('overview', {
     title: 'My Tours',
