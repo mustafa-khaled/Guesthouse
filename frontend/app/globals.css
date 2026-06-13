@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+
+body {
+  font-family: 'Lato', sans-serif;
+  @apply bg-gray-50 text-gray-800 antialiased;
+}
