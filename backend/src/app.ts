@@ -1,93 +1,67 @@
-import express from 'express'
-import morgan from 'morgan'
-import rateLimit from 'express-rate-limit'
-import helmet from 'helmet'
-import mongoSanitize from 'express-mongo-sanitize'
-import xss from 'xss-clean'
-import path from 'path'
-import cors from 'cors'
-import hpp from 'hpp'
-import cookieParser from 'cookie-parser'
-import { fileURLToPath } from 'url'
-import { Request, Response, NextFunction } from 'express'
+import express from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import { authRouter } from "./modules/auth";
+import { propertyRouter } from "./modules/property";
+import { roomTypeRouter } from "./modules/roomType";
+import { roomRouter } from "./modules/room";
+import { ratePlanRouter } from "./modules/ratePlan";
+import { inventoryRouter } from "./modules/inventory";
+import { guestRouter } from "./modules/guest";
+import { bookingRouter } from "./modules/booking";
+import { addOnRouter } from "./modules/addOn";
+import { promotionRouter } from "./modules/promotion";
+import { paymentRouter } from "./modules/payment";
+import { notificationRouter } from "./modules/notification";
+import { housekeepingRouter } from "./modules/housekeeping";
+import { frontDeskRouter } from "./modules/frontDesk";
+import { reportsRouter } from "./modules/reports";
+import { dashboardRouter } from "./modules/dashboard";
+import { reviewRouter } from "./modules/review";
+import userRouter from "./routes/user.routes";
+import adminRoutes from "./routes/admin.routes";
+import { errorHandler, notFoundHandler } from "./middleware";
 
-import { AppError } from './utils/appError.js'
-import { globalErrorHandler } from './controllers/errorController.js'
-import tourRouter from './routes/tourRoutes.js'
-import userRouter from './routes/userRoutes.js'
-import reviewRouter from './routes/reviewRoutes.js'
-import bookingRouter from './routes/bookingRoutes.js'
-import { setupOpenAPI } from './openapi/setup.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const app = express()
-
-app.set('view engine', 'pug')
-app.set('views', path.join(__dirname, '..', 'views'))
-
-app.use(express.static(path.join(__dirname, '..', 'public')))
+const app = express();
 
 app.use(
   cors({
-    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
-  }),
-)
+  })
+);
 
-app.use(
-  helmet.contentSecurityPolicy({
-    useDefaults: true,
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://js.stripe.com', 'https://cdnjs.cloudflare.com'],
-      frameSrc: ["'self'", 'https://js.stripe.com'],
-      connectSrc: ["'self'", 'https://api.stripe.com', 'ws://localhost:*'],
-      imgSrc: ["'self'", 'data:', 'https:', 'http:', `${process.env.FRONTEND_URL || 'http://localhost:3000'}`],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc: ['https://fonts.gstatic.com'],
-    },
-  }),
-)
+app.use(express.json());
 
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'))
-}
+app.use(cookieParser());
 
-const limiter = rateLimit({
-  max: 100,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again in an hour!',
-})
-app.use('/api', limiter)
+app.get("/health", (req, res) => {
+  res.status(200).json({ message: "OK", timestamp: new Date().toISOString() });
+});
 
-app.use(express.json({ limit: '10kb' }))
-app.use(cookieParser())
-app.use(express.urlencoded({ extended: true, limit: '10kb' }))
+app.use("/auth", authRouter);
+app.use("/user", userRouter);
+app.use("/admin", adminRoutes);
 
-app.use(mongoSanitize())
-app.use(xss())
-app.use(hpp({
-  whitelist: [
-    'duration', 'ratingsQuantity', 'ratingsAverage',
-    'maxGroupSize', 'difficulty', 'price',
-  ],
-}))
+app.use("/api", propertyRouter);
+app.use("/api", roomTypeRouter);
+app.use("/api", roomRouter);
+app.use("/api", ratePlanRouter);
+app.use("/api", inventoryRouter);
+app.use("/api", guestRouter);
+app.use("/api", bookingRouter);
+app.use("/api", addOnRouter);
+app.use("/api", promotionRouter);
+app.use("/api", paymentRouter);
+app.use("/api", notificationRouter);
+app.use("/api", housekeepingRouter);
+app.use("/api", frontDeskRouter);
+app.use("/api", reportsRouter);
+app.use("/api", dashboardRouter);
+app.use("/api", reviewRouter);
 
-// OpenAPI docs
-setupOpenAPI(app)
+app.use(notFoundHandler);
 
-// Routes
-app.use('/api/v1/tours', tourRouter)
-app.use('/api/v1/users', userRouter)
-app.use('/api/v1/reviews', reviewRouter)
-app.use('/api/v1/bookings', bookingRouter)
+app.use(errorHandler);
 
-app.all('*', (req: Request, _res: Response, next: NextFunction) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404))
-})
-
-app.use(globalErrorHandler)
-
-export default app
+export default app;
