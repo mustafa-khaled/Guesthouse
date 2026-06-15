@@ -1,4 +1,10 @@
 import { Schema, model } from "mongoose";
+import { Role } from "../common/enums/role.enum";
+
+export enum AuthProvider {
+  LOCAL = "local",
+  GOOGLE = "google",
+}
 
 const userSchema = new Schema(
   {
@@ -11,12 +17,12 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
     },
     role: {
       type: String,
-      enum: ["admin", "user"],
-      default: "user",
+      enum: Object.values(Role),
+      default: Role.USER,
     },
     isEmailVerified: {
       type: Boolean,
@@ -25,13 +31,15 @@ const userSchema = new Schema(
     name: {
       type: String,
     },
-    twoFactorEnabled: {
-      type: Boolean,
-      default: false,
-    },
-    twoFactorSecret: {
+    authProvider: {
       type: String,
-      default: undefined,
+      enum: Object.values(AuthProvider),
+      default: AuthProvider.LOCAL,
+    },
+    googleId: {
+      type: String,
+      sparse: true,
+      unique: true,
     },
     tokenVersion: {
       type: Number,
