@@ -89,7 +89,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download shared build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: shared-dist
           path: packages/shared/dist
@@ -135,7 +135,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download shared build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: shared-dist
           path: packages/shared/dist
