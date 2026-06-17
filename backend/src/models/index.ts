@@ -14,3 +14,4 @@ export * from "./payment.model";
 export * from "./folio.model";
 export * from "./housekeepingTask.model";
 export * from "./review.model";
+export * from "./auditLog.model";

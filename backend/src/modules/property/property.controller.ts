@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { z } from "zod";
 import { propertyService } from "./property.service";
 import {
   createPropertySchema,
@@ -6,127 +6,67 @@ import {
   getPropertySchema,
   listPropertiesSchema,
 } from "./property.schema";
-import { HttpError } from "../../common/errors/http.errors";
+import {
+  wrapController,
+  created,
+  ok,
+  okMessage,
+  okPaginated,
+} from "../../common/utils/controller-wrapper";
 
-class PropertyController {
-  async create(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = createPropertySchema.safeParse({ body: req.body });
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Validation failed",
-          errors: result.error.flatten(),
-        });
-      }
-
-      const property = await propertyService.create(
-        result.data.body,
-        req.user?.id
-      );
-
-      return res.status(201).json({
-        message: "Property created successfully",
-        data: property,
-      });
-    } catch (error) {
-      if (error instanceof HttpError) {
-        return res.status(error.statusCode).json({ message: error.message });
-      }
-      next(error);
+export const propertyController = {
+  create: wrapController(
+    { body: createPropertySchema.shape.body },
+    async ({ res, data, user }) => {
+      const property = await propertyService.create(data.body, user?.id);
+      return created(res, property, "Property created successfully");
     }
-  }
+  ),
 
-  async getById(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = getPropertySchema.safeParse({ params: req.params });
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Validation failed",
-          errors: result.error.flatten(),
-        });
-      }
-
-      const property = await propertyService.findById(result.data.params.id);
-
-      return res.status(200).json({
-        data: property,
-      });
-    } catch (error) {
-      if (error instanceof HttpError) {
-        return res.status(error.statusCode).json({ message: error.message });
-      }
-      next(error);
+  getBySlug: wrapController(
+    {
+      params: z.object({ slug: z.string().min(1) }),
+    },
+    async ({ res, data }) => {
+      const property = await propertyService.findBySlug(data.params.slug);
+      return ok(res, property);
     }
-  }
+  ),
 
-  async update(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = updatePropertySchema.safeParse({
-        params: req.params,
-        body: req.body,
-      });
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Validation failed",
-          errors: result.error.flatten(),
-        });
-      }
-
-      const property = await propertyService.update(
-        result.data.params.id,
-        result.data.body
-      );
-
-      return res.status(200).json({
-        message: "Property updated successfully",
-        data: property,
-      });
-    } catch (error) {
-      if (error instanceof HttpError) {
-        return res.status(error.statusCode).json({ message: error.message });
-      }
-      next(error);
+  getById: wrapController(
+    { params: getPropertySchema.shape.params },
+    async ({ res, data }) => {
+      const property = await propertyService.findById(data.params.id);
+      return ok(res, property);
     }
-  }
+  ),
 
-  async delete(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = getPropertySchema.safeParse({ params: req.params });
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Validation failed",
-          errors: result.error.flatten(),
-        });
-      }
-
-      await propertyService.delete(result.data.params.id);
-
-      return res.status(200).json({
-        message: "Property deleted successfully",
-      });
-    } catch (error) {
-      if (error instanceof HttpError) {
-        return res.status(error.statusCode).json({ message: error.message });
-      }
-      next(error);
+  update: wrapController(
+    {
+      params: updatePropertySchema.shape.params,
+      body: updatePropertySchema.shape.body,
+    },
+    async ({ res, data }) => {
+      const property = await propertyService.update(data.params.id, data.body);
+      return ok(res, property, "Property updated successfully");
     }
-  }
+  ),
 
-  async list(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = listPropertiesSchema.safeParse({ query: req.query });
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Validation failed",
-          errors: result.error.flatten(),
-        });
-      }
+  delete: wrapController(
+    { params: getPropertySchema.shape.params },
+    async ({ res, data }) => {
+      await propertyService.delete(data.params.id);
+      return okMessage(res, "Property deleted successfully");
+    }
+  ),
 
-      const { page, limit, sortBy, sortOrder, amenities, ...filters } =
-        result.data.query;
+  list: wrapController(
+    { query: listPropertiesSchema.shape.query },
+    async ({ res, data }) => {
+      const { page, limit, sortBy, sortOrder, amenities, ...filters } = data.query;
 
       const amenitiesArray = amenities
-        ? amenities.split(",").map((a) => a.trim())
+        ? amenities.split(",").map((a: string) => a.trim())
         : undefined;
 
       const properties = await propertyService.list(
@@ -137,37 +77,15 @@ class PropertyController {
         sortOrder
       );
 
-      return res.status(200).json(properties);
-    } catch (error) {
-      if (error instanceof HttpError) {
-        return res.status(error.statusCode).json({ message: error.message });
-      }
-      next(error);
+      return okPaginated(res, properties);
     }
-  }
+  ),
 
-  async getStats(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = getPropertySchema.safeParse({ params: req.params });
-      if (!result.success) {
-        return res.status(400).json({
-          message: "Validation failed",
-          errors: result.error.flatten(),
-        });
-      }
-
-      const stats = await propertyService.getPropertyStats(result.data.params.id);
-
-      return res.status(200).json({
-        data: stats,
-      });
-    } catch (error) {
-      if (error instanceof HttpError) {
-        return res.status(error.statusCode).json({ message: error.message });
-      }
-      next(error);
+  getStats: wrapController(
+    { params: getPropertySchema.shape.params },
+    async ({ res, data }) => {
+      const stats = await propertyService.getPropertyStats(data.params.id);
+      return ok(res, stats);
     }
-  }
-}
-
-export const propertyController = new PropertyController();
+  ),
+};

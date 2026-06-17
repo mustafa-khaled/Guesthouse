@@ -12,6 +12,14 @@ import {
   getSortParams,
   PaginatedResult,
 } from "../../common/utils/pagination";
+import {
+  getOrSet,
+  invalidate,
+  invalidateKey,
+  buildCacheKey,
+  CacheTTL,
+  CachePrefix,
+} from "../../lib/cache";
 import { Types } from "mongoose";
 
 export interface CreatePropertyData {
@@ -62,10 +70,55 @@ class PropertyService {
     });
 
     await property.save();
+
+    await invalidate(`${CachePrefix.PROPERTY_LIST}:*`);
+
     return property;
   }
 
   async findById(id: string): Promise<IProperty> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestError("Invalid property ID");
+    }
+
+    const cacheKey = buildCacheKey(CachePrefix.PROPERTY, id);
+    
+    const property = await getOrSet(
+      cacheKey,
+      async () => {
+        const doc = await Property.findById(id);
+        return doc ? doc.toObject() : null;
+      },
+      CacheTTL.PROPERTY
+    );
+
+    if (!property) {
+      throw new NotFoundError("Property not found");
+    }
+
+    return property as IProperty;
+  }
+
+  async findBySlug(slug: string): Promise<IProperty> {
+    const cacheKey = buildCacheKey(CachePrefix.PROPERTY, "slug", slug);
+    
+    const property = await getOrSet(
+      cacheKey,
+      async () => {
+        const doc = await Property.findOne({ slug, isActive: true });
+        return doc ? doc.toObject() : null;
+      },
+      CacheTTL.PROPERTY
+    );
+
+    if (!property) {
+      throw new NotFoundError("Property not found");
+    }
+
+    return property as IProperty;
+  }
+
+  async update(id: string, data: UpdatePropertyData): Promise<IProperty> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestError("Invalid property ID");
     }
@@ -75,20 +128,7 @@ class PropertyService {
       throw new NotFoundError("Property not found");
     }
 
-    return property;
-  }
-
-  async findBySlug(slug: string): Promise<IProperty> {
-    const property = await Property.findOne({ slug, isActive: true });
-    if (!property) {
-      throw new NotFoundError("Property not found");
-    }
-
-    return property;
-  }
-
-  async update(id: string, data: UpdatePropertyData): Promise<IProperty> {
-    const property = await this.findById(id);
+    const oldSlug = property.slug;
 
     if (data.slug && data.slug !== property.slug) {
       const existingSlug = await Property.findOne({
@@ -107,11 +147,25 @@ class PropertyService {
     Object.assign(property, data);
     await property.save();
 
+    await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, id));
+    await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, "slug", oldSlug));
+    if (data.slug && data.slug !== oldSlug) {
+      await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, "slug", data.slug));
+    }
+    await invalidate(`${CachePrefix.PROPERTY_LIST}:*`);
+
     return property;
   }
 
   async delete(id: string): Promise<void> {
-    const property = await this.findById(id);
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestError("Invalid property ID");
+    }
+
+    const property = await Property.findById(id);
+    if (!property) {
+      throw new NotFoundError("Property not found");
+    }
 
     const roomTypesCount = await RoomType.countDocuments({
       propertyId: property._id,
@@ -125,6 +179,10 @@ class PropertyService {
     }
 
     await (property as any).softDelete();
+
+    await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, id));
+    await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, "slug", property.slug));
+    await invalidate(`${CachePrefix.PROPERTY_LIST}:*`);
   }
 
   async list(

@@ -245,6 +245,11 @@ bookingSchema.index({ propertyId: 1, status: 1 });
 bookingSchema.index({ guestId: 1, createdAt: -1 });
 bookingSchema.index({ assignedRoomId: 1, status: 1 });
 
+bookingSchema.index(
+  { confirmationNumber: "text", specialRequests: "text", internalNotes: "text" },
+  { weights: { confirmationNumber: 10, specialRequests: 2, internalNotes: 1 }, name: "booking_text_search" }
+);
+
 bookingSchema.plugin(softDeletePlugin);
 bookingSchema.plugin(toJSONPlugin);
 

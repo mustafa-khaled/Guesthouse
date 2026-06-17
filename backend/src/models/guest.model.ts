@@ -139,6 +139,11 @@ guestSchema.index({ lastName: 1, firstName: 1 });
 guestSchema.index({ tags: 1 });
 guestSchema.index({ userId: 1 }, { sparse: true });
 
+guestSchema.index(
+  { firstName: "text", lastName: "text", email: "text", phone: "text" },
+  { weights: { firstName: 10, lastName: 10, email: 5, phone: 3 }, name: "guest_text_search" }
+);
+
 guestSchema.virtual("fullName").get(function () {
   return `${this.firstName} ${this.lastName}`;
 });

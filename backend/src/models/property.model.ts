@@ -150,6 +150,11 @@ propertySchema.index({ isActive: 1, isDeleted: 1 });
 propertySchema.index({ "address.city": 1, "address.country": 1 });
 propertySchema.index({ ownerId: 1 });
 
+propertySchema.index(
+  { name: "text", slug: "text", description: "text", "address.city": "text", "address.country": "text" },
+  { weights: { name: 10, slug: 8, "address.city": 5, "address.country": 3, description: 1 }, name: "property_text_search" }
+);
+
 propertySchema.plugin(softDeletePlugin);
 propertySchema.plugin(toJSONPlugin);
 

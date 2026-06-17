@@ -3,12 +3,18 @@ import { reportsService } from "./reports.service";
 import { HttpError } from "../../common/errors/http.errors";
 import { z } from "zod";
 import { dateStringSchema } from "../../common/utils/dateUtils";
+import {
+  sendCSVResponse,
+  occupancyExportFields,
+  revenueExportFields,
+} from "../../lib/export";
 
 const reportQuerySchema = z.object({
   propertyId: z.string().min(1),
   startDate: dateStringSchema,
   endDate: dateStringSchema,
   groupBy: z.enum(["day", "week", "month"]).default("day"),
+  format: z.enum(["json", "csv"]).default("json"),
 });
 
 const dailySummarySchema = z.object({
@@ -33,6 +39,13 @@ class ReportsController {
         result.data.endDate,
         result.data.groupBy
       );
+
+      if (result.data.format === "csv") {
+        return sendCSVResponse(res, report.data || [], {
+          filename: `occupancy_report_${result.data.startDate}_${result.data.endDate}`,
+          fields: occupancyExportFields,
+        });
+      }
 
       return res.status(200).json({
         data: report,
@@ -61,6 +74,13 @@ class ReportsController {
         result.data.endDate,
         result.data.groupBy
       );
+
+      if (result.data.format === "csv") {
+        return sendCSVResponse(res, report.data || [], {
+          filename: `revenue_report_${result.data.startDate}_${result.data.endDate}`,
+          fields: revenueExportFields,
+        });
+      }
 
       return res.status(200).json({
         data: report,

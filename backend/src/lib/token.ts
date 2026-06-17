@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Role } from "../common/enums/role.enum";
+import { env } from "../config/env";
 
 export interface AccessTokenPayload {
   sub: string;
@@ -19,7 +20,7 @@ export function createAccessToken(
 ) {
   const payload: AccessTokenPayload = { sub: userId, role, tokenVersion };
 
-  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, {
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
     expiresIn: "30m",
   });
 }
@@ -27,15 +28,15 @@ export function createAccessToken(
 export function createRefreshToken(userId: string, tokenVersion: number) {
   const payload: RefreshTokenPayload = { sub: userId, tokenVersion };
 
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
     expiresIn: "7d",
   });
 }
 
 export function verifyRefreshToken(token: string): RefreshTokenPayload {
-  return jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as RefreshTokenPayload;
+  return jwt.verify(token, env.JWT_REFRESH_SECRET) as RefreshTokenPayload;
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  return jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as AccessTokenPayload;
+  return jwt.verify(token, env.JWT_ACCESS_SECRET) as AccessTokenPayload;
 }

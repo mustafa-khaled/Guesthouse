@@ -4,6 +4,8 @@ import { Property } from "../../models/property.model";
 import { Payment, IPayment } from "../../models/payment.model";
 import { sendEmail } from "../../lib/email";
 import { formatDate } from "../../common/utils/dateUtils";
+import { env } from "../../config/env";
+import { logger } from "../../lib/logger";
 
 interface EmailData {
   to: string;
@@ -119,7 +121,7 @@ class NotificationService {
     const guest = populatedBooking.guestId as any;
     const property = populatedBooking.propertyId as any;
 
-    const reviewUrl = `${process.env.FRONTEND_URL}/review/${populatedBooking._id}`;
+    const reviewUrl = `${env.FRONTEND_URL}/review/${populatedBooking._id}`;
 
     const email: EmailData = {
       to: guest.email,
@@ -185,7 +187,7 @@ class NotificationService {
     try {
       await sendEmail(email.to, email.subject, email.html);
     } catch (error) {
-      console.error("Failed to send email:", error);
+      logger.error({ err: error, to: email.to, subject: email.subject }, "Failed to send notification email");
     }
   }
 

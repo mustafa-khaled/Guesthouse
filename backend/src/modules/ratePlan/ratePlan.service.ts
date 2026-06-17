@@ -10,6 +10,14 @@ import {
   ConflictError,
   BadRequestError,
 } from "../../common/errors/http.errors";
+import {
+  getOrSet,
+  invalidate,
+  invalidateKey,
+  buildCacheKey,
+  CacheTTL,
+  CachePrefix,
+} from "../../lib/cache";
 import { Types } from "mongoose";
 import { isDateInRange, getDayOfWeek } from "../../common/utils/dateUtils";
 
@@ -66,6 +74,9 @@ class RatePlanService {
     });
 
     await ratePlan.save();
+
+    await invalidate(`${CachePrefix.RATE_PLANS_BY_ROOM}:${roomTypeId}:*`);
+
     return ratePlan;
   }
 
@@ -74,19 +85,36 @@ class RatePlanService {
       throw new BadRequestError("Invalid rate plan ID");
     }
 
-    const ratePlan = await RatePlan.findById(id).populate(
-      "roomTypeId",
-      "name code propertyId"
+    const cacheKey = buildCacheKey(CachePrefix.RATE_PLAN, id);
+
+    const ratePlan = await getOrSet(
+      cacheKey,
+      async () => {
+        const doc = await RatePlan.findById(id).populate(
+          "roomTypeId",
+          "name code propertyId"
+        );
+        return doc ? doc.toObject() : null;
+      },
+      CacheTTL.RATE_PLAN
     );
+
     if (!ratePlan) {
       throw new NotFoundError("Rate plan not found");
     }
 
-    return ratePlan;
+    return ratePlan as IRatePlan;
   }
 
   async update(id: string, data: Partial<CreateRatePlanData>): Promise<IRatePlan> {
-    const ratePlan = await this.findById(id);
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestError("Invalid rate plan ID");
+    }
+
+    const ratePlan = await RatePlan.findById(id);
+    if (!ratePlan) {
+      throw new NotFoundError("Rate plan not found");
+    }
 
     if (data.code && data.code !== ratePlan.code) {
       const existingCode = await RatePlan.findOne({
@@ -104,12 +132,26 @@ class RatePlanService {
     Object.assign(ratePlan, data);
     await ratePlan.save();
 
+    await invalidateKey(buildCacheKey(CachePrefix.RATE_PLAN, id));
+    await invalidate(`${CachePrefix.RATE_PLANS_BY_ROOM}:${ratePlan.roomTypeId}:*`);
+
     return ratePlan;
   }
 
   async delete(id: string): Promise<void> {
-    const ratePlan = await this.findById(id);
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestError("Invalid rate plan ID");
+    }
+
+    const ratePlan = await RatePlan.findById(id);
+    if (!ratePlan) {
+      throw new NotFoundError("Rate plan not found");
+    }
+
     await (ratePlan as any).softDelete();
+
+    await invalidateKey(buildCacheKey(CachePrefix.RATE_PLAN, id));
+    await invalidate(`${CachePrefix.RATE_PLANS_BY_ROOM}:${ratePlan.roomTypeId}:*`);
   }
 
   async listByRoomType(
@@ -120,13 +162,26 @@ class RatePlanService {
       throw new BadRequestError("Invalid room type ID");
     }
 
-    const query: any = { roomTypeId: new Types.ObjectId(roomTypeId) };
+    const cacheKey = buildCacheKey(
+      CachePrefix.RATE_PLANS_BY_ROOM,
+      roomTypeId,
+      isActive?.toString() ?? "all"
+    );
 
-    if (isActive !== undefined) {
-      query.isActive = isActive;
-    }
+    return getOrSet(
+      cacheKey,
+      async () => {
+        const query: any = { roomTypeId: new Types.ObjectId(roomTypeId) };
 
-    return RatePlan.find(query).sort({ basePrice: 1 });
+        if (isActive !== undefined) {
+          query.isActive = isActive;
+        }
+
+        const docs = await RatePlan.find(query).sort({ basePrice: 1 });
+        return docs.map((d) => d.toObject());
+      },
+      CacheTTL.RATE_PLAN
+    );
   }
 
   async createPriceRule(

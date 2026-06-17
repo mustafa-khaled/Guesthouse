@@ -6,6 +6,8 @@ const router = Router();
 
 router.get("/", propertyController.list);
 
+router.get("/slug/:slug", propertyController.getBySlug);
+
 router.get("/:id", propertyController.getById);
 
 router.post("/", requireAuth, requireManager, propertyController.create);

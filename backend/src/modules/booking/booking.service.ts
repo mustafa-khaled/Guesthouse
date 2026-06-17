@@ -32,6 +32,8 @@ import {
 } from "../../common/enums/bookingStatus.enum";
 import { RoomStatus } from "../../common/enums/roomStatus.enum";
 import { Types } from "mongoose";
+import { withTransaction } from "../../lib/transaction";
+import { emit, EventType } from "../../lib/events";
 
 function generateConfirmationNumber(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -214,23 +216,40 @@ class BookingService {
       holdId: data.holdId ? new Types.ObjectId(data.holdId) : undefined,
     });
 
-    await booking.save();
+    await withTransaction(async (session) => {
+      await booking.save({ session });
 
-    if (data.holdId) {
-      await inventoryService.convertHoldToBooking(data.holdId);
-    } else {
-      await inventoryService.incrementBookedRooms(
-        data.propertyId,
-        data.roomTypeId,
-        checkInDate,
-        checkOutDate,
-        data.rooms
-      );
-    }
+      if (data.holdId) {
+        await inventoryService.convertHoldToBooking(data.holdId);
+      } else {
+        await inventoryService.incrementBookedRooms(
+          data.propertyId,
+          data.roomTypeId,
+          checkInDate,
+          checkOutDate,
+          data.rooms,
+          session
+        );
+      }
 
-    if (data.promotionCode) {
-      await promotionService.incrementUsage(data.promotionCode);
-    }
+      if (data.promotionCode) {
+        await promotionService.incrementUsage(data.promotionCode);
+      }
+    });
+
+    emit(EventType.BOOKING_CREATED, {
+      bookingId: booking._id.toString(),
+      confirmationNumber: booking.confirmationNumber,
+      propertyId: data.propertyId,
+      guestId: guest._id.toString(),
+      guestEmail: guest.email,
+      guestName: `${guest.firstName} ${guest.lastName}`,
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
+      roomTypeId: data.roomTypeId,
+      totalAmount: grandTotal,
+      userId,
+    });
 
     return booking.populate([
       { path: "propertyId", select: "name" },
@@ -333,15 +352,36 @@ class BookingService {
       refundAmount,
     };
 
-    await booking.save();
+    await withTransaction(async (session) => {
+      await booking.save({ session });
 
-    await inventoryService.decrementBookedRooms(
-      booking.propertyId.toString(),
-      booking.roomTypeId.toString(),
-      booking.dates.checkIn,
-      booking.dates.checkOut,
-      booking.occupancy.rooms
-    );
+      await inventoryService.decrementBookedRooms(
+        booking.propertyId.toString(),
+        booking.roomTypeId.toString(),
+        booking.dates.checkIn,
+        booking.dates.checkOut,
+        booking.occupancy.rooms,
+        session
+      );
+    });
+
+    const guest = await guestService.findById(booking.guestId.toString());
+
+    emit(EventType.BOOKING_CANCELLED, {
+      bookingId: booking._id.toString(),
+      confirmationNumber: booking.confirmationNumber,
+      propertyId: booking.propertyId.toString(),
+      guestId: booking.guestId.toString(),
+      guestEmail: guest.email,
+      guestName: `${guest.firstName} ${guest.lastName}`,
+      checkIn: booking.dates.checkIn,
+      checkOut: booking.dates.checkOut,
+      roomTypeId: booking.roomTypeId.toString(),
+      totalAmount: booking.pricing.grandTotal,
+      userId,
+      reason,
+      refundAmount,
+    });
 
     return booking;
   }
@@ -382,7 +422,28 @@ class BookingService {
     room.isOccupied = true;
     room.status = RoomStatus.DIRTY;
 
-    await Promise.all([booking.save(), room.save()]);
+    await withTransaction(async (session) => {
+      await booking.save({ session });
+      await room.save({ session });
+    });
+
+    const guest = await guestService.findById(booking.guestId.toString());
+
+    emit(EventType.BOOKING_CHECKED_IN, {
+      bookingId: booking._id.toString(),
+      confirmationNumber: booking.confirmationNumber,
+      propertyId: booking.propertyId.toString(),
+      guestId: booking.guestId.toString(),
+      guestEmail: guest.email,
+      guestName: `${guest.firstName} ${guest.lastName}`,
+      checkIn: booking.dates.checkIn,
+      checkOut: booking.dates.checkOut,
+      roomTypeId: booking.roomTypeId.toString(),
+      totalAmount: booking.pricing.grandTotal,
+      userId,
+      roomId: room._id.toString(),
+      roomNumber: room.roomNumber,
+    });
 
     return booking;
   }
@@ -402,21 +463,41 @@ class BookingService {
       checkedOutBy: new Types.ObjectId(userId),
     };
 
-    if (booking.assignedRoomId) {
-      const room = await Room.findById(booking.assignedRoomId);
-      if (room) {
-        room.isOccupied = false;
-        room.status = RoomStatus.DIRTY;
-        await room.save();
+    await withTransaction(async (session) => {
+      if (booking.assignedRoomId) {
+        const room = await Room.findById(booking.assignedRoomId).session(session);
+        if (room) {
+          room.isOccupied = false;
+          room.status = RoomStatus.DIRTY;
+          await room.save({ session });
+        }
       }
-    }
 
-    await booking.save();
+      await booking.save({ session });
+    });
 
     await guestService.updateStayStats(
       booking.guestId.toString(),
       booking.pricing.grandTotal
     );
+
+    const guest = await guestService.findById(booking.guestId.toString());
+
+    emit(EventType.BOOKING_CHECKED_OUT, {
+      bookingId: booking._id.toString(),
+      confirmationNumber: booking.confirmationNumber,
+      propertyId: booking.propertyId.toString(),
+      guestId: booking.guestId.toString(),
+      guestEmail: guest.email,
+      guestName: `${guest.firstName} ${guest.lastName}`,
+      checkIn: booking.dates.checkIn,
+      checkOut: booking.dates.checkOut,
+      roomTypeId: booking.roomTypeId.toString(),
+      totalAmount: booking.pricing.grandTotal,
+      userId,
+      roomId: booking.assignedRoomId?.toString(),
+      finalAmount: booking.pricing.grandTotal,
+    });
 
     return booking;
   }
@@ -457,6 +538,21 @@ class BookingService {
 
     booking.status = BookingStatus.CONFIRMED;
     await booking.save();
+
+    const guest = await guestService.findById(booking.guestId.toString());
+
+    emit(EventType.BOOKING_CONFIRMED, {
+      bookingId: booking._id.toString(),
+      confirmationNumber: booking.confirmationNumber,
+      propertyId: booking.propertyId.toString(),
+      guestId: booking.guestId.toString(),
+      guestEmail: guest.email,
+      guestName: `${guest.firstName} ${guest.lastName}`,
+      checkIn: booking.dates.checkIn,
+      checkOut: booking.dates.checkOut,
+      roomTypeId: booking.roomTypeId.toString(),
+      totalAmount: booking.pricing.grandTotal,
+    });
 
     return booking;
   }

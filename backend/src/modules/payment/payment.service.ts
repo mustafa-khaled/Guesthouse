@@ -21,6 +21,8 @@ import {
 } from "../../common/errors/http.errors";
 import { BookingStatus, PaymentStatus } from "../../common/enums/bookingStatus.enum";
 import { Types } from "mongoose";
+import { env } from "../../config/env";
+import { logger } from "../../lib/logger";
 
 function generateFolioNumber(): string {
   const year = new Date().getFullYear();
@@ -49,7 +51,7 @@ class PaymentService {
       throw new BadRequestError("Invalid payment amount");
     }
 
-    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const stripeSecretKey = env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {
       throw new BadRequestError("Payment processing is not configured");
     }
@@ -102,7 +104,7 @@ class PaymentService {
       throw new NotFoundError("Payment not found");
     }
 
-    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const stripeSecretKey = env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {
       throw new BadRequestError("Payment processing is not configured");
     }
@@ -191,7 +193,7 @@ class PaymentService {
     const property = await Property.findById(booking.propertyId);
     let refundedAmount = 0;
 
-    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const stripeSecretKey = env.STRIPE_SECRET_KEY;
 
     if (stripeSecretKey && cardPayments.length > 0) {
       const stripe = require("stripe")(stripeSecretKey);
@@ -210,7 +212,7 @@ class PaymentService {
 
           refundedAmount += refundAmount;
         } catch (error) {
-          console.error("Stripe refund error:", error);
+          logger.error({ err: error, paymentId: payment._id }, "Stripe refund error");
         }
       }
     }

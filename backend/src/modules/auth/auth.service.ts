@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { Request } from "express";
 import { User, AuthProvider } from "../../models/user.model";
 import {
   hashPassword,
@@ -8,6 +9,10 @@ import {
   createRefreshToken,
   verifyRefreshToken,
   sendEmail,
+  audit,
+  auditFailure,
+  AuditAction,
+  AuditResource,
 } from "../../lib";
 import { Role } from "../../common/enums/role.enum";
 import {
@@ -17,6 +22,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "../../common/errors";
+import { env } from "../../config/env";
 
 export interface RegisterInput {
   email: string;
@@ -49,7 +55,7 @@ export interface AuthResult {
 }
 
 function getAppUrl(): string {
-  return process.env.APP_URL || `http://localhost:${process.env.PORT}`;
+  return env.APP_URL;
 }
 
 class AuthService {
@@ -81,7 +87,7 @@ class AuthService {
   async sendVerificationEmail(userId: string, email: string): Promise<void> {
     const verifyToken = jwt.sign(
       { sub: userId },
-      process.env.JWT_ACCESS_SECRET!,
+      env.JWT_ACCESS_SECRET,
       { expiresIn: "1d" },
     );
 
@@ -95,9 +101,9 @@ class AuthService {
     );
   }
 
-  async verifyEmail(token: string): Promise<string> {
+  async verifyEmail(token: string, req?: Request): Promise<string> {
     try {
-      const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as {
+      const payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as {
         sub: string;
       };
 
@@ -113,6 +119,13 @@ class AuthService {
       user.isEmailVerified = true;
       await user.save();
 
+      await audit({
+        action: AuditAction.EMAIL_VERIFIED,
+        resource: AuditResource.USER,
+        resourceId: user.id,
+        resourceName: user.email,
+      }, req);
+
       return "Email verified successfully. You can now login.";
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -122,16 +135,29 @@ class AuthService {
     }
   }
 
-  async login(input: LoginInput): Promise<AuthResult> {
+  async login(input: LoginInput, req?: Request): Promise<AuthResult> {
     const { email, password } = input;
     const normalizedEmail = email.toLowerCase().trim();
 
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
+      await auditFailure({
+        action: AuditAction.LOGIN_FAILED,
+        resource: AuditResource.USER,
+        details: { email: normalizedEmail },
+        errorMessage: "User not found",
+      }, req);
       throw new UnauthorizedError("Invalid email or password.");
     }
 
     if (!user.password) {
+      await auditFailure({
+        action: AuditAction.LOGIN_FAILED,
+        resource: AuditResource.USER,
+        resourceId: user.id,
+        details: { email: normalizedEmail, reason: "social_login_only" },
+        errorMessage: "Account uses social login",
+      }, req);
       throw new UnauthorizedError(
         "This account uses social login. Please sign in with Google.",
       );
@@ -139,14 +165,35 @@ class AuthService {
 
     const isPasswordValid = await checkPassword(password, user.password);
     if (!isPasswordValid) {
+      await auditFailure({
+        action: AuditAction.LOGIN_FAILED,
+        resource: AuditResource.USER,
+        resourceId: user.id,
+        details: { email: normalizedEmail },
+        errorMessage: "Invalid password",
+      }, req);
       throw new UnauthorizedError("Invalid email or password.");
     }
 
     if (!user.isEmailVerified) {
+      await auditFailure({
+        action: AuditAction.LOGIN_FAILED,
+        resource: AuditResource.USER,
+        resourceId: user.id,
+        details: { email: normalizedEmail, reason: "email_not_verified" },
+        errorMessage: "Email not verified",
+      }, req);
       throw new ForbiddenError("Please verify your email before logging in.");
     }
 
     const tokens = this.generateTokens(user.id, user.role as Role, user.tokenVersion);
+
+    await audit({
+      action: AuditAction.LOGIN,
+      resource: AuditResource.USER,
+      resourceId: user.id,
+      resourceName: user.email,
+    }, req);
 
     return {
       ...tokens,
@@ -181,8 +228,14 @@ class AuthService {
     }
   }
 
-  async logout(userId: string): Promise<void> {
+  async logout(userId: string, req?: Request): Promise<void> {
     await User.findByIdAndUpdate(userId, { $inc: { tokenVersion: 1 } });
+    
+    await audit({
+      action: AuditAction.LOGOUT,
+      resource: AuditResource.USER,
+      resourceId: userId,
+    }, req);
   }
 
   async forgotPassword(email: string): Promise<void> {
@@ -210,7 +263,7 @@ class AuthService {
     );
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
+  async resetPassword(token: string, newPassword: string, req?: Request): Promise<void> {
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
     const user = await User.findOne({
@@ -229,6 +282,13 @@ class AuthService {
     user.resetPasswordExpires = undefined;
     user.tokenVersion = user.tokenVersion + 1;
     await user.save();
+
+    await audit({
+      action: AuditAction.PASSWORD_RESET,
+      resource: AuditResource.USER,
+      resourceId: user.id,
+      resourceName: user.email,
+    }, req);
   }
 
   async handleGoogleAuth(

@@ -9,15 +9,16 @@ import {
   verifyEmailSchema,
 } from "./auth.schema";
 import { HttpError } from "../../common/errors";
+import { env } from "../../config/env";
 
 function getFrontendUrl(): string {
-  return process.env.FRONTEND_URL || "http://localhost:3000";
+  return env.FRONTEND_URL;
 }
 
 async function getGoogleClient(): Promise<OAuth2Client> {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.GOOGLE_CALLBACK_URL;
+  const clientId = env.GOOGLE_CLIENT_ID;
+  const clientSecret = env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = env.GOOGLE_CALLBACK_URL;
 
   if (!clientId || !clientSecret) {
     throw new Error("Google client credentials are not set.");
@@ -27,7 +28,7 @@ async function getGoogleClient(): Promise<OAuth2Client> {
 }
 
 function setRefreshTokenCookie(res: Response, refreshToken: string): void {
-  const isProd = process.env.NODE_ENV === "production";
+  const isProd = env.NODE_ENV === "production";
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
@@ -70,7 +71,7 @@ export async function verifyEmailHandler(req: Request, res: Response) {
       });
     }
 
-    const message = await authService.verifyEmail(result.data.token);
+    const message = await authService.verifyEmail(result.data.token, req);
 
     return res.json({ message });
   } catch (error) {
@@ -91,7 +92,7 @@ export async function loginHandler(req: Request, res: Response) {
       });
     }
 
-    const authResult = await authService.login(result.data);
+    const authResult = await authService.login(result.data, req);
 
     setRefreshTokenCookie(res, authResult.refreshToken);
 
@@ -136,7 +137,7 @@ export async function refreshHandler(req: Request, res: Response) {
 export async function logoutHandler(req: Request, res: Response) {
   try {
     if (req.user?.id) {
-      await authService.logout(req.user.id);
+      await authService.logout(req.user.id, req);
     }
 
     res.clearCookie("refreshToken", { path: "/" });
@@ -177,7 +178,7 @@ export async function resetPasswordHandler(req: Request, res: Response) {
       });
     }
 
-    await authService.resetPassword(result.data.token, result.data.password);
+    await authService.resetPassword(result.data.token, result.data.password, req);
 
     return res.json({ message: "Password reset successfully." });
   } catch (error) {
@@ -191,7 +192,7 @@ export async function resetPasswordHandler(req: Request, res: Response) {
 export async function googleAuthStartHandler(_req: Request, res: Response) {
   try {
     const state = authService.generateOAuthState();
-    const isProd = process.env.NODE_ENV === "production";
+    const isProd = env.NODE_ENV === "production";
 
     res.cookie("oauth_state", state, {
       httpOnly: true,
@@ -248,7 +249,7 @@ export async function googleAuthCallbackHandler(req: Request, res: Response) {
 
     const ticket = await client.verifyIdToken({
       idToken: tokens.id_token,
-      audience: process.env.GOOGLE_CLIENT_ID!,
+      audience: env.GOOGLE_CLIENT_ID!,
     });
     const payload = ticket.getPayload();
 

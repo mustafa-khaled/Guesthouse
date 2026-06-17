@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { HttpError } from "../common/errors/http.errors";
 import { ZodError } from "zod";
+import { env } from "../config/env";
 
 export function errorHandler(
   err: Error,
@@ -26,11 +27,12 @@ export function errorHandler(
     });
   }
 
-  console.error("Unhandled error:", err);
+  req.log.error({ err }, "Unhandled error");
 
   return res.status(500).json({
     message: "Internal server error",
-    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    error: env.NODE_ENV === "development" ? err.message : undefined,
+    requestId: env.NODE_ENV === "development" ? req.id : undefined,
   });
 }
 

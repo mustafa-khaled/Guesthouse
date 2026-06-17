@@ -15,11 +15,18 @@ import {
   ConflictError,
 } from "../../common/errors/http.errors";
 import {
+  getOrSet,
+  invalidate,
+  buildCacheKey,
+  CacheTTL,
+  CachePrefix,
+} from "../../lib/cache";
+import {
   parseDate,
   getDateRange,
   getNightsBetween,
 } from "../../common/utils/dateUtils";
-import { Types } from "mongoose";
+import { Types, ClientSession } from "mongoose";
 
 export interface AvailabilityResult {
   roomType: IRoomType;
@@ -255,21 +262,37 @@ class InventoryService {
       throw new BadRequestError("Invalid property ID");
     }
 
-    const start = parseDate(startDate);
-    const end = parseDate(endDate);
+    const cacheKey = buildCacheKey(
+      CachePrefix.INVENTORY,
+      "calendar",
+      propertyId,
+      startDate,
+      endDate,
+      roomTypeId || "all"
+    );
 
-    const query: any = {
-      propertyId: new Types.ObjectId(propertyId),
-      date: { $gte: start, $lte: end },
-    };
+    return getOrSet(
+      cacheKey,
+      async () => {
+        const start = parseDate(startDate);
+        const end = parseDate(endDate);
 
-    if (roomTypeId) {
-      query.roomTypeId = new Types.ObjectId(roomTypeId);
-    }
+        const query: any = {
+          propertyId: new Types.ObjectId(propertyId),
+          date: { $gte: start, $lte: end },
+        };
 
-    return Inventory.find(query)
-      .populate("roomTypeId", "name code")
-      .sort({ roomTypeId: 1, date: 1 });
+        if (roomTypeId) {
+          query.roomTypeId = new Types.ObjectId(roomTypeId);
+        }
+
+        const docs = await Inventory.find(query)
+          .populate("roomTypeId", "name code")
+          .sort({ roomTypeId: 1, date: 1 });
+        return docs.map((d) => d.toObject());
+      },
+      CacheTTL.INVENTORY
+    );
   }
 
   async bulkUpdateInventory(
@@ -310,6 +333,9 @@ class InventoryService {
     }));
 
     const result = await Inventory.bulkWrite(bulkOps);
+
+    await invalidate(`${CachePrefix.INVENTORY}:*:${propertyId}:*`);
+
     return result.modifiedCount + result.upsertedCount;
   }
 
@@ -362,6 +388,11 @@ class InventoryService {
     }));
 
     const result = await Inventory.bulkWrite(bulkOps);
+
+    if (result.upsertedCount > 0) {
+      await invalidate(`${CachePrefix.INVENTORY}:*:${propertyId}:*`);
+    }
+
     return result.upsertedCount;
   }
 
@@ -493,7 +524,8 @@ class InventoryService {
     roomTypeId: string,
     checkIn: Date,
     checkOut: Date,
-    rooms: number
+    rooms: number,
+    session?: ClientSession
   ): Promise<void> {
     const dates = getDateRange(checkIn, checkOut);
     dates.pop();
@@ -506,7 +538,8 @@ class InventoryService {
       },
       {
         $inc: { bookedRooms: rooms, availableRooms: -rooms },
-      }
+      },
+      { session }
     );
   }
 
@@ -515,7 +548,8 @@ class InventoryService {
     roomTypeId: string,
     checkIn: Date,
     checkOut: Date,
-    rooms: number
+    rooms: number,
+    session?: ClientSession
   ): Promise<void> {
     const dates = getDateRange(checkIn, checkOut);
     dates.pop();
@@ -528,7 +562,8 @@ class InventoryService {
       },
       {
         $inc: { bookedRooms: -rooms, availableRooms: rooms },
-      }
+      },
+      { session }
     );
   }
 }
