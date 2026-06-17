@@ -2,7 +2,7 @@
 # Backend Dockerfile - Multi-stage pnpm build
 # ============================================
 
-FROM node:20-alpine AS base
+FROM node:26-alpine AS base
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
@@ -50,7 +50,7 @@ RUN pnpm build
 # ============================================
 # Stage 4: Production runtime
 # ============================================
-FROM node:20-alpine AS runner
+FROM node:26-alpine AS runner
 
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
