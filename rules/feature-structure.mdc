@@ -1,0 +1,49 @@
+---
+description: Standard feature folder structure based on app-content reference pattern. Apply when creating or refactoring features under src/features/.
+globs: "src/features/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Feature Structure Standard
+
+Use `src/features/app-content` as the reference when building CRUD/table features.
+
+## Folder layout
+
+```
+feature/
+├── index.ts              # Sectioned named exports
+├── api/
+│   ├── index.ts
+│   ├── *.api.ts          # entityApi object ONLY — no wrapper functions
+│   └── *.query-keys.ts
+├── hooks/
+│   ├── index.ts
+│   ├── use-*-list.ts
+│   ├── use-create-*.ts / use-update-*.ts / use-delete-*.ts
+│   └── use-*-actions.ts  # SweetAlert confirms for delete/toggle
+├── config/
+│   ├── index.ts
+│   ├── *.columns.tsx     # getXColumns({ onEdit, onDelete, ... })
+│   └── *.constants.ts
+├── components/
+│   ├── index.ts          # Named exports (not export *)
+│   ├── *-table.tsx       # Owns useDataTable + useEntityModal + modal
+│   ├── *-modal.tsx       # Shell only → delegates to form
+│   └── *-form.tsx        # Owns RHF + mutation hooks
+├── types/
+└── schemas/              # Zod validation (when needed)
+```
+
+## Hard rules
+
+1. **API object only** — hooks call `entityApi.method`; unwrap `response.success` in `queryFn`, not in `*.api.ts`.
+2. **Modal state in table** — use `useEntityModal` from `@/shared/hooks`; pages stay thin.
+3. **Hooks in form, not modal** — modals are shells; forms call `useCreate*` / `useUpdate*`.
+4. **`*Actions` hook** — bundle delete/toggle (and similar) with SweetAlert confirms.
+5. **Named alias exports** — `export { XTable } from './x-table'` in `components/index.ts`; sectioned barrel in root `index.ts`.
+6. **Columns in config** — never inline large `ColumnDef[]` in table components.
+
+## Partial application
+
+Route-based CRUD, multi-step wizards, and full-page forms are allowed when they fit the domain (e.g. blog create wizard, campaign create page). Still apply config/, api object, barrels, and `*Actions` hooks where applicable.

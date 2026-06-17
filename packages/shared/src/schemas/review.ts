@@ -1,21 +1,18 @@
 import { z } from 'zod'
 
 export const reviewSchema = z.object({
-  review: z.string().min(1, 'Review cannot be empty!'),
+  id: z.string().optional(),
+  _id: z.string().optional(),
+  propertyId: z.union([z.string(), z.record(z.unknown())]),
+  userId: z.union([z.string(), z.record(z.unknown())]).optional(),
+  bookingId: z.string().optional(),
   rating: z.number().min(1).max(5),
-  tour: z.string(),
-  user: z.string(),
-})
-
-export const reviewResponseSchema = reviewSchema.extend({
-  _id: z.string(),
-  createdAt: z.string(),
-  user: z.object({
-    _id: z.string(),
-    name: z.string(),
-    photo: z.string(),
-  }),
+  title: z.string().optional(),
+  comment: z.string().optional(),
+  status: z.enum(['pending', 'approved', 'rejected']).optional(),
+  response: z.string().optional(),
+  helpfulCount: z.number().optional(),
+  createdAt: z.string().optional(),
 })
 
 export type Review = z.infer<typeof reviewSchema>
-export type ReviewResponse = z.infer<typeof reviewResponseSchema>

@@ -1,30 +1,44 @@
 import { z } from 'zod'
 
-export const apiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+export const paginationMetaSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+  hasNextPage: z.boolean(),
+  hasPrevPage: z.boolean(),
+})
+
+export const paginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
   z.object({
-    status: z.literal('success'),
-    data: z.object({ data: dataSchema }).optional(),
-    results: z.number().optional(),
-    resultsPerPage: z.number().optional(),
+    data: z.array(itemSchema),
+    pagination: paginationMetaSchema,
   })
 
-export const apiErrorSchema = z.object({
-  status: z.enum(['fail', 'error']),
+export const apiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    message: z.string().optional(),
+    data: dataSchema,
+  })
+
+export const messageResponseSchema = z.object({
   message: z.string(),
 })
 
 export const authResponseSchema = z.object({
-  status: z.literal('success'),
-  token: z.string(),
-  data: z.object({ user: z.any() }),
+  message: z.string(),
+  accessToken: z.string().optional(),
+  user: z.any().optional(),
 })
 
-export type ApiResponse<T> = {
-  status: 'success'
-  data?: { data: T }
-  results?: number
-  resultsPerPage?: number
+export type PaginationMeta = z.infer<typeof paginationMetaSchema>
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  pagination: PaginationMeta
 }
 
-export type ApiError = z.infer<typeof apiErrorSchema>
-export type AuthResponse = z.infer<typeof authResponseSchema>
+export interface ApiResponse<T> {
+  message?: string
+  data: T
+}

@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server'
-import { BACKEND_URL } from '@/lib/constants'
+import { cookies } from 'next/headers'
+import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from '@/lib/constants'
+import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/lib/api/auth-helpers'
 
-export async function GET() {
-  const res = await fetch(`${BACKEND_URL}/api/v1/users/logout`)
+export async function POST() {
+  const cookieStore = await cookies()
+  const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value
+  const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value
 
-  const data = await res.json()
+  const res = await proxyBackend(
+    '/auth/logout',
+    {
+      method: 'POST',
+      headers: refreshToken ? { Cookie: `refreshToken=${refreshToken}` } : {},
+    },
+    accessToken,
+  )
 
+  const data = await res.json().catch(() => ({ message: 'Logged out' }))
   const response = NextResponse.json(data, { status: res.status })
-
-  const setCookie = res.headers.get('set-cookie')
-  if (setCookie) {
-    response.headers.set('Set-Cookie', setCookie)
-  }
-
+  clearAuthCookies(response)
   return response
 }

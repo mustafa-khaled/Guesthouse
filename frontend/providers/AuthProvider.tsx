@@ -7,7 +7,9 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
-import type { User } from '@/types'
+import type { User, Role } from '@guesthouse/shared'
+import { hasMinimumRole } from '@guesthouse/shared'
+import { clientFetch } from '@/lib/api/client'
 
 interface AuthContextType {
   user: User | null
@@ -21,9 +23,17 @@ interface AuthContextType {
   ) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
+  hasRole: (role: Role) => boolean
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null)
+
+function normalizeUser(raw: Record<string, unknown>): User {
+  return {
+    ...raw,
+    id: (raw.id as string) || (raw._id as string),
+  } as User
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -31,13 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me')
-      if (res.ok) {
-        const data = await res.json()
-        setUser(data.data?.user || null)
-      } else {
-        setUser(null)
-      }
+      const data = await clientFetch<{ user: Record<string, unknown> }>('/auth/me')
+      setUser(normalizeUser(data.user))
     } catch {
       setUser(null)
     } finally {
@@ -49,21 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser()
   }, [refreshUser])
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-
-    const data = await res.json()
-
-    if (data.status !== 'success') {
-      throw new Error(data.message || 'Login failed')
-    }
-
-    setUser(data.data?.user || null)
-  }, [])
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const data = await clientFetch<{ user: Record<string, unknown> }>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        },
+      )
+      setUser(normalizeUser(data.user))
+    },
+    [],
+  )
 
   const signup = useCallback(
     async (
@@ -72,31 +75,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: string,
       passwordConfirm: string,
     ) => {
-      const res = await fetch('/api/auth/signup', {
+      await clientFetch('/auth/signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, passwordConfirm }),
       })
-
-      const data = await res.json()
-
-      if (data.status !== 'success') {
-        throw new Error(data.message || 'Signup failed')
-      }
-
-      setUser(data.data?.user || null)
     },
     [],
   )
 
   const logout = useCallback(async () => {
-    await fetch('/api/auth/logout')
+    await clientFetch('/auth/logout', { method: 'POST' })
     setUser(null)
   }, [])
 
+  const hasRole = useCallback(
+    (role: Role) => {
+      if (!user?.role) return false
+      return hasMinimumRole(user.role, role)
+    },
+    [user],
+  )
+
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, signup, logout, refreshUser }}
+      value={{ user, isLoading, login, signup, logout, refreshUser, hasRole }}
     >
       {children}
     </AuthContext.Provider>
