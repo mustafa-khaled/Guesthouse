@@ -4,8 +4,13 @@
     "dev": "concurrently -n sh,be,fe -c yellow,blue,green \"pnpm --filter @guesthouse/shared dev\" \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
     "build": "pnpm --filter @guesthouse/shared build && pnpm -r --filter !@guesthouse/shared build",
     "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm --filter backend test",
+    "test:coverage": "pnpm --filter backend test:coverage",
     "dev:be": "pnpm --filter backend dev",
-    "dev:fe": "pnpm --filter frontend dev"
+    "dev:fe": "pnpm --filter frontend dev",
+    "seed": "pnpm --filter backend seed",
+    "seed:clean": "pnpm --filter backend seed:clean"
   },
   "pnpm": {
     "approvedBuilds": [
