@@ -1,16 +1,16 @@
-import Header from '@/components/shared/Header'
-import Footer from '@/components/shared/Footer'
+import { Footer } from "@/components/sections/footer";
+import { Navbar } from "@/components/sections/navbar";
 
 export default function GuestLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
+    <>
+      <Navbar />
       <main className="flex-1 bg-gray-50">{children}</main>
       <Footer />
-    </div>
-  )
+    </>
+  );
 }

@@ -1,0 +1,35 @@
+---
+description: Matcha design system and Serene Stays hotel UI patterns for Next.js components
+globs: src/**/*.{tsx,ts,css}
+alwaysApply: true
+---
+
+# Matcha Hotel UI Rules
+
+This project uses TypeUI **Matcha** for all UI. Follow these rules on every change.
+
+## Required skills (read before UI work)
+
+1. `.agents/skills/typeui-fundamentals/` — accessibility, spacing, typography, UX guardrails
+2. `.agents/skills/typeui-design-system/SKILL.md` — Matcha tokens and components
+3. `.agents/skills/serene-stays-hotel/SKILL.md` — page structure and content tone
+
+## Design tokens (never override with random values)
+
+- Surface `#F6F2E8`, Section `#DBF2D0`, Brand `#314535`, Brand Medium `#AEC2A4`
+- Heading `#2B3A2E`, Body `#4A5547`
+- Fonts: Noto Serif (headings), Noto Sans (body)
+- Radius: 4px. Spacing: 8px grid. Min touch target: 48px.
+
+## Architecture
+
+- Primitives → `src/components/ui/`
+- Sections → `src/components/sections/`
+- Content/data → `src/lib/content.ts`
+- `page.tsx` composes sections only
+
+## Do not
+
+- Use Geist fonts, pill buttons, gold accents, or dark mode
+- Add unrelated dependencies without need
+- Weaken accessibility for aesthetics
