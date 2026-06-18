@@ -1,5 +1,17 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-matcha-surface: #F6F2E8;
+  --color-matcha-section: #DBF2D0;
+  --color-matcha-brand: #314535;
+  --color-matcha-brand-medium: #AEC2A4;
+  --color-matcha-heading: #2B3A2E;
+  --color-matcha-body: #4A5547;
+  --color-matcha-border: #C8D4BC;
+  --color-matcha-white: #FFFFFF;
+  --color-matcha-shadow: rgba(43, 58, 46, 0.08);
+}
+
 body {
   font-family: 'Lato', sans-serif;
   @apply bg-gray-50 text-gray-800 antialiased;

@@ -80,7 +80,6 @@ const promotionSchema = new Schema<IPromotion>(
     code: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
     },

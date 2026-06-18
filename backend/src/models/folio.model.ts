@@ -65,12 +65,10 @@ const folioSchema = new Schema<IFolio>(
       type: Schema.Types.ObjectId,
       ref: "Booking",
       required: true,
-      unique: true,
     },
     folioNumber: {
       type: String,
       required: true,
-      unique: true,
     },
     lineItems: [lineItemSchema],
     subtotal: {

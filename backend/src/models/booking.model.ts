@@ -170,7 +170,6 @@ const bookingSchema = new Schema<IBooking>(
     confirmationNumber: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
     },
     propertyId: {

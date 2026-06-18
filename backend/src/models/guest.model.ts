@@ -83,14 +83,12 @@ const guestSchema = new Schema<IGuest>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      sparse: true,
     },
     email: {
       type: String,
       required: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     phone: {
       type: String,

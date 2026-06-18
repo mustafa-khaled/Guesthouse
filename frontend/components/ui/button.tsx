@@ -7,6 +7,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-green-600 text-white hover:bg-green-700',
+        primary: 'bg-green-600 text-white hover:bg-green-700',
+        secondary: 'border border-gray-300 bg-white hover:bg-gray-50',
         outline: 'border border-gray-300 bg-white hover:bg-gray-50',
         ghost: 'hover:bg-gray-100',
         destructive: 'bg-red-600 text-white hover:bg-red-700',
@@ -24,18 +26,33 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+    VariantProps<typeof buttonVariants> {
+  href?: string
+}
 
 export function Button({
   className,
   variant,
   size,
+  href,
   ...props
 }: ButtonProps) {
+  const classes = cn(buttonVariants({ variant, size, className }))
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        className={classes}
+        {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+      />
+    )
+  }
+
   return (
     <button
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      className={classes}
+      {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
     />
   )
 }

@@ -42,38 +42,8 @@ async function connectDB(): Promise<void> {
 
 async function cleanDatabase(): Promise<void> {
   logger.info("Cleaning database...");
-  
-  const collections = [
-    "users",
-    "properties",
-    "roomtypes",
-    "rooms",
-    "rateplans",
-    "guests",
-    "bookings",
-    "payments",
-    "folios",
-    "housekeepingtasks",
-    "reviews",
-    "notifications",
-    "addons",
-    "promotions",
-    "inventories",
-    "auditlogs",
-  ];
-
-  for (const collection of collections) {
-    try {
-      await mongoose.connection.db?.dropCollection(collection);
-      logger.info(`Dropped collection: ${collection}`);
-    } catch (error: any) {
-      if (error.code !== 26) {
-        logger.warn(`Could not drop collection ${collection}: ${error.message}`);
-      }
-    }
-  }
-
-  logger.info("Database cleaned");
+  await mongoose.connection.dropDatabase();
+  logger.info("Database cleaned (dropped and recreated)");
 }
 
 async function seedUsers(): Promise<Map<string, string>> {
@@ -143,13 +113,14 @@ async function seedRooms(
   roomTypeIdMap: Map<string, string>
 ): Promise<void> {
   logger.info("Seeding rooms...");
+
   let count = 0;
 
   const roomConfigs: Record<string, { code: string; count: number; floor: number }[]> = {
     "seaside-resort-spa": [
       { code: "OVS", count: 5, floor: 3 },
       { code: "DLX", count: 10, floor: 2 },
-      { code: "FAM", count: 3, floor: 3 },
+      { code: "FAM", count: 3, floor: 4 },
     ],
     "mountain-lodge-inn": [
       { code: "MTV", count: 8, floor: 2 },
@@ -163,6 +134,7 @@ async function seedRooms(
     ],
   };
 
+  const rooms: any[] = [];
   for (const [propertySlug, configs] of Object.entries(roomConfigs)) {
     const propertyId = propertyIdMap.get(propertySlug);
     if (!propertyId) continue;
@@ -173,7 +145,7 @@ async function seedRooms(
 
       for (let i = 1; i <= config.count; i++) {
         const roomNumber = `${config.floor}${String(i).padStart(2, "0")}`;
-        await Room.create({
+        rooms.push({
           propertyId: new mongoose.Types.ObjectId(propertyId),
           roomTypeId: new mongoose.Types.ObjectId(roomTypeId),
           roomNumber,
@@ -182,11 +154,12 @@ async function seedRooms(
           isOccupied: false,
           isActive: true,
         });
-        count++;
       }
     }
   }
 
+  await Room.insertMany(rooms);
+  count = rooms.length;
   logger.info(`Seeded ${count} rooms`);
 }
 
@@ -307,14 +280,14 @@ async function seedAddOns(propertyIdMap: Map<string, string>): Promise<void> {
   let count = 0;
 
   const addOns = [
-    { name: "Airport Transfer", code: "TRANSFER", price: 75, category: "transport", chargeType: "per_stay" },
-    { name: "Late Checkout", code: "LATE-CO", price: 50, category: "service", chargeType: "per_stay" },
-    { name: "Early Check-in", code: "EARLY-CI", price: 50, category: "service", chargeType: "per_stay" },
-    { name: "Spa Package", code: "SPA", price: 150, category: "wellness", chargeType: "per_person" },
-    { name: "Romantic Dinner", code: "DINNER", price: 120, category: "dining", chargeType: "per_person" },
-    { name: "Extra Bed", code: "XBED", price: 40, category: "room", chargeType: "per_night" },
-    { name: "Parking", code: "PARK", price: 25, category: "transport", chargeType: "per_night" },
-    { name: "Pet Fee", code: "PET", price: 30, category: "other", chargeType: "per_night" },
+    { name: "Airport Transfer", code: "TRANSFER", category: "transport", pricing: { type: "per-stay" as const, amount: 75 } },
+    { name: "Late Checkout", code: "LATE-CO", category: "amenity", pricing: { type: "per-stay" as const, amount: 50 } },
+    { name: "Early Check-in", code: "EARLY-CI", category: "amenity", pricing: { type: "per-stay" as const, amount: 50 } },
+    { name: "Spa Package", code: "SPA", category: "spa", pricing: { type: "per-person" as const, amount: 150 } },
+    { name: "Romantic Dinner", code: "DINNER", category: "dining", pricing: { type: "per-person" as const, amount: 120 } },
+    { name: "Extra Bed", code: "XBED", category: "amenity", pricing: { type: "per-night" as const, amount: 40 } },
+    { name: "Parking", code: "PARK", category: "transport", pricing: { type: "per-night" as const, amount: 25 } },
+    { name: "Pet Fee", code: "PET", category: "other", pricing: { type: "per-night" as const, amount: 30 } },
   ];
 
   for (const propertyId of propertyIdMap.values()) {

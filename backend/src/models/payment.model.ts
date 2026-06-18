@@ -92,7 +92,6 @@ const paymentSchema = new Schema<IPayment>(
     },
     stripePaymentIntentId: {
       type: String,
-      sparse: true,
     },
     stripeRefundId: String,
     metadata: metadataSchema,

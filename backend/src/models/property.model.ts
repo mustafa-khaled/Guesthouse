@@ -109,7 +109,6 @@ const propertySchema = new Schema<IProperty>(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },
