@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      image_tag:
+        description: Image tag (git SHA or latest)
+        required: false
+        default: latest
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd ${{ secrets.DEPLOY_PATH }}
+            export IMAGE_TAG="${{ inputs.image_tag }}"
+            export REGISTRY="ghcr.io/${{ github.repository }}"
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T backend \
+              node dist/scripts/ensure-indexes.js
+            bash scripts/smoke-test.sh "${{ secrets.DEPLOY_URL }}"
+            mkdir -p .deploy
+            echo "${{ inputs.image_tag }}" > .deploy/last-good-tag
+
+      - name: Rollback on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd ${{ secrets.DEPLOY_PATH }}
+            if [ -f .deploy/last-good-tag ]; then
+              export IMAGE_TAG="$(cat .deploy/last-good-tag)"
+              export REGISTRY="ghcr.io/${{ github.repository }}"
+              echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+              bash scripts/smoke-test.sh "${{ secrets.DEPLOY_URL }}" || true
+            fi

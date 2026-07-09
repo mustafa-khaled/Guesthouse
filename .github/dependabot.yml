@@ -1,58 +1,58 @@
 version: 2
 updates:
   # npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: 'weekly'
+      day: 'monday'
     open-pull-requests-limit: 10
     groups:
       dev-dependencies:
-        dependency-type: "development"
+        dependency-type: 'development'
         patterns:
-          - "@types/*"
-          - "typescript"
-          - "vitest"
-          - "eslint*"
+          - '@types/*'
+          - 'typescript'
+          - 'vitest'
+          - 'eslint*'
       production-minor:
-        dependency-type: "production"
+        dependency-type: 'production'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
     ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     labels:
-      - "dependencies"
-      - "automated"
+      - 'dependencies'
+      - 'automated'
 
   # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: 'weekly'
+      day: 'monday'
     labels:
-      - "dependencies"
-      - "ci"
-      - "automated"
+      - 'dependencies'
+      - 'ci'
+      - 'automated'
 
   # Docker
-  - package-ecosystem: "docker"
-    directory: "/backend"
+  - package-ecosystem: 'docker'
+    directory: '/backend'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     labels:
-      - "dependencies"
-      - "docker"
-      - "automated"
+      - 'dependencies'
+      - 'docker'
+      - 'automated'
 
-  - package-ecosystem: "docker"
-    directory: "/frontend"
+  - package-ecosystem: 'docker'
+    directory: '/frontend'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     labels:
-      - "dependencies"
-      - "docker"
-      - "automated"
+      - 'dependencies'
+      - 'docker'
+      - 'automated'

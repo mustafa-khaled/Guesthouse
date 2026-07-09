@@ -1,0 +1,28 @@
+---
+description: Express + Mongoose backend patterns for Guesthouse API development
+globs: backend/**/*.{ts,js}
+alwaysApply: false
+---
+
+# Backend Express Rules
+
+Before editing backend code, read the project skills:
+
+1. `.agents/skills/guesthouse-backend-architecture/SKILL.md` — module layout, wrapController, auth, events
+2. `.agents/skills/express-best-practices/SKILL.md` — read the relevant rule for your task (validation, errors, security, DB, tests)
+
+## Quick reminders
+
+- New handlers: `wrapController` + Zod schema — not manual try/catch
+- Business logic: `*.service.ts` — not routes or controllers
+- New routes: mount under `/api/v1` in `app.ts`
+- Side effects: emit events via `lib/events.ts` — not direct email/socket calls
+- Responses: use `created`, `ok`, `okPaginated` helpers for consistent envelopes
+- Errors: throw `HttpError` from services; trust `errorHandler` for unhandled errors
+
+## Do not
+
+- Use NestJS patterns — this is plain Express
+- Mount webhooks after `express.json()`
+- Read `process.env` directly — use `config/env.ts`
+- Skip validation on user input
