@@ -1,6 +1,6 @@
 /**
  * Role definitions for the Hotel Booking System
- * 
+ *
  * Role Mapping for Hotel Operations:
  * - ADMIN: Hotel Manager - Full access to all properties, users, reports
  * - MODERATOR: Front Desk - Check-in/out, booking management, guest profiles
@@ -9,11 +9,11 @@
  * - VIEWER: Read-only Staff - View dashboards, reports only
  */
 export enum Role {
-  USER = "user",
-  ADMIN = "admin",
-  MODERATOR = "moderator",
-  EDITOR = "editor",
-  VIEWER = "viewer",
+  USER = 'user',
+  ADMIN = 'admin',
+  MODERATOR = 'moderator',
+  EDITOR = 'editor',
+  VIEWER = 'viewer',
 }
 
 export const RoleHierarchy: Record<Role, number> = {

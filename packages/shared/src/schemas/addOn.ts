@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const addOnSchema = z.object({
   id: z.string().optional(),
@@ -9,6 +9,6 @@ export const addOnSchema = z.object({
   price: z.number(),
   category: z.string().optional(),
   isActive: z.boolean().optional(),
-})
+});
 
-export type AddOn = z.infer<typeof addOnSchema>
+export type AddOn = z.infer<typeof addOnSchema>;

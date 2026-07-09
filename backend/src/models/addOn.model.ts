@@ -1,20 +1,20 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
 
 export enum AddOnPricingType {
-  PER_STAY = "per-stay",
-  PER_NIGHT = "per-night",
-  PER_PERSON = "per-person",
-  PER_PERSON_PER_NIGHT = "per-person-per-night",
+  PER_STAY = 'per-stay',
+  PER_NIGHT = 'per-night',
+  PER_PERSON = 'per-person',
+  PER_PERSON_PER_NIGHT = 'per-person-per-night',
 }
 
 export enum AddOnCategory {
-  TRANSPORT = "transport",
-  DINING = "dining",
-  SPA = "spa",
-  EXPERIENCE = "experience",
-  AMENITY = "amenity",
-  OTHER = "other",
+  TRANSPORT = 'transport',
+  DINING = 'dining',
+  SPA = 'spa',
+  EXPERIENCE = 'experience',
+  AMENITY = 'amenity',
+  OTHER = 'other',
 }
 
 export interface IAddOnPricing {
@@ -53,7 +53,7 @@ const pricingSchema = new Schema(
     },
     amount: { type: Number, required: true, min: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const availabilitySchema = new Schema(
@@ -62,20 +62,20 @@ const availabilitySchema = new Schema(
       type: [Number],
       validate: {
         validator: (arr: number[]) => arr.every((d) => d >= 0 && d <= 6),
-        message: "Days of week must be between 0 and 6",
+        message: 'Days of week must be between 0 and 6',
       },
     },
     requiresAdvanceBooking: { type: Boolean, default: false },
     advanceBookingHours: { type: Number, min: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const addOnSchema = new Schema<IAddOn>(
   {
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       required: true,
       index: true,
     },
@@ -110,7 +110,7 @@ const addOnSchema = new Schema<IAddOn>(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 addOnSchema.index({ propertyId: 1, code: 1 }, { unique: true });
@@ -119,4 +119,4 @@ addOnSchema.index({ propertyId: 1, isActive: 1, category: 1 });
 addOnSchema.plugin(softDeletePlugin);
 addOnSchema.plugin(toJSONPlugin);
 
-export const AddOn = model<IAddOn>("AddOn", addOnSchema);
+export const AddOn = model<IAddOn>('AddOn', addOnSchema);

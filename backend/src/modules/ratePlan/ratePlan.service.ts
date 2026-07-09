@@ -1,15 +1,7 @@
-import { RatePlan, IRatePlan } from "../../models/ratePlan.model";
-import {
-  PriceRule,
-  IPriceRule,
-  PriceAdjustmentType,
-} from "../../models/priceRule.model";
-import { RoomType } from "../../models/roomType.model";
-import {
-  NotFoundError,
-  ConflictError,
-  BadRequestError,
-} from "../../common/errors/http.errors";
+import { RatePlan, IRatePlan } from '../../models/ratePlan.model';
+import { PriceRule, IPriceRule, PriceAdjustmentType } from '../../models/priceRule.model';
+import { RoomType } from '../../models/roomType.model';
+import { NotFoundError, ConflictError, BadRequestError } from '../../common/errors/http.errors';
 import {
   getOrSet,
   invalidate,
@@ -17,9 +9,9 @@ import {
   buildCacheKey,
   CacheTTL,
   CachePrefix,
-} from "../../lib/cache";
-import { Types } from "mongoose";
-import { isDateInRange, getDayOfWeek } from "../../common/utils/dateUtils";
+} from '../../lib/cache';
+import { Types } from 'mongoose';
+import { isDateInRange, getDayOfWeek } from '../../common/utils/dateUtils';
 
 export interface CreateRatePlanData {
   name: string;
@@ -27,12 +19,12 @@ export interface CreateRatePlanData {
   description?: string;
   basePrice: number;
   inclusions?: string[];
-  cancellationPolicy?: IRatePlan["cancellationPolicy"];
-  paymentPolicy?: IRatePlan["paymentPolicy"];
+  cancellationPolicy?: IRatePlan['cancellationPolicy'];
+  paymentPolicy?: IRatePlan['paymentPolicy'];
   depositPercentage?: number;
   minNights?: number;
   maxNights?: number;
-  advanceBookingDays?: IRatePlan["advanceBookingDays"];
+  advanceBookingDays?: IRatePlan['advanceBookingDays'];
   isActive?: boolean;
   validFrom?: Date;
   validTo?: Date;
@@ -50,12 +42,12 @@ export interface CreatePriceRuleData {
 class RatePlanService {
   async create(roomTypeId: string, data: CreateRatePlanData): Promise<IRatePlan> {
     if (!Types.ObjectId.isValid(roomTypeId)) {
-      throw new BadRequestError("Invalid room type ID");
+      throw new BadRequestError('Invalid room type ID');
     }
 
     const roomType = await RoomType.findById(roomTypeId);
     if (!roomType) {
-      throw new NotFoundError("Room type not found");
+      throw new NotFoundError('Room type not found');
     }
 
     const existingCode = await RatePlan.findOne({
@@ -64,7 +56,7 @@ class RatePlanService {
     });
     if (existingCode) {
       throw new ConflictError(
-        `Rate plan with code "${data.code}" already exists for this room type`
+        `Rate plan with code "${data.code}" already exists for this room type`,
       );
     }
 
@@ -82,7 +74,7 @@ class RatePlanService {
 
   async findById(id: string): Promise<IRatePlan> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid rate plan ID");
+      throw new BadRequestError('Invalid rate plan ID');
     }
 
     const cacheKey = buildCacheKey(CachePrefix.RATE_PLAN, id);
@@ -90,17 +82,14 @@ class RatePlanService {
     const ratePlan = await getOrSet(
       cacheKey,
       async () => {
-        const doc = await RatePlan.findById(id).populate(
-          "roomTypeId",
-          "name code propertyId"
-        );
+        const doc = await RatePlan.findById(id).populate('roomTypeId', 'name code propertyId');
         return doc ? doc.toObject() : null;
       },
-      CacheTTL.RATE_PLAN
+      CacheTTL.RATE_PLAN,
     );
 
     if (!ratePlan) {
-      throw new NotFoundError("Rate plan not found");
+      throw new NotFoundError('Rate plan not found');
     }
 
     return ratePlan as IRatePlan;
@@ -108,12 +97,12 @@ class RatePlanService {
 
   async update(id: string, data: Partial<CreateRatePlanData>): Promise<IRatePlan> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid rate plan ID");
+      throw new BadRequestError('Invalid rate plan ID');
     }
 
     const ratePlan = await RatePlan.findById(id);
     if (!ratePlan) {
-      throw new NotFoundError("Rate plan not found");
+      throw new NotFoundError('Rate plan not found');
     }
 
     if (data.code && data.code !== ratePlan.code) {
@@ -124,7 +113,7 @@ class RatePlanService {
       });
       if (existingCode) {
         throw new ConflictError(
-          `Rate plan with code "${data.code}" already exists for this room type`
+          `Rate plan with code "${data.code}" already exists for this room type`,
         );
       }
     }
@@ -140,12 +129,12 @@ class RatePlanService {
 
   async delete(id: string): Promise<void> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid rate plan ID");
+      throw new BadRequestError('Invalid rate plan ID');
     }
 
     const ratePlan = await RatePlan.findById(id);
     if (!ratePlan) {
-      throw new NotFoundError("Rate plan not found");
+      throw new NotFoundError('Rate plan not found');
     }
 
     await (ratePlan as any).softDelete();
@@ -154,18 +143,15 @@ class RatePlanService {
     await invalidate(`${CachePrefix.RATE_PLANS_BY_ROOM}:${ratePlan.roomTypeId}:*`);
   }
 
-  async listByRoomType(
-    roomTypeId: string,
-    isActive?: boolean
-  ): Promise<IRatePlan[]> {
+  async listByRoomType(roomTypeId: string, isActive?: boolean): Promise<IRatePlan[]> {
     if (!Types.ObjectId.isValid(roomTypeId)) {
-      throw new BadRequestError("Invalid room type ID");
+      throw new BadRequestError('Invalid room type ID');
     }
 
     const cacheKey = buildCacheKey(
       CachePrefix.RATE_PLANS_BY_ROOM,
       roomTypeId,
-      isActive?.toString() ?? "all"
+      isActive?.toString() ?? 'all',
     );
 
     return getOrSet(
@@ -180,14 +166,11 @@ class RatePlanService {
         const docs = await RatePlan.find(query).sort({ basePrice: 1 });
         return docs.map((d) => d.toObject());
       },
-      CacheTTL.RATE_PLAN
+      CacheTTL.RATE_PLAN,
     );
   }
 
-  async createPriceRule(
-    ratePlanId: string,
-    data: CreatePriceRuleData
-  ): Promise<IPriceRule> {
+  async createPriceRule(ratePlanId: string, data: CreatePriceRuleData): Promise<IPriceRule> {
     const ratePlan = await this.findById(ratePlanId);
 
     const priceRule = new PriceRule({
@@ -203,17 +186,14 @@ class RatePlanService {
     return priceRule;
   }
 
-  async updatePriceRule(
-    id: string,
-    data: Partial<CreatePriceRuleData>
-  ): Promise<IPriceRule> {
+  async updatePriceRule(id: string, data: Partial<CreatePriceRuleData>): Promise<IPriceRule> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid price rule ID");
+      throw new BadRequestError('Invalid price rule ID');
     }
 
     const priceRule = await PriceRule.findById(id);
     if (!priceRule) {
-      throw new NotFoundError("Price rule not found");
+      throw new NotFoundError('Price rule not found');
     }
 
     if (data.priceAdjustment) {
@@ -231,12 +211,12 @@ class RatePlanService {
 
   async deletePriceRule(id: string): Promise<void> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid price rule ID");
+      throw new BadRequestError('Invalid price rule ID');
     }
 
     const priceRule = await PriceRule.findById(id);
     if (!priceRule) {
-      throw new NotFoundError("Price rule not found");
+      throw new NotFoundError('Price rule not found');
     }
 
     await (priceRule as any).softDelete();
@@ -258,8 +238,8 @@ class RatePlanService {
       ratePlanId: ratePlan._id,
       isActive: true,
       isDeleted: false,
-      "dateRange.start": { $lte: date },
-      "dateRange.end": { $gte: date },
+      'dateRange.start': { $lte: date },
+      'dateRange.end': { $gte: date },
     }).sort({ priority: -1 });
 
     let price = ratePlan.basePrice;
@@ -297,7 +277,7 @@ class RatePlanService {
   async calculateTotalPrice(
     ratePlanId: string,
     checkIn: Date,
-    checkOut: Date
+    checkOut: Date,
   ): Promise<{ total: number; breakdown: { date: Date; price: number }[] }> {
     const breakdown: { date: Date; price: number }[] = [];
     let total = 0;

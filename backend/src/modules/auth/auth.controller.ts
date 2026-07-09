@@ -1,15 +1,15 @@
-import { Request, Response } from "express";
-import { OAuth2Client } from "google-auth-library";
-import { authService } from "./auth.service";
+import { Request, Response } from 'express';
+import { OAuth2Client } from 'google-auth-library';
+import { authService } from './auth.service';
 import {
   registerSchema,
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   verifyEmailSchema,
-} from "./auth.schema";
-import { HttpError } from "../../common/errors";
-import { env } from "../../config/env";
+} from './auth.schema';
+import { HttpError } from '../../common/errors';
+import { env } from '../../config/env';
 
 function getFrontendUrl(): string {
   return env.FRONTEND_URL;
@@ -21,19 +21,19 @@ async function getGoogleClient(): Promise<OAuth2Client> {
   const redirectUri = env.GOOGLE_CALLBACK_URL;
 
   if (!clientId || !clientSecret) {
-    throw new Error("Google client credentials are not set.");
+    throw new Error('Google client credentials are not set.');
   }
 
   return new OAuth2Client({ clientId, clientSecret, redirectUri });
 }
 
 function setRefreshTokenCookie(res: Response, refreshToken: string): void {
-  const isProd = env.NODE_ENV === "production";
+  const isProd = env.NODE_ENV === 'production';
 
-  res.cookie("refreshToken", refreshToken, {
+  res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: "lax",
+    sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
@@ -43,7 +43,7 @@ export async function registerHandler(req: Request, res: Response) {
     const result = registerSchema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: result.error.flatten(),
       });
     }
@@ -51,14 +51,14 @@ export async function registerHandler(req: Request, res: Response) {
     const user = await authService.register(result.data);
 
     return res.status(201).json({
-      message: "User registered. Please check your email to verify your account.",
+      message: 'User registered. Please check your email to verify your account.',
       user,
     });
   } catch (error) {
     if (error instanceof HttpError) {
       return res.status(error.statusCode).json({ message: error.message });
     }
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
@@ -67,7 +67,7 @@ export async function verifyEmailHandler(req: Request, res: Response) {
     const result = verifyEmailSchema.safeParse({ token: req.query.token });
     if (!result.success) {
       return res.status(400).json({
-        message: "Verification token is missing.",
+        message: 'Verification token is missing.',
       });
     }
 
@@ -78,7 +78,7 @@ export async function verifyEmailHandler(req: Request, res: Response) {
     if (error instanceof HttpError) {
       return res.status(error.statusCode).json({ message: error.message });
     }
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
@@ -87,7 +87,7 @@ export async function loginHandler(req: Request, res: Response) {
     const result = loginSchema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: result.error.flatten(),
       });
     }
@@ -97,7 +97,7 @@ export async function loginHandler(req: Request, res: Response) {
     setRefreshTokenCookie(res, authResult.refreshToken);
 
     return res.json({
-      message: "Login successful.",
+      message: 'Login successful.',
       accessToken: authResult.accessToken,
       user: authResult.user,
     });
@@ -105,7 +105,7 @@ export async function loginHandler(req: Request, res: Response) {
     if (error instanceof HttpError) {
       return res.status(error.statusCode).json({ message: error.message });
     }
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
@@ -114,7 +114,7 @@ export async function refreshHandler(req: Request, res: Response) {
     const token = req.cookies?.refreshToken as string | undefined;
 
     if (!token) {
-      return res.status(401).json({ message: "Refresh token is missing." });
+      return res.status(401).json({ message: 'Refresh token is missing.' });
     }
 
     const authResult = await authService.refresh(token);
@@ -122,7 +122,7 @@ export async function refreshHandler(req: Request, res: Response) {
     setRefreshTokenCookie(res, authResult.refreshToken);
 
     return res.json({
-      message: "Token refreshed.",
+      message: 'Token refreshed.',
       accessToken: authResult.accessToken,
       user: authResult.user,
     });
@@ -130,7 +130,7 @@ export async function refreshHandler(req: Request, res: Response) {
     if (error instanceof HttpError) {
       return res.status(error.statusCode).json({ message: error.message });
     }
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
@@ -140,12 +140,12 @@ export async function logoutHandler(req: Request, res: Response) {
       await authService.logout(req.user.id, req);
     }
 
-    res.clearCookie("refreshToken", { path: "/" });
+    res.clearCookie('refreshToken', { path: '/' });
 
-    return res.json({ message: "Logged out successfully." });
+    return res.json({ message: 'Logged out successfully.' });
   } catch (error) {
-    res.clearCookie("refreshToken", { path: "/" });
-    return res.json({ message: "Logged out successfully." });
+    res.clearCookie('refreshToken', { path: '/' });
+    return res.json({ message: 'Logged out successfully.' });
   }
 }
 
@@ -153,17 +153,17 @@ export async function forgotPasswordHandler(req: Request, res: Response) {
   try {
     const result = forgotPasswordSchema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ message: "Valid email is required." });
+      return res.status(400).json({ message: 'Valid email is required.' });
     }
 
     await authService.forgotPassword(result.data.email);
 
     return res.json({
-      message: "If an account exists, you will receive a reset link.",
+      message: 'If an account exists, you will receive a reset link.',
     });
   } catch (error) {
     return res.json({
-      message: "If an account exists, you will receive a reset link.",
+      message: 'If an account exists, you will receive a reset link.',
     });
   }
 }
@@ -173,39 +173,39 @@ export async function resetPasswordHandler(req: Request, res: Response) {
     const result = resetPasswordSchema.safeParse(req.body);
     if (!result.success) {
       return res.status(400).json({
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: result.error.flatten(),
       });
     }
 
     await authService.resetPassword(result.data.token, result.data.password, req);
 
-    return res.json({ message: "Password reset successfully." });
+    return res.json({ message: 'Password reset successfully.' });
   } catch (error) {
     if (error instanceof HttpError) {
       return res.status(error.statusCode).json({ message: error.message });
     }
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }
 
 export async function googleAuthStartHandler(_req: Request, res: Response) {
   try {
     const state = authService.generateOAuthState();
-    const isProd = env.NODE_ENV === "production";
+    const isProd = env.NODE_ENV === 'production';
 
-    res.cookie("oauth_state", state, {
+    res.cookie('oauth_state', state, {
       httpOnly: true,
       secure: isProd,
-      sameSite: "lax",
+      sameSite: 'lax',
       maxAge: 10 * 60 * 1000,
     });
 
     const client = await getGoogleClient();
     const authUrl = client.generateAuthUrl({
-      access_type: "offline",
-      prompt: "consent",
-      scope: ["openid", "email", "profile"],
+      access_type: 'offline',
+      prompt: 'consent',
+      scope: ['openid', 'email', 'profile'],
       state,
     });
 
@@ -229,7 +229,7 @@ export async function googleAuthCallbackHandler(req: Request, res: Response) {
   }
 
   const storedState = req.cookies?.oauth_state;
-  res.clearCookie("oauth_state");
+  res.clearCookie('oauth_state');
 
   if (!state || state !== storedState) {
     return res.redirect(`${frontendUrl}/auth/error?message=invalid_state`);
@@ -261,17 +261,11 @@ export async function googleAuthCallbackHandler(req: Request, res: Response) {
       return res.redirect(`${frontendUrl}/auth/error?message=invalid_google_profile`);
     }
 
-    const authResult = await authService.handleGoogleAuth(
-      googleId,
-      email,
-      payload?.name,
-    );
+    const authResult = await authService.handleGoogleAuth(googleId, email, payload?.name);
 
     setRefreshTokenCookie(res, authResult.refreshToken);
 
-    return res.redirect(
-      `${frontendUrl}/auth/callback#access_token=${authResult.accessToken}`,
-    );
+    return res.redirect(`${frontendUrl}/auth/callback#access_token=${authResult.accessToken}`);
   } catch (error) {
     return res.redirect(`${frontendUrl}/auth/error?message=oauth_failed`);
   }

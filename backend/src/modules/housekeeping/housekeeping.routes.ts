@@ -1,70 +1,60 @@
-import { Router } from "express";
-import { housekeepingController } from "./housekeeping.controller";
-import { requireAuth, requireFrontDesk, requireHousekeeping } from "../../middleware";
+import { Router } from 'express';
+import { housekeepingController } from './housekeeping.controller';
+import { requireAuth, requireFrontDesk, requireHousekeeping } from '../../middleware';
 
 const router = Router();
 
+router.get('/housekeeping/tasks', requireAuth, requireHousekeeping, housekeepingController.list);
+
 router.get(
-  "/housekeeping/tasks",
+  '/housekeeping/dashboard',
   requireAuth,
   requireHousekeeping,
-  housekeepingController.list
+  housekeepingController.getDashboard,
 );
 
 router.get(
-  "/housekeeping/dashboard",
+  '/housekeeping/tasks/:id',
   requireAuth,
   requireHousekeeping,
-  housekeepingController.getDashboard
+  housekeepingController.getById,
 );
 
-router.get(
-  "/housekeeping/tasks/:id",
-  requireAuth,
-  requireHousekeeping,
-  housekeepingController.getById
-);
-
-router.post(
-  "/housekeeping/tasks",
-  requireAuth,
-  requireFrontDesk,
-  housekeepingController.create
-);
+router.post('/housekeeping/tasks', requireAuth, requireFrontDesk, housekeepingController.create);
 
 router.patch(
-  "/housekeeping/tasks/:id/status",
+  '/housekeeping/tasks/:id/status',
   requireAuth,
   requireHousekeeping,
-  housekeepingController.updateStatus
+  housekeepingController.updateStatus,
 );
 
 router.post(
-  "/housekeeping/tasks/:id/complete",
+  '/housekeeping/tasks/:id/complete',
   requireAuth,
   requireHousekeeping,
-  housekeepingController.complete
+  housekeepingController.complete,
 );
 
 router.post(
-  "/housekeeping/tasks/:id/verify",
+  '/housekeeping/tasks/:id/verify',
   requireAuth,
   requireFrontDesk,
-  housekeepingController.verify
+  housekeepingController.verify,
 );
 
 router.post(
-  "/housekeeping/tasks/:id/assign",
+  '/housekeeping/tasks/:id/assign',
   requireAuth,
   requireFrontDesk,
-  housekeepingController.assign
+  housekeepingController.assign,
 );
 
 router.post(
-  "/housekeeping/tasks/:id/issue",
+  '/housekeeping/tasks/:id/issue',
   requireAuth,
   requireHousekeeping,
-  housekeepingController.reportIssue
+  housekeepingController.reportIssue,
 );
 
 export default router;

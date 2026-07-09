@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const guestSchema = z.object({
   id: z.string().optional(),
@@ -9,7 +9,7 @@ export const guestSchema = z.object({
   phone: z.string().optional(),
   nationality: z.string().optional(),
   dateOfBirth: z.string().optional(),
-  preferences: z.record(z.unknown()).optional(),
+  preferences: z.record(z.string(), z.unknown()).optional(),
   userId: z.string().optional(),
   stats: z
     .object({
@@ -17,6 +17,6 @@ export const guestSchema = z.object({
       totalSpent: z.number().optional(),
     })
     .optional(),
-})
+});
 
-export type Guest = z.infer<typeof guestSchema>
+export type Guest = z.infer<typeof guestSchema>;

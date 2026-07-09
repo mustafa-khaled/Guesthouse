@@ -5,24 +5,24 @@ import {
   BookingCancelledPayload,
   BookingCheckedInPayload,
   BookingCheckedOutPayload,
-} from "../lib/events";
-import { sendEmail } from "../lib/email";
-import { logger } from "../lib/logger";
+} from '../lib/events';
+import { sendEmail } from '../lib/email';
+import { logger } from '../lib/logger';
 
 function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  return new Date(date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
 }
 
 export function registerBookingListeners(): void {
-  logger.info("Registering booking event listeners");
+  logger.info('Registering booking event listeners');
 
   on(EventType.BOOKING_CREATED, async (payload: BookingEventPayload) => {
-    logger.info({ bookingId: payload.bookingId }, "Booking created event received");
+    logger.info({ bookingId: payload.bookingId }, 'Booking created event received');
 
     await sendEmail(
       payload.guestEmail,
@@ -36,12 +36,12 @@ export function registerBookingListeners(): void {
         <p><strong>Check-out:</strong> ${formatDate(payload.checkOut)}</p>
         <p><strong>Total:</strong> $${payload.totalAmount.toFixed(2)}</p>
         <p>We look forward to welcoming you!</p>
-      `
+      `,
     );
   });
 
   on(EventType.BOOKING_CONFIRMED, async (payload: BookingEventPayload) => {
-    logger.info({ bookingId: payload.bookingId }, "Booking confirmed event received");
+    logger.info({ bookingId: payload.bookingId }, 'Booking confirmed event received');
 
     await sendEmail(
       payload.guestEmail,
@@ -54,16 +54,17 @@ export function registerBookingListeners(): void {
         <p><strong>Check-in:</strong> ${formatDate(payload.checkIn)}</p>
         <p><strong>Check-out:</strong> ${formatDate(payload.checkOut)}</p>
         <p>We look forward to welcoming you!</p>
-      `
+      `,
     );
   });
 
   on(EventType.BOOKING_CANCELLED, async (payload: BookingCancelledPayload) => {
-    logger.info({ bookingId: payload.bookingId }, "Booking cancelled event received");
+    logger.info({ bookingId: payload.bookingId }, 'Booking cancelled event received');
 
-    const refundText = payload.refundAmount && payload.refundAmount > 0
-      ? `<p>A refund of $${payload.refundAmount.toFixed(2)} will be processed within 5-10 business days.</p>`
-      : "";
+    const refundText =
+      payload.refundAmount && payload.refundAmount > 0
+        ? `<p>A refund of $${payload.refundAmount.toFixed(2)} will be processed within 5-10 business days.</p>`
+        : '';
 
     await sendEmail(
       payload.guestEmail,
@@ -76,14 +77,14 @@ export function registerBookingListeners(): void {
         <p><strong>Original Check-in:</strong> ${formatDate(payload.checkIn)}</p>
         ${refundText}
         <p>We hope to welcome you in the future.</p>
-      `
+      `,
     );
   });
 
   on(EventType.BOOKING_CHECKED_IN, async (payload: BookingCheckedInPayload) => {
     logger.info(
       { bookingId: payload.bookingId, roomNumber: payload.roomNumber },
-      "Guest checked in event received"
+      'Guest checked in event received',
     );
 
     await sendEmail(
@@ -97,12 +98,12 @@ export function registerBookingListeners(): void {
         <p><strong>Check-out:</strong> ${formatDate(payload.checkOut)}</p>
         <p>If you need anything during your stay, please don't hesitate to contact the front desk.</p>
         <p>Enjoy your stay!</p>
-      `
+      `,
     );
   });
 
   on(EventType.BOOKING_CHECKED_OUT, async (payload: BookingCheckedOutPayload) => {
-    logger.info({ bookingId: payload.bookingId }, "Guest checked out event received");
+    logger.info({ bookingId: payload.bookingId }, 'Guest checked out event received');
 
     await sendEmail(
       payload.guestEmail,
@@ -114,9 +115,9 @@ export function registerBookingListeners(): void {
         <p><strong>Final Amount:</strong> $${payload.finalAmount.toFixed(2)}</p>
         <p>We would love to hear about your experience. Please consider leaving us a review.</p>
         <p>We hope to see you again soon!</p>
-      `
+      `,
     );
   });
 
-  logger.info("Booking event listeners registered");
+  logger.info('Booking event listeners registered');
 }

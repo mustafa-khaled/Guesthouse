@@ -1,36 +1,37 @@
-import { Request, Response, Router } from "express";
-import { requireAuth, requiredRole } from "../middleware";
-import { User } from "../models";
-import { Role } from "../common/enums/role.enum";
+import { Request, Response, Router } from 'express';
+import { requireAuth, requiredRole } from '../middleware';
+import { User } from '../models';
+import { Role } from '../common/enums/role.enum';
 import {
   queryAuditLogs,
   getResourceHistory,
   getUserActivity,
   AuditAction,
   AuditResource,
-} from "../lib/audit";
+} from '../lib/audit';
+import { asParam } from '../common/utils/params';
 
 const router = Router();
 
 router.get(
-  "/users",
+  '/users',
   requireAuth,
   requiredRole(Role.ADMIN),
   async (_req: Request, res: Response) => {
     try {
-      const users = await User.find({}).select("-password");
+      const users = await User.find({}).select('-password');
       return res.json({
-        message: "Users fetched successfully",
+        message: 'Users fetched successfully',
         users,
       });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: 'Internal server error' });
     }
   },
 );
 
 router.get(
-  "/audit-logs",
+  '/audit-logs',
   requireAuth,
   requiredRole(Role.ADMIN),
   async (req: Request, res: Response) => {
@@ -55,16 +56,16 @@ router.get(
         resourceId: resourceId as string | undefined,
         userId: userId as string | undefined,
         userEmail: userEmail as string | undefined,
-        success: success === "true" ? true : success === "false" ? false : undefined,
+        success: success === 'true' ? true : success === 'false' ? false : undefined,
         startDate: startDate ? new Date(startDate as string) : undefined,
         endDate: endDate ? new Date(endDate as string) : undefined,
         page: page ? parseInt(page as string, 10) : undefined,
         limit: limit ? parseInt(limit as string, 10) : undefined,
-        sort: sort as "asc" | "desc" | undefined,
+        sort: sort as 'asc' | 'desc' | undefined,
       });
 
       return res.json({
-        message: "Audit logs fetched successfully",
+        message: 'Audit logs fetched successfully',
         data: result.logs,
         pagination: {
           total: result.total,
@@ -74,13 +75,13 @@ router.get(
         },
       });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: 'Internal server error' });
     }
   },
 );
 
 router.get(
-  "/audit-logs/resource/:resource/:resourceId",
+  '/audit-logs/resource/:resource/:resourceId',
   requireAuth,
   requiredRole(Role.ADMIN),
   async (req: Request, res: Response) => {
@@ -90,22 +91,22 @@ router.get(
 
       const logs = await getResourceHistory(
         resource as AuditResource,
-        resourceId,
-        limit ? parseInt(limit as string, 10) : undefined
+        asParam(resourceId),
+        limit ? parseInt(limit as string, 10) : undefined,
       );
 
       return res.json({
-        message: "Resource audit history fetched successfully",
+        message: 'Resource audit history fetched successfully',
         data: logs,
       });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: 'Internal server error' });
     }
   },
 );
 
 router.get(
-  "/audit-logs/user/:userId",
+  '/audit-logs/user/:userId',
   requireAuth,
   requiredRole(Role.ADMIN),
   async (req: Request, res: Response) => {
@@ -114,39 +115,39 @@ router.get(
       const { limit } = req.query;
 
       const logs = await getUserActivity(
-        userId,
-        limit ? parseInt(limit as string, 10) : undefined
+        asParam(userId),
+        limit ? parseInt(limit as string, 10) : undefined,
       );
 
       return res.json({
-        message: "User activity fetched successfully",
+        message: 'User activity fetched successfully',
         data: logs,
       });
     } catch (error) {
-      return res.status(500).json({ message: "Internal server error" });
+      return res.status(500).json({ message: 'Internal server error' });
     }
   },
 );
 
 router.get(
-  "/audit-logs/actions",
+  '/audit-logs/actions',
   requireAuth,
   requiredRole(Role.ADMIN),
   (_req: Request, res: Response) => {
     return res.json({
-      message: "Available audit actions",
+      message: 'Available audit actions',
       data: Object.values(AuditAction),
     });
   },
 );
 
 router.get(
-  "/audit-logs/resources",
+  '/audit-logs/resources',
   requireAuth,
   requiredRole(Role.ADMIN),
   (_req: Request, res: Response) => {
     return res.json({
-      message: "Available audit resources",
+      message: 'Available audit resources',
       data: Object.values(AuditResource),
     });
   },

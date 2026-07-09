@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const ratePlanSchema = z.object({
   id: z.string().optional(),
@@ -12,6 +12,6 @@ export const ratePlanSchema = z.object({
   minNights: z.number().optional(),
   maxNights: z.number().optional(),
   isActive: z.boolean().optional(),
-})
+});
 
-export type RatePlan = z.infer<typeof ratePlanSchema>
+export type RatePlan = z.infer<typeof ratePlanSchema>;

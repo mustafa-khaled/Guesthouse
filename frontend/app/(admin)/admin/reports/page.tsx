@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const reports = [
   {
@@ -34,7 +34,7 @@ const reports = [
     title: 'Daily Summary',
     description: 'Daily operations and financial summary',
   },
-]
+];
 
 export default function AdminReportsPage() {
   return (
@@ -59,5 +59,5 @@ export default function AdminReportsPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }

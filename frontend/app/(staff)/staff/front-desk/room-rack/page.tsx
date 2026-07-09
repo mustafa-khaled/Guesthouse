@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import { frontDeskQueries } from '@/queries/staff.queries'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { frontDeskQueries } from '@/queries/staff.queries';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -12,27 +12,27 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { RoomStatusBadge } from '@/components/shared/StatusBadge'
-import Spinner from '@/components/Spinner'
-import { getId, getRefLabel } from '@/lib/utils'
+} from '@/components/ui/table';
+import { RoomStatusBadge } from '@/components/shared/StatusBadge';
+import Spinner from '@/components/Spinner';
+import { getId, getRefLabel } from '@/lib/utils';
 
-type RoomRackRow = Record<string, unknown>
+type RoomRackRow = Record<string, unknown>;
 
 export default function RoomRackPage() {
-  const { data, isLoading, isError, error } = useQuery(frontDeskQueries.roomRack())
+  const { data, isLoading, isError, error } = useQuery(frontDeskQueries.roomRack());
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Failed to load room rack'}
       </div>
-    )
+    );
   }
 
-  const rows = (data ?? []) as RoomRackRow[]
+  const rows = (data ?? []) as RoomRackRow[];
 
   return (
     <div className="space-y-6">
@@ -72,8 +72,7 @@ export default function RoomRackPage() {
                         String(row.number ?? row.roomNumber ?? '—')}
                     </TableCell>
                     <TableCell>
-                      {getRefLabel(row.roomType as never) ||
-                        String(row.roomTypeName ?? '—')}
+                      {getRefLabel(row.roomType as never) || String(row.roomTypeName ?? '—')}
                     </TableCell>
                     <TableCell>
                       {row.status ? (
@@ -83,8 +82,7 @@ export default function RoomRackPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {getRefLabel(row.guest as never) ||
-                        getRefLabel(row.guestId as never)}
+                      {getRefLabel(row.guest as never) || getRefLabel(row.guestId as never)}
                     </TableCell>
                     <TableCell className="text-gray-500">
                       {String(row.notes ?? row.housekeepingNotes ?? '—')}
@@ -97,5 +95,5 @@ export default function RoomRackPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

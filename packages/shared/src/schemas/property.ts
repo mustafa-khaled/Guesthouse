@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 const addressSchema = z.object({
   street: z.string().optional(),
@@ -12,13 +12,13 @@ const addressSchema = z.object({
       lng: z.number().optional(),
     })
     .optional(),
-})
+});
 
 const imageSchema = z.object({
   url: z.string(),
   caption: z.string().optional(),
   isPrimary: z.boolean().optional(),
-})
+});
 
 export const propertySchema = z.object({
   id: z.string().optional(),
@@ -49,6 +49,6 @@ export const propertySchema = z.object({
   starRating: z.number().optional(),
   isActive: z.boolean().optional(),
   createdAt: z.string().optional(),
-})
+});
 
-export type Property = z.infer<typeof propertySchema>
+export type Property = z.infer<typeof propertySchema>;

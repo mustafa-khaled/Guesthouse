@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
-import { ZodSchema, ZodError } from "zod";
+import { NextFunction, Request, Response } from 'express';
+import { ZodSchema, ZodError } from 'zod';
 
 export interface ValidatedRequest<T = any> extends Request {
   validated: T;
@@ -15,7 +15,7 @@ export function validate<T>(schema: ZodSchema<T>) {
 
     if (!result.success) {
       return res.status(400).json({
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: result.error.flatten(),
       });
     }
@@ -31,7 +31,7 @@ export function validateBody<T>(schema: ZodSchema<T>) {
 
     if (!result.success) {
       return res.status(400).json({
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: result.error.flatten(),
       });
     }
@@ -47,7 +47,7 @@ export function validateQuery<T>(schema: ZodSchema<T>) {
 
     if (!result.success) {
       return res.status(400).json({
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: result.error.flatten(),
       });
     }
@@ -63,7 +63,7 @@ export function validateParams<T>(schema: ZodSchema<T>) {
 
     if (!result.success) {
       return res.status(400).json({
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: result.error.flatten(),
       });
     }

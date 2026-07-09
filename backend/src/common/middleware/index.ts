@@ -5,4 +5,4 @@ export {
   strictLimiter,
   uploadLimiter,
   webhookLimiter,
-} from "./rate-limit.middleware";
+} from './rate-limit.middleware';

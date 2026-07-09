@@ -1,28 +1,31 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 dotenv.config();
 
-import http from "http";
-import { env } from "./config/env";
-import { logger } from "./lib/logger";
-import { connectDB } from "./config/db";
-import { connectRedis, disconnectRedis } from "./lib/redis";
-import { closeQueues } from "./lib/queue";
-import { initializeSocket, closeSocket } from "./lib/socket";
-import { startWorkers, stopWorkers } from "./workers";
-import { registerAllListeners } from "./listeners";
-import app from "./app";
+import http from 'http';
+import mongoose from 'mongoose';
+import { env } from './config/env';
+import { logger } from './lib/logger';
+import { initSentry } from './lib/sentry';
+import { connectDB } from './config/db';
+import { connectRedis, disconnectRedis } from './lib/redis';
+import { closeQueues } from './lib/queue';
+import { initializeSocket, closeSocket } from './lib/socket';
+import { startWorkers, stopWorkers } from './workers';
+import { registerAllListeners } from './listeners';
+import app from './app';
 
 let server: http.Server;
 
 async function startServer() {
+  initSentry();
   await connectDB();
   await connectRedis();
   await startWorkers();
 
   server = http.createServer(app);
-  
+
   initializeSocket(server);
-  
+
   registerAllListeners();
 
   server.listen(env.PORT, () => {
@@ -32,34 +35,35 @@ async function startServer() {
 }
 
 async function gracefulShutdown(signal: string) {
-  logger.info({ signal }, "Received shutdown signal");
+  logger.info({ signal }, 'Received shutdown signal');
 
   server.close(async () => {
-    logger.info("HTTP server closed");
+    logger.info('HTTP server closed');
 
     try {
       await closeSocket();
       await stopWorkers();
       await closeQueues();
       await disconnectRedis();
-      logger.info("All connections closed gracefully");
+      await mongoose.disconnect();
+      logger.info('All connections closed gracefully');
       process.exit(0);
     } catch (err) {
-      logger.error({ err }, "Error during graceful shutdown");
+      logger.error({ err }, 'Error during graceful shutdown');
       process.exit(1);
     }
   });
 
   setTimeout(() => {
-    logger.warn("Forced shutdown after timeout");
+    logger.warn('Forced shutdown after timeout');
     process.exit(1);
-  }, 10000);
+  }, 30000);
 }
 
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 startServer().catch((error) => {
-  logger.fatal({ err: error }, "Failed to start server");
+  logger.fatal({ err: error }, 'Failed to start server');
   process.exit(1);
 });

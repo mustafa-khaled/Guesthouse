@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-export const RoleEnum = z.enum(['user', 'admin', 'moderator', 'editor', 'viewer'])
-export type Role = z.infer<typeof RoleEnum>
+export const RoleEnum = z.enum(['user', 'admin', 'moderator', 'editor', 'viewer']);
+export type Role = z.infer<typeof RoleEnum>;
 
 export const BookingStatusEnum = z.enum([
   'pending',
@@ -10,17 +10,11 @@ export const BookingStatusEnum = z.enum([
   'checked-out',
   'cancelled',
   'no-show',
-])
-export type BookingStatus = z.infer<typeof BookingStatusEnum>
+]);
+export type BookingStatus = z.infer<typeof BookingStatusEnum>;
 
-export const PaymentStatusEnum = z.enum([
-  'pending',
-  'partial',
-  'paid',
-  'refunded',
-  'failed',
-])
-export type PaymentStatus = z.infer<typeof PaymentStatusEnum>
+export const PaymentStatusEnum = z.enum(['pending', 'partial', 'paid', 'refunded', 'failed']);
+export type PaymentStatus = z.infer<typeof PaymentStatusEnum>;
 
 export const RoomStatusEnum = z.enum([
   'dirty',
@@ -28,8 +22,8 @@ export const RoomStatusEnum = z.enum([
   'inspected',
   'maintenance',
   'out-of-order',
-])
-export type RoomStatus = z.infer<typeof RoomStatusEnum>
+]);
+export type RoomStatus = z.infer<typeof RoomStatusEnum>;
 
 export const BookingSourceEnum = z.enum([
   'direct',
@@ -40,8 +34,8 @@ export const BookingSourceEnum = z.enum([
   'expedia',
   'airbnb',
   'other',
-])
-export type BookingSource = z.infer<typeof BookingSourceEnum>
+]);
+export type BookingSource = z.infer<typeof BookingSourceEnum>;
 
 export const HousekeepingTaskStatusEnum = z.enum([
   'pending',
@@ -49,11 +43,11 @@ export const HousekeepingTaskStatusEnum = z.enum([
   'completed',
   'verified',
   'cancelled',
-])
-export type HousekeepingTaskStatus = z.infer<typeof HousekeepingTaskStatusEnum>
+]);
+export type HousekeepingTaskStatus = z.infer<typeof HousekeepingTaskStatusEnum>;
 
-export const HousekeepingPriorityEnum = z.enum(['low', 'normal', 'high', 'urgent'])
-export type HousekeepingPriority = z.infer<typeof HousekeepingPriorityEnum>
+export const HousekeepingPriorityEnum = z.enum(['low', 'normal', 'high', 'urgent']);
+export type HousekeepingPriority = z.infer<typeof HousekeepingPriorityEnum>;
 
 export const RoleHierarchy: Record<Role, number> = {
   viewer: 1,
@@ -61,8 +55,8 @@ export const RoleHierarchy: Record<Role, number> = {
   editor: 3,
   moderator: 4,
   admin: 5,
-}
+};
 
 export function hasMinimumRole(userRole: Role, requiredRole: Role): boolean {
-  return RoleHierarchy[userRole] >= RoleHierarchy[requiredRole]
+  return RoleHierarchy[userRole] >= RoleHierarchy[requiredRole];
 }

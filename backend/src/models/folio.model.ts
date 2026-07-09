@@ -1,20 +1,20 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { toJSONPlugin } from '../common/plugins';
 
 export enum FolioLineItemCategory {
-  ROOM = "room",
-  ADDON = "addon",
-  TAX = "tax",
-  FEE = "fee",
-  PAYMENT = "payment",
-  REFUND = "refund",
-  ADJUSTMENT = "adjustment",
+  ROOM = 'room',
+  ADDON = 'addon',
+  TAX = 'tax',
+  FEE = 'fee',
+  PAYMENT = 'payment',
+  REFUND = 'refund',
+  ADJUSTMENT = 'adjustment',
 }
 
 export enum FolioStatus {
-  OPEN = "open",
-  CLOSED = "closed",
-  VOID = "void",
+  OPEN = 'open',
+  CLOSED = 'closed',
+  VOID = 'void',
 }
 
 export interface IFolioLineItem {
@@ -56,14 +56,14 @@ const lineItemSchema = new Schema(
     total: { type: Number, required: true },
     reference: String,
   },
-  { _id: true }
+  { _id: true },
 );
 
 const folioSchema = new Schema<IFolio>(
   {
     bookingId: {
       type: Schema.Types.ObjectId,
-      ref: "Booking",
+      ref: 'Booking',
       required: true,
     },
     folioNumber: {
@@ -98,7 +98,7 @@ const folioSchema = new Schema<IFolio>(
     },
     closedAt: Date,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 folioSchema.index({ folioNumber: 1 });
@@ -131,4 +131,4 @@ folioSchema.methods.recalculate = function () {
 
 folioSchema.plugin(toJSONPlugin);
 
-export const Folio = model<IFolio>("Folio", folioSchema);
+export const Folio = model<IFolio>('Folio', folioSchema);

@@ -1,17 +1,13 @@
-import { Property, IProperty } from "../../models/property.model";
-import { RoomType } from "../../models/roomType.model";
-import { Room } from "../../models/room.model";
-import {
-  NotFoundError,
-  ConflictError,
-  BadRequestError,
-} from "../../common/errors/http.errors";
+import { Property, IProperty } from '../../models/property.model';
+import { RoomType } from '../../models/roomType.model';
+import { Room } from '../../models/room.model';
+import { NotFoundError, ConflictError, BadRequestError } from '../../common/errors/http.errors';
 import {
   getPaginationParams,
   createPaginatedResult,
   getSortParams,
   PaginatedResult,
-} from "../../common/utils/pagination";
+} from '../../common/utils/pagination';
 import {
   getOrSet,
   invalidate,
@@ -19,18 +15,18 @@ import {
   buildCacheKey,
   CacheTTL,
   CachePrefix,
-} from "../../lib/cache";
-import { Types } from "mongoose";
+} from '../../lib/cache';
+import { Types } from 'mongoose';
 
 export interface CreatePropertyData {
   name: string;
   slug: string;
   description?: string;
-  address?: IProperty["address"];
-  contact?: IProperty["contact"];
-  settings?: Partial<IProperty["settings"]>;
+  address?: IProperty['address'];
+  contact?: IProperty['contact'];
+  settings?: Partial<IProperty['settings']>;
   amenities?: string[];
-  images?: IProperty["images"];
+  images?: IProperty['images'];
   starRating?: number;
   isActive?: boolean;
   ownerId?: string;
@@ -40,11 +36,11 @@ export interface UpdatePropertyData {
   name?: string;
   slug?: string;
   description?: string;
-  address?: IProperty["address"];
-  contact?: IProperty["contact"];
-  settings?: Partial<IProperty["settings"]>;
+  address?: IProperty['address'];
+  contact?: IProperty['contact'];
+  settings?: Partial<IProperty['settings']>;
   amenities?: string[];
-  images?: IProperty["images"];
+  images?: IProperty['images'];
   starRating?: number;
   isActive?: boolean;
 }
@@ -78,41 +74,41 @@ class PropertyService {
 
   async findById(id: string): Promise<IProperty> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const cacheKey = buildCacheKey(CachePrefix.PROPERTY, id);
-    
+
     const property = await getOrSet(
       cacheKey,
       async () => {
         const doc = await Property.findById(id);
         return doc ? doc.toObject() : null;
       },
-      CacheTTL.PROPERTY
+      CacheTTL.PROPERTY,
     );
 
     if (!property) {
-      throw new NotFoundError("Property not found");
+      throw new NotFoundError('Property not found');
     }
 
     return property as IProperty;
   }
 
   async findBySlug(slug: string): Promise<IProperty> {
-    const cacheKey = buildCacheKey(CachePrefix.PROPERTY, "slug", slug);
-    
+    const cacheKey = buildCacheKey(CachePrefix.PROPERTY, 'slug', slug);
+
     const property = await getOrSet(
       cacheKey,
       async () => {
         const doc = await Property.findOne({ slug, isActive: true });
         return doc ? doc.toObject() : null;
       },
-      CacheTTL.PROPERTY
+      CacheTTL.PROPERTY,
     );
 
     if (!property) {
-      throw new NotFoundError("Property not found");
+      throw new NotFoundError('Property not found');
     }
 
     return property as IProperty;
@@ -120,12 +116,12 @@ class PropertyService {
 
   async update(id: string, data: UpdatePropertyData): Promise<IProperty> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const property = await Property.findById(id);
     if (!property) {
-      throw new NotFoundError("Property not found");
+      throw new NotFoundError('Property not found');
     }
 
     const oldSlug = property.slug;
@@ -141,16 +137,21 @@ class PropertyService {
     }
 
     if (data.settings) {
-      data.settings = { ...property.settings.toObject(), ...data.settings };
+      data.settings = {
+        ...(typeof (property.settings as any).toObject === 'function'
+          ? (property.settings as any).toObject()
+          : property.settings),
+        ...data.settings,
+      };
     }
 
     Object.assign(property, data);
     await property.save();
 
     await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, id));
-    await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, "slug", oldSlug));
+    await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, 'slug', oldSlug));
     if (data.slug && data.slug !== oldSlug) {
-      await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, "slug", data.slug));
+      await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, 'slug', data.slug));
     }
     await invalidate(`${CachePrefix.PROPERTY_LIST}:*`);
 
@@ -159,12 +160,12 @@ class PropertyService {
 
   async delete(id: string): Promise<void> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const property = await Property.findById(id);
     if (!property) {
-      throw new NotFoundError("Property not found");
+      throw new NotFoundError('Property not found');
     }
 
     const roomTypesCount = await RoomType.countDocuments({
@@ -174,14 +175,14 @@ class PropertyService {
 
     if (roomTypesCount > 0) {
       throw new ConflictError(
-        "Cannot delete property with existing room types. Delete room types first."
+        'Cannot delete property with existing room types. Delete room types first.',
       );
     }
 
     await (property as any).softDelete();
 
     await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, id));
-    await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, "slug", property.slug));
+    await invalidateKey(buildCacheKey(CachePrefix.PROPERTY, 'slug', property.slug));
     await invalidate(`${CachePrefix.PROPERTY_LIST}:*`);
   }
 
@@ -189,17 +190,17 @@ class PropertyService {
     filters: ListPropertiesFilters,
     page: number = 1,
     limit: number = 20,
-    sortBy: string = "createdAt",
-    sortOrder: "asc" | "desc" = "desc"
+    sortBy: string = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc',
   ): Promise<PaginatedResult<IProperty>> {
     const query: any = {};
 
     if (filters.city) {
-      query["address.city"] = { $regex: filters.city, $options: "i" };
+      query['address.city'] = { $regex: filters.city, $options: 'i' };
     }
 
     if (filters.country) {
-      query["address.country"] = { $regex: filters.country, $options: "i" };
+      query['address.country'] = { $regex: filters.country, $options: 'i' };
     }
 
     if (filters.minRating) {
@@ -220,10 +221,7 @@ class PropertyService {
     const sort = getSortParams(sortBy, sortOrder);
 
     const [properties, total] = await Promise.all([
-      Property.find(query)
-        .sort(sort)
-        .skip(pagination.skip)
-        .limit(pagination.limit),
+      Property.find(query).sort(sort).skip(pagination.skip).limit(pagination.limit),
       Property.countDocuments(query),
     ]);
 

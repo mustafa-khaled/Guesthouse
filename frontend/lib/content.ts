@@ -3,14 +3,14 @@ export const site = {
   tagline: 'Find your stillness.',
   phone: '+1 (555) 123-4567',
   email: 'hello@serenestays.com',
-}
+};
 
 export const navLinks = [
   { label: 'Suites', href: '#suites' },
   { label: 'Spa', href: '#spa' },
   { label: 'Packages', href: '#packages' },
   { label: 'Experiences', href: '#experiences' },
-]
+];
 
 export const stats = [
   { value: '12', label: 'Signature suites' },
@@ -18,7 +18,7 @@ export const stats = [
   { value: '5k+', label: 'Happy guests' },
   { value: '4.9', label: 'Guest rating' },
   { value: '8', label: 'Years of care' },
-]
+];
 
 export const faqs = [
   {
@@ -51,14 +51,14 @@ export const faqs = [
     answer:
       'Absolutely. Each suite features a dedicated workspace, high-speed Wi-Fi, and noise-minimizing design. We also offer day-use rates for a focused change of scenery.',
   },
-]
+];
 
 export const testimonials = [
   {
     name: 'Elena R.',
     detail: 'Wellness Loft, 5 nights',
     quote:
-      'I came for rest and left carrying a quiet I hadn\'t felt in years. The garden spa, the tea ceremony, the morning light — every detail was intention.',
+      "I came for rest and left carrying a quiet I hadn't felt in years. The garden spa, the tea ceremony, the morning light — every detail was intention.",
   },
   {
     name: 'Marcus T.',
@@ -70,9 +70,9 @@ export const testimonials = [
     name: 'Sofia & David',
     detail: 'Garden Sanctuary, 7 nights',
     quote:
-      'We booked a weekend and stayed a week. The staff anticipated every need without hovering. Our best escape yet — and we\'ve already rebooked.',
+      "We booked a weekend and stayed a week. The staff anticipated every need without hovering. Our best escape yet — and we've already rebooked.",
   },
-]
+];
 
 export const trustItems = [
   {
@@ -90,7 +90,7 @@ export const trustItems = [
     description:
       'From our garden-to-table kitchen to our botanical spa treatments, nature is our co-host and compass.',
   },
-]
+];
 
 export const footerLinks = {
   stay: [
@@ -111,7 +111,7 @@ export const footerLinks = {
     { label: 'Cancellation policy', href: '#' },
     { label: 'Privacy policy', href: '#' },
   ],
-}
+};
 
 export const experiencePaths = [
   {
@@ -126,31 +126,28 @@ export const experiencePaths = [
       'Shared stillness. Couples massage, candlelit dinners, and a suite with a deep soaking tub.',
     href: '#',
   },
-]
+];
 
 export const spaTreatments = [
   {
     name: 'Garden Stone Massage',
     duration: '60 min',
     price: '$145',
-    description:
-      'Warm basalt stones and slow, flowing strokes melt tension and restore deep calm.',
+    description: 'Warm basalt stones and slow, flowing strokes melt tension and restore deep calm.',
   },
   {
     name: 'Eucalyptus Renewal',
     duration: '75 min',
     price: '$175',
-    description:
-      'A steamy eucalyptus wrap followed by a full-body scrub — skin feels reborn.',
+    description: 'A steamy eucalyptus wrap followed by a full-body scrub — skin feels reborn.',
   },
   {
     name: 'Sunrise Yoga & Tea',
     duration: '45 min',
     price: '$65',
-    description:
-      'Gentle morning flow on the garden deck, followed by a curated tea ceremony.',
+    description: 'Gentle morning flow on the garden deck, followed by a curated tea ceremony.',
   },
-]
+];
 
 export const packages = [
   {
@@ -198,4 +195,4 @@ export const packages = [
     ],
     highlighted: false,
   },
-]
+];

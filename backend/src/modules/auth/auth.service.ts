@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
-import crypto from "crypto";
-import { Request } from "express";
-import { User, AuthProvider } from "../../models/user.model";
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { Request } from 'express';
+import { User, AuthProvider } from '../../models/user.model';
 import {
   hashPassword,
   checkPassword,
@@ -13,16 +13,16 @@ import {
   auditFailure,
   AuditAction,
   AuditResource,
-} from "../../lib";
-import { Role } from "../../common/enums/role.enum";
+} from '../../lib';
+import { Role } from '../../common/enums/role.enum';
 import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
-} from "../../common/errors";
-import { env } from "../../config/env";
+} from '../../common/errors';
+import { env } from '../../config/env';
 
 export interface RegisterInput {
   email: string;
@@ -65,7 +65,7 @@ class AuthService {
 
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      throw new ConflictError("Email is already in use.");
+      throw new ConflictError('Email is already in use.');
     }
 
     const passwordHash = await hashPassword(password);
@@ -85,17 +85,13 @@ class AuthService {
   }
 
   async sendVerificationEmail(userId: string, email: string): Promise<void> {
-    const verifyToken = jwt.sign(
-      { sub: userId },
-      env.JWT_ACCESS_SECRET,
-      { expiresIn: "1d" },
-    );
+    const verifyToken = jwt.sign({ sub: userId }, env.JWT_ACCESS_SECRET, { expiresIn: '1d' });
 
     const verifyUrl = `${getAppUrl()}/auth/verify-email?token=${verifyToken}`;
 
     await sendEmail(
       email,
-      "Verify your email",
+      'Verify your email',
       `<p>Please verify your email by clicking this link:</p>
        <p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
     );
@@ -109,29 +105,32 @@ class AuthService {
 
       const user = await User.findById(payload.sub);
       if (!user) {
-        throw new NotFoundError("User not found.");
+        throw new NotFoundError('User not found.');
       }
 
       if (user.isEmailVerified) {
-        return "Email already verified.";
+        return 'Email already verified.';
       }
 
       user.isEmailVerified = true;
       await user.save();
 
-      await audit({
-        action: AuditAction.EMAIL_VERIFIED,
-        resource: AuditResource.USER,
-        resourceId: user.id,
-        resourceName: user.email,
-      }, req);
+      await audit(
+        {
+          action: AuditAction.EMAIL_VERIFIED,
+          resource: AuditResource.USER,
+          resourceId: user.id,
+          resourceName: user.email,
+        },
+        req,
+      );
 
-      return "Email verified successfully. You can now login.";
+      return 'Email verified successfully. You can now login.';
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new BadRequestError("Invalid or expired verification token.");
+      throw new BadRequestError('Invalid or expired verification token.');
     }
   }
 
@@ -141,59 +140,72 @@ class AuthService {
 
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
-      await auditFailure({
-        action: AuditAction.LOGIN_FAILED,
-        resource: AuditResource.USER,
-        details: { email: normalizedEmail },
-        errorMessage: "User not found",
-      }, req);
-      throw new UnauthorizedError("Invalid email or password.");
+      await auditFailure(
+        {
+          action: AuditAction.LOGIN_FAILED,
+          resource: AuditResource.USER,
+          details: { email: normalizedEmail },
+          errorMessage: 'User not found',
+        },
+        req,
+      );
+      throw new UnauthorizedError('Invalid email or password.');
     }
 
     if (!user.password) {
-      await auditFailure({
-        action: AuditAction.LOGIN_FAILED,
-        resource: AuditResource.USER,
-        resourceId: user.id,
-        details: { email: normalizedEmail, reason: "social_login_only" },
-        errorMessage: "Account uses social login",
-      }, req);
-      throw new UnauthorizedError(
-        "This account uses social login. Please sign in with Google.",
+      await auditFailure(
+        {
+          action: AuditAction.LOGIN_FAILED,
+          resource: AuditResource.USER,
+          resourceId: user.id,
+          details: { email: normalizedEmail, reason: 'social_login_only' },
+          errorMessage: 'Account uses social login',
+        },
+        req,
       );
+      throw new UnauthorizedError('This account uses social login. Please sign in with Google.');
     }
 
     const isPasswordValid = await checkPassword(password, user.password);
     if (!isPasswordValid) {
-      await auditFailure({
-        action: AuditAction.LOGIN_FAILED,
-        resource: AuditResource.USER,
-        resourceId: user.id,
-        details: { email: normalizedEmail },
-        errorMessage: "Invalid password",
-      }, req);
-      throw new UnauthorizedError("Invalid email or password.");
+      await auditFailure(
+        {
+          action: AuditAction.LOGIN_FAILED,
+          resource: AuditResource.USER,
+          resourceId: user.id,
+          details: { email: normalizedEmail },
+          errorMessage: 'Invalid password',
+        },
+        req,
+      );
+      throw new UnauthorizedError('Invalid email or password.');
     }
 
     if (!user.isEmailVerified) {
-      await auditFailure({
-        action: AuditAction.LOGIN_FAILED,
-        resource: AuditResource.USER,
-        resourceId: user.id,
-        details: { email: normalizedEmail, reason: "email_not_verified" },
-        errorMessage: "Email not verified",
-      }, req);
-      throw new ForbiddenError("Please verify your email before logging in.");
+      await auditFailure(
+        {
+          action: AuditAction.LOGIN_FAILED,
+          resource: AuditResource.USER,
+          resourceId: user.id,
+          details: { email: normalizedEmail, reason: 'email_not_verified' },
+          errorMessage: 'Email not verified',
+        },
+        req,
+      );
+      throw new ForbiddenError('Please verify your email before logging in.');
     }
 
     const tokens = this.generateTokens(user.id, user.role as Role, user.tokenVersion);
 
-    await audit({
-      action: AuditAction.LOGIN,
-      resource: AuditResource.USER,
-      resourceId: user.id,
-      resourceName: user.email,
-    }, req);
+    await audit(
+      {
+        action: AuditAction.LOGIN,
+        resource: AuditResource.USER,
+        resourceId: user.id,
+        resourceName: user.email,
+      },
+      req,
+    );
 
     return {
       ...tokens,
@@ -207,11 +219,11 @@ class AuthService {
 
       const user = await User.findById(payload.sub);
       if (!user) {
-        throw new UnauthorizedError("User not found.");
+        throw new UnauthorizedError('User not found.');
       }
 
       if (user.tokenVersion !== payload.tokenVersion) {
-        throw new UnauthorizedError("Refresh token invalidated.");
+        throw new UnauthorizedError('Refresh token invalidated.');
       }
 
       const tokens = this.generateTokens(user.id, user.role as Role, user.tokenVersion);
@@ -224,18 +236,21 @@ class AuthService {
       if (error instanceof UnauthorizedError) {
         throw error;
       }
-      throw new UnauthorizedError("Invalid refresh token.");
+      throw new UnauthorizedError('Invalid refresh token.');
     }
   }
 
   async logout(userId: string, req?: Request): Promise<void> {
     await User.findByIdAndUpdate(userId, { $inc: { tokenVersion: 1 } });
-    
-    await audit({
-      action: AuditAction.LOGOUT,
-      resource: AuditResource.USER,
-      resourceId: userId,
-    }, req);
+
+    await audit(
+      {
+        action: AuditAction.LOGOUT,
+        resource: AuditResource.USER,
+        resourceId: userId,
+      },
+      req,
+    );
   }
 
   async forgotPassword(email: string): Promise<void> {
@@ -246,8 +261,8 @@ class AuthService {
       return;
     }
 
-    const rawToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
 
     user.resetPasswordToken = tokenHash;
     user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
@@ -257,14 +272,14 @@ class AuthService {
 
     await sendEmail(
       user.email,
-      "Reset your password",
+      'Reset your password',
       `<p>Reset your password by clicking this link:</p>
        <p><a href="${resetUrl}">${resetUrl}</a></p>`,
     );
   }
 
   async resetPassword(token: string, newPassword: string, req?: Request): Promise<void> {
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
       resetPasswordToken: tokenHash,
@@ -272,7 +287,7 @@ class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestError("Invalid or expired reset token.");
+      throw new BadRequestError('Invalid or expired reset token.');
     }
 
     const passwordHash = await hashPassword(newPassword);
@@ -283,19 +298,18 @@ class AuthService {
     user.tokenVersion = user.tokenVersion + 1;
     await user.save();
 
-    await audit({
-      action: AuditAction.PASSWORD_RESET,
-      resource: AuditResource.USER,
-      resourceId: user.id,
-      resourceName: user.email,
-    }, req);
+    await audit(
+      {
+        action: AuditAction.PASSWORD_RESET,
+        resource: AuditResource.USER,
+        resourceId: user.id,
+        resourceName: user.email,
+      },
+      req,
+    );
   }
 
-  async handleGoogleAuth(
-    googleId: string,
-    email: string,
-    name?: string,
-  ): Promise<AuthResult> {
+  async handleGoogleAuth(googleId: string, email: string, name?: string): Promise<AuthResult> {
     const normalizedEmail = email.toLowerCase().trim();
 
     let user = await User.findOne({ googleId });
@@ -331,14 +345,10 @@ class AuthService {
   }
 
   generateOAuthState(): string {
-    return crypto.randomBytes(32).toString("hex");
+    return crypto.randomBytes(32).toString('hex');
   }
 
-  private generateTokens(
-    userId: string,
-    role: Role,
-    tokenVersion: number,
-  ): TokenPair {
+  private generateTokens(userId: string, role: Role, tokenVersion: number): TokenPair {
     return {
       accessToken: createAccessToken(userId, role, tokenVersion),
       refreshToken: createRefreshToken(userId, tokenVersion),

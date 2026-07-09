@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const paymentSchema = z.object({
   id: z.string().optional(),
@@ -10,7 +10,7 @@ export const paymentSchema = z.object({
   status: z.string().optional(),
   stripePaymentIntentId: z.string().optional(),
   createdAt: z.string().optional(),
-})
+});
 
 export const folioEntrySchema = z.object({
   id: z.string().optional(),
@@ -19,7 +19,7 @@ export const folioEntrySchema = z.object({
   amount: z.number(),
   type: z.enum(['charge', 'payment', 'adjustment', 'refund']).optional(),
   createdAt: z.string().optional(),
-})
+});
 
 export const folioSchema = z.object({
   id: z.string().optional(),
@@ -29,7 +29,7 @@ export const folioSchema = z.object({
   balance: z.number().optional(),
   totalCharges: z.number().optional(),
   totalPayments: z.number().optional(),
-})
+});
 
-export type Payment = z.infer<typeof paymentSchema>
-export type Folio = z.infer<typeof folioSchema>
+export type Payment = z.infer<typeof paymentSchema>;
+export type Folio = z.infer<typeof folioSchema>;

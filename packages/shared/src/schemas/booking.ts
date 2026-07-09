@@ -1,14 +1,14 @@
-import { z } from 'zod'
-import { BookingStatusEnum, BookingSourceEnum, PaymentStatusEnum } from './enums.js'
+import { z } from 'zod';
+import { BookingStatusEnum, BookingSourceEnum, PaymentStatusEnum } from './enums.js';
 
 export const bookingSchema = z.object({
   id: z.string().optional(),
   _id: z.string().optional(),
   confirmationNumber: z.string().optional(),
-  propertyId: z.union([z.string(), z.record(z.unknown())]),
-  roomTypeId: z.union([z.string(), z.record(z.unknown())]),
-  ratePlanId: z.union([z.string(), z.record(z.unknown())]).optional(),
-  guestId: z.union([z.string(), z.record(z.unknown())]).optional(),
+  propertyId: z.union([z.string(), z.record(z.string(), z.unknown())]),
+  roomTypeId: z.union([z.string(), z.record(z.string(), z.unknown())]),
+  ratePlanId: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
+  guestId: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
   checkIn: z.string(),
   checkOut: z.string(),
   adults: z.number(),
@@ -29,9 +29,9 @@ export const bookingSchema = z.object({
     .optional(),
   specialRequests: z.string().optional(),
   internalNotes: z.string().optional(),
-  assignedRoomId: z.union([z.string(), z.record(z.unknown())]).optional(),
+  assignedRoomId: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
   createdAt: z.string().optional(),
-})
+});
 
 export const createBookingSchema = z.object({
   propertyId: z.string(),
@@ -51,7 +51,7 @@ export const createBookingSchema = z.object({
   specialRequests: z.string().optional(),
   promotionCode: z.string().optional(),
   holdId: z.string().optional(),
-})
+});
 
-export type Booking = z.infer<typeof bookingSchema>
-export type CreateBookingInput = z.infer<typeof createBookingSchema>
+export type Booking = z.infer<typeof bookingSchema>;
+export type CreateBookingInput = z.infer<typeof createBookingSchema>;

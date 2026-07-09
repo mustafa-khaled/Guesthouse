@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useQuery } from '@tanstack/react-query'
-import { adminQueries } from '@/queries/admin.queries'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useQuery } from '@tanstack/react-query';
+import { adminQueries } from '@/queries/admin.queries';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -11,25 +11,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import Spinner from '@/components/Spinner'
-import { formatDate, getId } from '@/lib/utils'
-import type { Promotion } from '@/types'
+} from '@/components/ui/table';
+import Spinner from '@/components/Spinner';
+import { formatDate, getId } from '@/lib/utils';
+import type { Promotion } from '@/types';
 
 export default function AdminPromotionsPage() {
-  const { data, isLoading, isError, error } = useQuery(adminQueries.promotions())
+  const { data, isLoading, isError, error } = useQuery(adminQueries.promotions());
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Failed to load promotions'}
       </div>
-    )
+    );
   }
 
-  const promotions = data ?? []
+  const promotions = data ?? [];
 
   return (
     <div className="space-y-6">
@@ -89,5 +89,5 @@ export default function AdminPromotionsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

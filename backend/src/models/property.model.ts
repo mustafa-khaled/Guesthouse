@@ -1,5 +1,5 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
 
 export interface IPropertyAddress {
   street?: string;
@@ -65,7 +65,7 @@ const addressSchema = new Schema(
       lng: Number,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const contactSchema = new Schema(
@@ -74,20 +74,20 @@ const contactSchema = new Schema(
     email: String,
     website: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 const settingsSchema = new Schema(
   {
-    timezone: { type: String, default: "UTC" },
-    currency: { type: String, default: "USD" },
-    checkInTime: { type: String, default: "15:00" },
-    checkOutTime: { type: String, default: "11:00" },
+    timezone: { type: String, default: 'UTC' },
+    currency: { type: String, default: 'USD' },
+    checkInTime: { type: String, default: '15:00' },
+    checkOutTime: { type: String, default: '11:00' },
     cancellationPolicy: String,
     taxRate: { type: Number, default: 0 },
     serviceFeeRate: { type: Number, default: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const imageSchema = new Schema(
@@ -96,7 +96,7 @@ const imageSchema = new Schema(
     caption: String,
     isPrimary: { type: Boolean, default: false },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const propertySchema = new Schema<IProperty>(
@@ -138,23 +138,32 @@ const propertySchema = new Schema<IProperty>(
     },
     ownerId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 propertySchema.index({ slug: 1 });
 propertySchema.index({ isActive: 1, isDeleted: 1 });
-propertySchema.index({ "address.city": 1, "address.country": 1 });
+propertySchema.index({ 'address.city': 1, 'address.country': 1 });
 propertySchema.index({ ownerId: 1 });
 
 propertySchema.index(
-  { name: "text", slug: "text", description: "text", "address.city": "text", "address.country": "text" },
-  { weights: { name: 10, slug: 8, "address.city": 5, "address.country": 3, description: 1 }, name: "property_text_search" }
+  {
+    name: 'text',
+    slug: 'text',
+    description: 'text',
+    'address.city': 'text',
+    'address.country': 'text',
+  },
+  {
+    weights: { name: 10, slug: 8, 'address.city': 5, 'address.country': 3, description: 1 },
+    name: 'property_text_search',
+  },
 );
 
 propertySchema.plugin(softDeletePlugin);
 propertySchema.plugin(toJSONPlugin);
 
-export const Property = model<IProperty>("Property", propertySchema);
+export const Property = model<IProperty>('Property', propertySchema);

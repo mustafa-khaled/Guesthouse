@@ -1,38 +1,24 @@
-import { Router } from "express";
-import { inventoryController } from "./inventory.controller";
-import { requireAuth, requireManager, requireFrontDesk } from "../../middleware";
+import { Router } from 'express';
+import { inventoryController } from './inventory.controller';
+import { requireAuth, requireManager, requireFrontDesk } from '../../middleware';
 
 const router = Router();
 
-router.get("/availability/search", inventoryController.searchAvailability);
+router.get('/availability/search', inventoryController.searchAvailability);
 
 router.get(
-  "/properties/:propertyId/inventory",
+  '/properties/:propertyId/inventory',
   requireAuth,
   requireFrontDesk,
-  inventoryController.getInventory
+  inventoryController.getInventory,
 );
 
-router.put(
-  "/inventory/bulk-update",
-  requireAuth,
-  requireManager,
-  inventoryController.bulkUpdate
-);
+router.put('/inventory/bulk-update', requireAuth, requireManager, inventoryController.bulkUpdate);
 
-router.post(
-  "/inventory/initialize",
-  requireAuth,
-  requireManager,
-  inventoryController.initialize
-);
+router.post('/inventory/initialize', requireAuth, requireManager, inventoryController.initialize);
 
-router.post("/inventory/hold", requireAuth, inventoryController.createHold);
+router.post('/inventory/hold', requireAuth, inventoryController.createHold);
 
-router.delete(
-  "/inventory/hold/:holdId",
-  requireAuth,
-  inventoryController.releaseHold
-);
+router.delete('/inventory/hold/:holdId', requireAuth, inventoryController.releaseHold);
 
 export default router;

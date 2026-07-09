@@ -1,22 +1,18 @@
-import { AddOn, IAddOn, AddOnPricingType } from "../../models/addOn.model";
-import { BookingAddOn, IBookingAddOn, BookingAddOnStatus } from "../../models/bookingAddOn.model";
-import { Booking } from "../../models/booking.model";
-import { Property } from "../../models/property.model";
-import {
-  NotFoundError,
-  ConflictError,
-  BadRequestError,
-} from "../../common/errors/http.errors";
-import { BookingStatus } from "../../common/enums/bookingStatus.enum";
-import { Types } from "mongoose";
+import { AddOn, IAddOn, AddOnPricingType } from '../../models/addOn.model';
+import { BookingAddOn, IBookingAddOn, BookingAddOnStatus } from '../../models/bookingAddOn.model';
+import { Booking } from '../../models/booking.model';
+import { Property } from '../../models/property.model';
+import { NotFoundError, ConflictError, BadRequestError } from '../../common/errors/http.errors';
+import { BookingStatus } from '../../common/enums/bookingStatus.enum';
+import { Types } from 'mongoose';
 
 export interface CreateAddOnData {
   name: string;
   code: string;
   description?: string;
   category?: string;
-  pricing: IAddOn["pricing"];
-  availability?: IAddOn["availability"];
+  pricing: IAddOn['pricing'];
+  availability?: IAddOn['availability'];
   maxQuantity?: number;
   isActive?: boolean;
 }
@@ -24,12 +20,12 @@ export interface CreateAddOnData {
 class AddOnService {
   async create(propertyId: string, data: CreateAddOnData): Promise<IAddOn> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const property = await Property.findById(propertyId);
     if (!property) {
-      throw new NotFoundError("Property not found");
+      throw new NotFoundError('Property not found');
     }
 
     const existingCode = await AddOn.findOne({
@@ -37,9 +33,7 @@ class AddOnService {
       code: data.code,
     });
     if (existingCode) {
-      throw new ConflictError(
-        `Add-on with code "${data.code}" already exists for this property`
-      );
+      throw new ConflictError(`Add-on with code "${data.code}" already exists for this property`);
     }
 
     const addOn = new AddOn({
@@ -53,12 +47,12 @@ class AddOnService {
 
   async findById(id: string): Promise<IAddOn> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid add-on ID");
+      throw new BadRequestError('Invalid add-on ID');
     }
 
     const addOn = await AddOn.findById(id);
     if (!addOn) {
-      throw new NotFoundError("Add-on not found");
+      throw new NotFoundError('Add-on not found');
     }
 
     return addOn;
@@ -74,9 +68,7 @@ class AddOnService {
         _id: { $ne: id },
       });
       if (existingCode) {
-        throw new ConflictError(
-          `Add-on with code "${data.code}" already exists for this property`
-        );
+        throw new ConflictError(`Add-on with code "${data.code}" already exists for this property`);
       }
     }
 
@@ -94,10 +86,10 @@ class AddOnService {
   async listByProperty(
     propertyId: string,
     category?: string,
-    isActive?: boolean
+    isActive?: boolean,
   ): Promise<IAddOn[]> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const query: any = { propertyId: new Types.ObjectId(propertyId) };
@@ -118,32 +110,32 @@ class AddOnService {
     addOnId: string,
     quantity: number,
     scheduledDate?: Date,
-    notes?: string
+    notes?: string,
   ): Promise<IBookingAddOn> {
     if (!Types.ObjectId.isValid(bookingId)) {
-      throw new BadRequestError("Invalid booking ID");
+      throw new BadRequestError('Invalid booking ID');
     }
 
     const booking = await Booking.findById(bookingId);
     if (!booking) {
-      throw new NotFoundError("Booking not found");
+      throw new NotFoundError('Booking not found');
     }
 
     if (
       booking.status === BookingStatus.CANCELLED ||
       booking.status === BookingStatus.CHECKED_OUT
     ) {
-      throw new BadRequestError("Cannot add add-ons to cancelled or completed bookings");
+      throw new BadRequestError('Cannot add add-ons to cancelled or completed bookings');
     }
 
     const addOn = await this.findById(addOnId);
 
     if (addOn.propertyId.toString() !== booking.propertyId.toString()) {
-      throw new BadRequestError("Add-on not available for this property");
+      throw new BadRequestError('Add-on not available for this property');
     }
 
     if (!addOn.isActive) {
-      throw new BadRequestError("Add-on is not currently available");
+      throw new BadRequestError('Add-on is not currently available');
     }
 
     if (addOn.maxQuantity && quantity > addOn.maxQuantity) {
@@ -157,7 +149,7 @@ class AddOnService {
     });
 
     if (existingAddOn) {
-      throw new ConflictError("This add-on has already been added to the booking");
+      throw new ConflictError('This add-on has already been added to the booking');
     }
 
     const unitPrice = addOn.pricing.amount;
@@ -197,19 +189,19 @@ class AddOnService {
 
   async removeFromBooking(bookingId: string, addOnId: string): Promise<void> {
     if (!Types.ObjectId.isValid(bookingId) || !Types.ObjectId.isValid(addOnId)) {
-      throw new BadRequestError("Invalid booking or add-on ID");
+      throw new BadRequestError('Invalid booking or add-on ID');
     }
 
     const booking = await Booking.findById(bookingId);
     if (!booking) {
-      throw new NotFoundError("Booking not found");
+      throw new NotFoundError('Booking not found');
     }
 
     if (
       booking.status === BookingStatus.CANCELLED ||
       booking.status === BookingStatus.CHECKED_OUT
     ) {
-      throw new BadRequestError("Cannot remove add-ons from cancelled or completed bookings");
+      throw new BadRequestError('Cannot remove add-ons from cancelled or completed bookings');
     }
 
     const bookingAddOn = await BookingAddOn.findOne({
@@ -219,11 +211,11 @@ class AddOnService {
     });
 
     if (!bookingAddOn) {
-      throw new NotFoundError("Add-on not found for this booking");
+      throw new NotFoundError('Add-on not found for this booking');
     }
 
     if (bookingAddOn.status === BookingAddOnStatus.DELIVERED) {
-      throw new BadRequestError("Cannot remove a delivered add-on");
+      throw new BadRequestError('Cannot remove a delivered add-on');
     }
 
     bookingAddOn.status = BookingAddOnStatus.CANCELLED;
@@ -232,15 +224,15 @@ class AddOnService {
 
   async updateBookingAddOnStatus(
     bookingAddOnId: string,
-    status: BookingAddOnStatus
+    status: BookingAddOnStatus,
   ): Promise<IBookingAddOn> {
     if (!Types.ObjectId.isValid(bookingAddOnId)) {
-      throw new BadRequestError("Invalid booking add-on ID");
+      throw new BadRequestError('Invalid booking add-on ID');
     }
 
     const bookingAddOn = await BookingAddOn.findById(bookingAddOnId);
     if (!bookingAddOn) {
-      throw new NotFoundError("Booking add-on not found");
+      throw new NotFoundError('Booking add-on not found');
     }
 
     bookingAddOn.status = status;

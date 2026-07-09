@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const ERROR_MESSAGES: Record<string, string> = {
   oauth_init_failed: 'Could not start Google sign-in. Please try again.',
@@ -14,14 +14,12 @@ const ERROR_MESSAGES: Record<string, string> = {
   invalid_google_profile: 'Could not retrieve your Google profile.',
   oauth_failed: 'Google sign-in failed. Please try again.',
   access_denied: 'You denied access to your Google account.',
-}
+};
 
 function AuthErrorContent() {
-  const searchParams = useSearchParams()
-  const rawMessage = searchParams.get('message') ?? 'unknown_error'
-  const message =
-    ERROR_MESSAGES[rawMessage] ??
-    decodeURIComponent(rawMessage).replace(/_/g, ' ')
+  const searchParams = useSearchParams();
+  const rawMessage = searchParams.get('message') ?? 'unknown_error';
+  const message = ERROR_MESSAGES[rawMessage] ?? decodeURIComponent(rawMessage).replace(/_/g, ' ');
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
@@ -42,17 +40,13 @@ function AuthErrorContent() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 export default function AuthErrorPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex justify-center py-24 text-gray-500">Loading...</div>
-      }
-    >
+    <Suspense fallback={<div className="flex justify-center py-24 text-gray-500">Loading...</div>}>
       <AuthErrorContent />
     </Suspense>
-  )
+  );
 }

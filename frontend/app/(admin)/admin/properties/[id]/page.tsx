@@ -1,34 +1,29 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { use, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
-import { propertyQueries } from '@/queries/properties.queries'
-import { clientFetch } from '@/lib/api/client'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import Spinner from '@/components/Spinner'
-import type { Property } from '@/types'
+import Link from 'next/link';
+import { use, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { propertyQueries } from '@/queries/properties.queries';
+import { clientFetch } from '@/lib/api/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import Spinner from '@/components/Spinner';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import type { Property } from '@/types';
 
-export default function AdminPropertyDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = use(params)
-  const queryClient = useQueryClient()
+export default function AdminPropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const queryClient = useQueryClient();
 
-  const { data: property, isLoading, isError, error } = useQuery(
-    propertyQueries.detail(id),
-  )
+  const { data: property, isLoading, isError, error } = useQuery(propertyQueries.detail(id));
 
-  const [form, setForm] = useState<Partial<Property>>({})
+  const [form, setForm] = useState<Partial<Property>>({});
 
-  const current = { ...property, ...form }
+  const current = { ...property, ...form };
 
   const updateMutation = useMutation({
     mutationFn: (body: Partial<Property>) =>
@@ -37,26 +32,25 @@ export default function AdminPropertyDetailPage({
         body: JSON.stringify(body),
       }),
     onSuccess: () => {
-      toast.success('Property updated')
-      queryClient.invalidateQueries({ queryKey: ['properties'] })
-      queryClient.invalidateQueries({ queryKey: ['admin', 'properties'] })
+      toast.success('Property updated');
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'properties'] });
     },
-    onError: (err) =>
-      toast.error(err instanceof Error ? err.message : 'Failed to update property'),
-  })
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to update property'),
+  });
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError || !property) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Property not found'}
       </div>
-    )
+    );
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     updateMutation.mutate({
       name: current.name,
       description: current.description,
@@ -64,20 +58,23 @@ export default function AdminPropertyDetailPage({
       isActive: current.isActive,
       contact: current.contact,
       address: current.address,
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          href="/admin/properties"
-          className="text-sm text-green-700 hover:underline"
-        >
+        <Link href="/admin/properties" className="text-sm text-green-700 hover:underline">
           &larr; Back to properties
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">{property.name}</h1>
         <p className="text-sm text-gray-500">Edit property details</p>
+        <Link
+          href={`/admin/properties/${id}/inventory`}
+          className="mt-2 inline-block text-sm text-green-700 hover:underline"
+        >
+          Manage inventory &rarr;
+        </Link>
       </div>
 
       <Card>
@@ -92,7 +89,9 @@ export default function AdminPropertyDetailPage({
                 id="name"
                 className="mt-1"
                 value={current.name ?? ''}
-                onChange={(e) => setForm((f: Partial<Property>) => ({ ...f, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f: Partial<Property>) => ({ ...f, name: e.target.value }))
+                }
               />
             </div>
 
@@ -214,6 +213,43 @@ export default function AdminPropertyDetailPage({
           </form>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Property Images</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ImageUpload
+            type="property-image"
+            label="Add property image"
+            onUploaded={(result) => {
+              const newImages = [
+                ...(current.images ?? []),
+                {
+                  url: result.url,
+                  caption: '',
+                  isPrimary: (current.images ?? []).length === 0,
+                },
+              ];
+              setForm((f) => ({ ...f, images: newImages }));
+              updateMutation.mutate({ images: newImages });
+            }}
+          />
+
+          {(current.images ?? []).length > 0 && (
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {(current.images ?? []).map((image, index) => (
+                <li key={`${image.url}-${index}`} className="rounded border p-2 text-sm">
+                  <p className="truncate text-gray-600">{image.url}</p>
+                  {image.isPrimary && (
+                    <span className="text-xs font-medium text-green-700">Primary</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

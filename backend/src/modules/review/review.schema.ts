@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { ReviewStatus } from "../../models/review.model";
+import { z } from 'zod';
+import { ReviewStatus } from '../../models/review.model';
 
 const ratingsSchema = z.object({
   overall: z.number().min(1).max(5),
@@ -47,8 +47,8 @@ export const listReviewsSchema = z.object({
     propertyId: z.string().optional(),
     status: z.nativeEnum(ReviewStatus).optional(),
     minRating: z.coerce.number().min(1).max(5).optional(),
-    sortBy: z.enum(["createdAt", "ratings.overall", "helpful"]).default("createdAt"),
-    sortOrder: z.enum(["asc", "desc"]).default("desc"),
+    sortBy: z.enum(['createdAt', 'ratings.overall', 'helpful']).default('createdAt'),
+    sortOrder: z.enum(['asc', 'desc']).default('desc'),
   }),
 });
 
@@ -57,7 +57,7 @@ export const moderateReviewSchema = z.object({
     id: z.string().min(1),
   }),
   body: z.object({
-    action: z.enum(["approve", "reject"]),
+    action: z.enum(['approve', 'reject']),
     reason: z.string().max(500).optional(),
   }),
 });

@@ -4,31 +4,24 @@ import {
   PaymentType,
   PaymentMethod,
   PaymentStatusEnum,
-} from "../../models/payment.model";
-import {
-  Folio,
-  IFolio,
-  FolioLineItemCategory,
-  FolioStatus,
-} from "../../models/folio.model";
-import { Booking } from "../../models/booking.model";
-import { Property } from "../../models/property.model";
-import { RatePlan } from "../../models/ratePlan.model";
-import {
-  NotFoundError,
-  BadRequestError,
-  ConflictError,
-} from "../../common/errors/http.errors";
-import { BookingStatus, PaymentStatus } from "../../common/enums/bookingStatus.enum";
-import { Types } from "mongoose";
-import { env } from "../../config/env";
-import { logger } from "../../lib/logger";
+} from '../../models/payment.model';
+import { Folio, IFolio, FolioLineItemCategory, FolioStatus } from '../../models/folio.model';
+import { Booking } from '../../models/booking.model';
+import { Property } from '../../models/property.model';
+import { RatePlan } from '../../models/ratePlan.model';
+import { NotFoundError, BadRequestError, ConflictError } from '../../common/errors/http.errors';
+import { BookingStatus, PaymentStatus } from '../../common/enums/bookingStatus.enum';
+import { Types } from 'mongoose';
+import { env } from '../../config/env';
+import { logger } from '../../lib/logger';
+import { assertBookingAccess } from '../booking/booking.access';
+import { AuthUser } from '../../common/types/express.d';
 
 function generateFolioNumber(): string {
   const year = new Date().getFullYear();
   const random = Math.floor(Math.random() * 1000000)
     .toString()
-    .padStart(6, "0");
+    .padStart(6, '0');
   return `INV-${year}-${random}`;
 }
 
@@ -36,30 +29,31 @@ class PaymentService {
   async createPaymentIntent(
     bookingId: string,
     amount?: number,
-    isDeposit: boolean = false
+    isDeposit: boolean = false,
+    user?: AuthUser,
   ): Promise<{ clientSecret: string; paymentIntentId: string; amount: number }> {
-    const booking = await this.getBooking(bookingId);
+    const booking = await this.getBooking(bookingId, user);
 
     if (booking.status === BookingStatus.CANCELLED) {
-      throw new BadRequestError("Cannot process payment for cancelled booking");
+      throw new BadRequestError('Cannot process payment for cancelled booking');
     }
 
     const paymentAmount =
       amount || (isDeposit ? booking.payment.depositAmount : booking.payment.amountDue);
 
     if (paymentAmount <= 0) {
-      throw new BadRequestError("Invalid payment amount");
+      throw new BadRequestError('Invalid payment amount');
     }
 
     const stripeSecretKey = env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {
-      throw new BadRequestError("Payment processing is not configured");
+      throw new BadRequestError('Payment processing is not configured');
     }
 
     const property = await Property.findById(booking.propertyId);
-    const currency = property?.settings?.currency?.toLowerCase() || "usd";
+    const currency = property?.settings?.currency?.toLowerCase() || 'usd';
 
-    const stripe = require("stripe")(stripeSecretKey);
+    const stripe = require('stripe')(stripeSecretKey);
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(paymentAmount * 100),
@@ -93,26 +87,28 @@ class PaymentService {
 
   async confirmPayment(
     bookingId: string,
-    paymentIntentId: string
+    paymentIntentId: string,
+    user?: AuthUser,
   ): Promise<IPayment> {
+    await this.getBooking(bookingId, user);
     const payment = await Payment.findOne({
       bookingId: new Types.ObjectId(bookingId),
       stripePaymentIntentId: paymentIntentId,
     });
 
     if (!payment) {
-      throw new NotFoundError("Payment not found");
+      throw new NotFoundError('Payment not found');
     }
 
     const stripeSecretKey = env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {
-      throw new BadRequestError("Payment processing is not configured");
+      throw new BadRequestError('Payment processing is not configured');
     }
 
-    const stripe = require("stripe")(stripeSecretKey);
+    const stripe = require('stripe')(stripeSecretKey);
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-    if (paymentIntent.status === "succeeded") {
+    if (paymentIntent.status === 'succeeded') {
       payment.status = PaymentStatusEnum.COMPLETED;
       payment.processedAt = new Date();
 
@@ -131,7 +127,7 @@ class PaymentService {
     } else {
       payment.status = PaymentStatusEnum.FAILED;
       await payment.save();
-      throw new BadRequestError("Payment was not successful");
+      throw new BadRequestError('Payment was not successful');
     }
 
     return payment;
@@ -141,12 +137,12 @@ class PaymentService {
     bookingId: string,
     amount: number,
     userId: string,
-    notes?: string
+    notes?: string,
   ): Promise<IPayment> {
     const booking = await this.getBooking(bookingId);
 
     if (booking.status === BookingStatus.CANCELLED) {
-      throw new BadRequestError("Cannot process payment for cancelled booking");
+      throw new BadRequestError('Cannot process payment for cancelled booking');
     }
 
     const property = await Property.findById(booking.propertyId);
@@ -156,7 +152,7 @@ class PaymentService {
       guestId: booking.guestId,
       type: PaymentType.PAYMENT,
       amount,
-      currency: property?.settings?.currency || "USD",
+      currency: property?.settings?.currency || 'USD',
       method: PaymentMethod.CASH,
       status: PaymentStatusEnum.COMPLETED,
       processedAt: new Date(),
@@ -176,12 +172,12 @@ class PaymentService {
     bookingId: string,
     amount: number,
     userId: string,
-    reason?: string
+    reason?: string,
   ): Promise<IPayment> {
     const booking = await this.getBooking(bookingId);
 
     if (amount > booking.payment.amountPaid) {
-      throw new BadRequestError("Refund amount exceeds amount paid");
+      throw new BadRequestError('Refund amount exceeds amount paid');
     }
 
     const cardPayments = await Payment.find({
@@ -196,7 +192,7 @@ class PaymentService {
     const stripeSecretKey = env.STRIPE_SECRET_KEY;
 
     if (stripeSecretKey && cardPayments.length > 0) {
-      const stripe = require("stripe")(stripeSecretKey);
+      const stripe = require('stripe')(stripeSecretKey);
 
       for (const payment of cardPayments) {
         if (refundedAmount >= amount) break;
@@ -212,7 +208,7 @@ class PaymentService {
 
           refundedAmount += refundAmount;
         } catch (error) {
-          logger.error({ err: error, paymentId: payment._id }, "Stripe refund error");
+          logger.error({ err: error, paymentId: payment._id }, 'Stripe refund error');
         }
       }
     }
@@ -222,7 +218,7 @@ class PaymentService {
       guestId: booking.guestId,
       type: PaymentType.REFUND,
       amount: -amount,
-      currency: property?.settings?.currency || "USD",
+      currency: property?.settings?.currency || 'USD',
       method: cardPayments.length > 0 ? PaymentMethod.CARD : PaymentMethod.CASH,
       status: PaymentStatusEnum.COMPLETED,
       processedAt: new Date(),
@@ -238,10 +234,10 @@ class PaymentService {
     return refund;
   }
 
-  async getFolio(bookingId: string): Promise<IFolio> {
-    const booking = await this.getBooking(bookingId);
+  async getFolio(bookingId: string, user?: AuthUser): Promise<IFolio> {
+    const booking = await this.getBooking(bookingId, user);
 
-    let folio = await Folio.findOne({ bookingId: booking._id });
+    let folio = (await Folio.findOne({ bookingId: booking._id })) as IFolio | null;
 
     if (!folio) {
       folio = await this.createFolio(booking);
@@ -255,12 +251,12 @@ class PaymentService {
     description: string,
     amount: number,
     quantity: number = 1,
-    category: string = "fee"
+    category: string = 'fee',
   ): Promise<IFolio> {
     const folio = await this.getFolio(bookingId);
 
     if (folio.status !== FolioStatus.OPEN) {
-      throw new BadRequestError("Cannot add charges to a closed folio");
+      throw new BadRequestError('Cannot add charges to a closed folio');
     }
 
     folio.lineItems.push({
@@ -290,7 +286,7 @@ class PaymentService {
     const folio = await this.getFolio(bookingId);
 
     if (folio.balance > 0) {
-      throw new BadRequestError("Cannot close folio with outstanding balance");
+      throw new BadRequestError('Cannot close folio with outstanding balance');
     }
 
     folio.status = FolioStatus.CLOSED;
@@ -304,18 +300,22 @@ class PaymentService {
     await this.getBooking(bookingId);
 
     return Payment.find({ bookingId: new Types.ObjectId(bookingId) })
-      .populate("processedBy", "name email")
+      .populate('processedBy', 'name email')
       .sort({ createdAt: -1 });
   }
 
-  private async getBooking(bookingId: string) {
+  private async getBooking(bookingId: string, user?: AuthUser) {
     if (!Types.ObjectId.isValid(bookingId)) {
-      throw new BadRequestError("Invalid booking ID");
+      throw new BadRequestError('Invalid booking ID');
     }
 
     const booking = await Booking.findById(bookingId);
     if (!booking) {
-      throw new NotFoundError("Booking not found");
+      throw new NotFoundError('Booking not found');
+    }
+
+    if (user) {
+      await assertBookingAccess(booking, user);
     }
 
     return booking;
@@ -334,19 +334,15 @@ class PaymentService {
       booking.payment.status = PaymentStatus.PARTIAL;
     }
 
-    if (
-      booking.status === BookingStatus.PENDING &&
-      booking.payment.amountPaid > 0
-    ) {
+    if (booking.status === BookingStatus.PENDING && booking.payment.amountPaid > 0) {
       const ratePlan = await RatePlan.findById(booking.ratePlanId);
-      const requiredDeposit =
-        ratePlan?.depositPercentage
-          ? (booking.pricing.grandTotal * ratePlan.depositPercentage) / 100
-          : 0;
+      const requiredDeposit = ratePlan?.depositPercentage
+        ? (booking.pricing.grandTotal * ratePlan.depositPercentage) / 100
+        : 0;
 
       if (
         booking.payment.amountPaid >= requiredDeposit ||
-        ratePlan?.paymentPolicy === "pay-at-hotel"
+        ratePlan?.paymentPolicy === 'pay-at-hotel'
       ) {
         booking.status = BookingStatus.CONFIRMED;
       }
@@ -383,7 +379,7 @@ class PaymentService {
     if (booking.pricing.taxes > 0) {
       lineItems.push({
         date: booking.dates.checkIn,
-        description: "Taxes",
+        description: 'Taxes',
         category: FolioLineItemCategory.TAX,
         amount: booking.pricing.taxes,
         quantity: 1,

@@ -1,6 +1,6 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
-import { RoomStatus } from "../common/enums/roomStatus.enum";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
+import { RoomStatus } from '../common/enums/roomStatus.enum';
 
 export interface IRoom extends Document {
   propertyId: Types.ObjectId;
@@ -24,13 +24,13 @@ const roomSchema = new Schema<IRoom>(
   {
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       required: true,
       index: true,
     },
     roomTypeId: {
       type: Schema.Types.ObjectId,
-      ref: "RoomType",
+      ref: 'RoomType',
       required: true,
       index: true,
     },
@@ -58,7 +58,7 @@ const roomSchema = new Schema<IRoom>(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 roomSchema.index({ propertyId: 1, roomNumber: 1 }, { unique: true });
@@ -68,4 +68,4 @@ roomSchema.index({ propertyId: 1, isOccupied: 1, isActive: 1 });
 roomSchema.plugin(softDeletePlugin);
 roomSchema.plugin(toJSONPlugin);
 
-export const Room = model<IRoom>("Room", roomSchema);
+export const Room = model<IRoom>('Room', roomSchema);

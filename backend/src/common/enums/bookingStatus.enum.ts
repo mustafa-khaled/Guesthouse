@@ -1,10 +1,10 @@
 export enum BookingStatus {
-  PENDING = "pending",
-  CONFIRMED = "confirmed",
-  CHECKED_IN = "checked-in",
-  CHECKED_OUT = "checked-out",
-  CANCELLED = "cancelled",
-  NO_SHOW = "no-show",
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  CHECKED_IN = 'checked-in',
+  CHECKED_OUT = 'checked-out',
+  CANCELLED = 'cancelled',
+  NO_SHOW = 'no-show',
 }
 
 export const BookingStatusTransitions: Record<BookingStatus, BookingStatus[]> = {
@@ -20,10 +20,7 @@ export const BookingStatusTransitions: Record<BookingStatus, BookingStatus[]> = 
   [BookingStatus.NO_SHOW]: [],
 };
 
-export function canTransitionTo(
-  currentStatus: BookingStatus,
-  newStatus: BookingStatus
-): boolean {
+export function canTransitionTo(currentStatus: BookingStatus, newStatus: BookingStatus): boolean {
   return BookingStatusTransitions[currentStatus].includes(newStatus);
 }
 
@@ -40,20 +37,20 @@ export function isActiveBooking(status: BookingStatus): boolean {
 }
 
 export enum PaymentStatus {
-  PENDING = "pending",
-  PARTIAL = "partial",
-  PAID = "paid",
-  REFUNDED = "refunded",
-  FAILED = "failed",
+  PENDING = 'pending',
+  PARTIAL = 'partial',
+  PAID = 'paid',
+  REFUNDED = 'refunded',
+  FAILED = 'failed',
 }
 
 export enum BookingSource {
-  DIRECT = "direct",
-  WEBSITE = "website",
-  PHONE = "phone",
-  WALK_IN = "walk-in",
-  BOOKING_COM = "booking.com",
-  EXPEDIA = "expedia",
-  AIRBNB = "airbnb",
-  OTHER = "other",
+  DIRECT = 'direct',
+  WEBSITE = 'website',
+  PHONE = 'phone',
+  WALK_IN = 'walk-in',
+  BOOKING_COM = 'booking.com',
+  EXPEDIA = 'expedia',
+  AIRBNB = 'airbnb',
+  OTHER = 'other',
 }

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const addressSchema = z.object({
   street: z.string().optional(),
@@ -21,16 +21,16 @@ const contactSchema = z.object({
 });
 
 const settingsSchema = z.object({
-  timezone: z.string().default("UTC"),
-  currency: z.string().length(3).default("USD"),
+  timezone: z.string().default('UTC'),
+  currency: z.string().length(3).default('USD'),
   checkInTime: z
     .string()
-    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Must be in HH:mm format")
-    .default("15:00"),
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Must be in HH:mm format')
+    .default('15:00'),
   checkOutTime: z
     .string()
-    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Must be in HH:mm format")
-    .default("11:00"),
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Must be in HH:mm format')
+    .default('11:00'),
   cancellationPolicy: z.string().optional(),
   taxRate: z.number().min(0).max(100).default(0),
   serviceFeeRate: z.number().min(0).max(100).default(0),
@@ -49,7 +49,7 @@ export const createPropertySchema = z.object({
       .string()
       .min(1)
       .max(100)
-      .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+      .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
     description: z.string().max(5000).optional(),
     address: addressSchema.optional(),
     contact: contactSchema.optional(),
@@ -71,7 +71,7 @@ export const updatePropertySchema = z.object({
       .string()
       .min(1)
       .max(100)
-      .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens")
+      .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens')
       .optional(),
     description: z.string().max(5000).optional(),
     address: addressSchema.optional(),
@@ -100,10 +100,10 @@ export const listPropertiesSchema = z.object({
     amenities: z.string().optional(),
     isActive: z
       .string()
-      .transform((val) => val === "true")
+      .transform((val) => val === 'true')
       .optional(),
-    sortBy: z.enum(["name", "createdAt", "starRating"]).default("createdAt"),
-    sortOrder: z.enum(["asc", "desc"]).default("desc"),
+    sortBy: z.enum(['name', 'createdAt', 'starRating']).default('createdAt'),
+    sortOrder: z.enum(['asc', 'desc']).default('desc'),
   }),
 });
 

@@ -1,14 +1,11 @@
-import { NextFunction, Request, Response } from "express";
-import { HttpError } from "../common/errors/http.errors";
-import { ZodError } from "zod";
-import { env } from "../config/env";
+import { NextFunction, Request, Response } from 'express';
+import { HttpError } from '../common/errors/http.errors';
+import { ZodError } from 'zod';
+import { env } from '../config/env';
+import { captureException } from '../lib/sentry';
+import { getRequestId } from './requestId';
 
-export function errorHandler(
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
   if (res.headersSent) {
     return next(err);
   }
@@ -22,17 +19,18 @@ export function errorHandler(
 
   if (err instanceof ZodError) {
     return res.status(400).json({
-      message: "Validation failed",
+      message: 'Validation failed',
       errors: err.flatten(),
     });
   }
 
-  req.log.error({ err }, "Unhandled error");
+  req.log.error({ err }, 'Unhandled error');
+  captureException(err);
 
   return res.status(500).json({
-    message: "Internal server error",
-    error: env.NODE_ENV === "development" ? err.message : undefined,
-    requestId: env.NODE_ENV === "development" ? req.id : undefined,
+    message: 'Internal server error',
+    error: env.NODE_ENV === 'development' ? err.message : undefined,
+    requestId: getRequestId(req),
   });
 }
 

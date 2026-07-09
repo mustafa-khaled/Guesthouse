@@ -1,11 +1,11 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { toJSONPlugin } from '../common/plugins';
 
 export enum BookingAddOnStatus {
-  PENDING = "pending",
-  CONFIRMED = "confirmed",
-  DELIVERED = "delivered",
-  CANCELLED = "cancelled",
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  DELIVERED = 'delivered',
+  CANCELLED = 'cancelled',
 }
 
 export interface IBookingAddOn extends Document {
@@ -25,13 +25,13 @@ const bookingAddOnSchema = new Schema<IBookingAddOn>(
   {
     bookingId: {
       type: Schema.Types.ObjectId,
-      ref: "Booking",
+      ref: 'Booking',
       required: true,
       index: true,
     },
     addOnId: {
       type: Schema.Types.ObjectId,
-      ref: "AddOn",
+      ref: 'AddOn',
       required: true,
     },
     quantity: {
@@ -58,11 +58,11 @@ const bookingAddOnSchema = new Schema<IBookingAddOn>(
       default: BookingAddOnStatus.PENDING,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 bookingAddOnSchema.index({ bookingId: 1, addOnId: 1 });
 
 bookingAddOnSchema.plugin(toJSONPlugin);
 
-export const BookingAddOn = model<IBookingAddOn>("BookingAddOn", bookingAddOnSchema);
+export const BookingAddOn = model<IBookingAddOn>('BookingAddOn', bookingAddOnSchema);

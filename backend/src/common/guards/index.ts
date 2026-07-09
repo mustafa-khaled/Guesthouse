@@ -1,1 +1,1 @@
-export { requireRole, requireMinimumRole } from "./roles.guard";
+export { requireRole, requireMinimumRole } from './roles.guard';

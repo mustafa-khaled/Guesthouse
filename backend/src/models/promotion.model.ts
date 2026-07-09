@@ -1,10 +1,10 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
 
 export enum DiscountType {
-  PERCENTAGE = "percentage",
-  FIXED = "fixed",
-  FREE_NIGHT = "free-night",
+  PERCENTAGE = 'percentage',
+  FIXED = 'fixed',
+  FREE_NIGHT = 'free-night',
 }
 
 export interface IPromotionConditions {
@@ -47,18 +47,18 @@ const conditionsSchema = new Schema(
     validTo: { type: Date, required: true },
     minNights: { type: Number, min: 1 },
     minSpend: { type: Number, min: 0 },
-    applicableRoomTypes: [{ type: Schema.Types.ObjectId, ref: "RoomType" }],
-    applicableRatePlans: [{ type: Schema.Types.ObjectId, ref: "RatePlan" }],
+    applicableRoomTypes: [{ type: Schema.Types.ObjectId, ref: 'RoomType' }],
+    applicableRatePlans: [{ type: Schema.Types.ObjectId, ref: 'RatePlan' }],
     daysOfWeek: {
       type: [Number],
       validate: {
         validator: (arr: number[]) => arr.every((d) => d >= 0 && d <= 6),
-        message: "Days of week must be between 0 and 6",
+        message: 'Days of week must be between 0 and 6',
       },
     },
     blackoutDates: [Date],
   },
-  { _id: false }
+  { _id: false },
 );
 
 const limitsSchema = new Schema(
@@ -67,14 +67,14 @@ const limitsSchema = new Schema(
     maxUsesPerGuest: { type: Number, min: 1 },
     currentUses: { type: Number, default: 0, min: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const promotionSchema = new Schema<IPromotion>(
   {
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       index: true,
     },
     code: {
@@ -116,14 +116,14 @@ const promotionSchema = new Schema<IPromotion>(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 promotionSchema.index({ code: 1 });
 promotionSchema.index({ propertyId: 1, isActive: 1 });
-promotionSchema.index({ "conditions.validFrom": 1, "conditions.validTo": 1 });
+promotionSchema.index({ 'conditions.validFrom': 1, 'conditions.validTo': 1 });
 
 promotionSchema.plugin(softDeletePlugin);
 promotionSchema.plugin(toJSONPlugin);
 
-export const Promotion = model<IPromotion>("Promotion", promotionSchema);
+export const Promotion = model<IPromotion>('Promotion', promotionSchema);

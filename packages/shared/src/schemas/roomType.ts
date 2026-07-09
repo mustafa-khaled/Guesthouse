@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const roomTypeSchema = z.object({
   id: z.string().optional(),
@@ -28,6 +28,6 @@ export const roomTypeSchema = z.object({
   basePrice: z.number().optional(),
   amenities: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
-})
+});
 
-export type RoomType = z.infer<typeof roomTypeSchema>
+export type RoomType = z.infer<typeof roomTypeSchema>;

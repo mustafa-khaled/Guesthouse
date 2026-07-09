@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { frontDeskService } from "./frontDesk.service";
+import { Request, Response, NextFunction } from 'express';
+import { frontDeskService } from './frontDesk.service';
 import {
   getArrivalsSchema,
   getDeparturesSchema,
@@ -9,8 +9,8 @@ import {
   roomMoveSchema,
   extendStaySchema,
   earlyCheckoutSchema,
-} from "./frontDesk.schema";
-import { HttpError } from "../../common/errors/http.errors";
+} from './frontDesk.schema';
+import { HttpError } from '../../common/errors/http.errors';
 
 class FrontDeskController {
   async getArrivals(req: Request, res: Response, next: NextFunction) {
@@ -18,14 +18,14 @@ class FrontDeskController {
       const result = getArrivalsSchema.safeParse({ query: req.query });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const arrivals = await frontDeskService.getArrivals(
         result.data.query.propertyId,
-        result.data.query.date
+        result.data.query.date,
       );
 
       return res.status(200).json({
@@ -45,14 +45,14 @@ class FrontDeskController {
       const result = getDeparturesSchema.safeParse({ query: req.query });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const departures = await frontDeskService.getDepartures(
         result.data.query.propertyId,
-        result.data.query.date
+        result.data.query.date,
       );
 
       return res.status(200).json({
@@ -72,14 +72,12 @@ class FrontDeskController {
       const result = getInHouseSchema.safeParse({ query: req.query });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const inHouse = await frontDeskService.getInHouseGuests(
-        result.data.query.propertyId
-      );
+      const inHouse = await frontDeskService.getInHouseGuests(result.data.query.propertyId);
 
       return res.status(200).json({
         data: inHouse,
@@ -98,14 +96,12 @@ class FrontDeskController {
       const result = getRoomRackSchema.safeParse({ query: req.query });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const roomRack = await frontDeskService.getRoomRack(
-        result.data.query.propertyId
-      );
+      const roomRack = await frontDeskService.getRoomRack(result.data.query.propertyId);
 
       return res.status(200).json(roomRack);
     } catch (error) {
@@ -121,7 +117,7 @@ class FrontDeskController {
       const result = walkInSchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -129,11 +125,11 @@ class FrontDeskController {
       const booking = await frontDeskService.createWalkIn(
         result.data.body.propertyId,
         result.data.body,
-        req.user!.id
+        req.user!.id,
       );
 
       return res.status(201).json({
-        message: "Walk-in booking created and checked in",
+        message: 'Walk-in booking created and checked in',
         data: booking,
       });
     } catch (error) {
@@ -149,7 +145,7 @@ class FrontDeskController {
       const result = roomMoveSchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -158,11 +154,11 @@ class FrontDeskController {
         result.data.body.bookingId,
         result.data.body.newRoomId,
         req.user!.id,
-        result.data.body.reason
+        result.data.body.reason,
       );
 
       return res.status(200).json({
-        message: "Guest moved to new room successfully",
+        message: 'Guest moved to new room successfully',
         data: booking,
       });
     } catch (error) {
@@ -178,7 +174,7 @@ class FrontDeskController {
       const result = extendStaySchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -186,11 +182,11 @@ class FrontDeskController {
       const booking = await frontDeskService.extendStay(
         result.data.body.bookingId,
         result.data.body.newCheckOut,
-        req.user!.id
+        req.user!.id,
       );
 
       return res.status(200).json({
-        message: "Stay extended successfully",
+        message: 'Stay extended successfully',
         data: booking,
       });
     } catch (error) {
@@ -206,18 +202,18 @@ class FrontDeskController {
       const result = earlyCheckoutSchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const booking = await frontDeskService.earlyCheckout(
         result.data.body.bookingId,
-        req.user!.id
+        req.user!.id,
       );
 
       return res.status(200).json({
-        message: "Early checkout processed successfully",
+        message: 'Early checkout processed successfully',
         data: booking,
       });
     } catch (error) {

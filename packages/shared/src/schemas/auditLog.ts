@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const auditLogSchema = z.object({
   id: z.string().optional(),
@@ -6,10 +6,10 @@ export const auditLogSchema = z.object({
   action: z.string(),
   resource: z.string(),
   resourceId: z.string().optional(),
-  userId: z.union([z.string(), z.record(z.unknown())]).optional(),
-  changes: z.record(z.unknown()).optional(),
+  userId: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
+  changes: z.record(z.string(), z.unknown()).optional(),
   ipAddress: z.string().optional(),
   createdAt: z.string().optional(),
-})
+});
 
-export type AuditLog = z.infer<typeof auditLogSchema>
+export type AuditLog = z.infer<typeof auditLogSchema>;

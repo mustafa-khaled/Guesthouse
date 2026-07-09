@@ -1,10 +1,10 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
   title: 'Your account',
-}
+};
 
 const accountLinks = [
   {
@@ -27,15 +27,13 @@ const accountLinks = [
     title: 'Account settings',
     description: 'Update your profile and change your password',
   },
-]
+];
 
 export default function AccountPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
       <h1 className="mb-2 text-3xl font-bold text-gray-900">Your account</h1>
-      <p className="mb-8 text-gray-600">
-        Manage your profile, bookings, and account settings.
-      </p>
+      <p className="mb-8 text-gray-600">Manage your profile, bookings, and account settings.</p>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {accountLinks.map((link) => (
@@ -52,5 +50,5 @@ export default function AccountPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { DiscountType } from "../../models/promotion.model";
-import { dateStringSchema } from "../../common/utils/dateUtils";
+import { z } from 'zod';
+import { DiscountType } from '../../models/promotion.model';
+import { dateStringSchema } from '../../common/utils/dateUtils';
 
 const conditionsSchema = z.object({
   validFrom: z.coerce.date(),
@@ -62,7 +62,7 @@ export const listPromotionsSchema = z.object({
     propertyId: z.string().optional(),
     isActive: z
       .string()
-      .transform((val) => val === "true")
+      .transform((val) => val === 'true')
       .optional(),
   }),
 });

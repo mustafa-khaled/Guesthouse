@@ -1,11 +1,8 @@
-import { Router } from "express";
-import { webhookController } from "./webhook.controller";
+import { Router } from 'express';
+import { webhookController } from './webhook.controller';
 
 const router = Router();
 
-router.post(
-  "/stripe",
-  webhookController.handleStripeWebhook.bind(webhookController)
-);
+router.post('/stripe', webhookController.handleStripeWebhook.bind(webhookController));
 
 export default router;

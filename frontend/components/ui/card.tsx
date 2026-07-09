@@ -1,14 +1,10 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  tint?: boolean
+  tint?: boolean;
 }
 
-export function Card({
-  className,
-  tint,
-  ...props
-}: CardProps) {
+export function Card({ className, tint, ...props }: CardProps) {
   return (
     <div
       className={cn(
@@ -18,31 +14,19 @@ export function Card({
       )}
       {...props}
     />
-  )
+  );
 }
 
-export function CardHeader({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex flex-col space-y-1.5 p-6 pb-3', className)} {...props} />
+export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('flex flex-col space-y-1.5 p-6 pb-3', className)} {...props} />;
 }
 
-export function CardTitle({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLHeadingElement>) {
+export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3
-      className={cn('text-lg font-semibold leading-none tracking-tight', className)}
-      {...props}
-    />
-  )
+    <h3 className={cn('text-lg font-semibold leading-none tracking-tight', className)} {...props} />
+  );
 }
 
-export function CardContent({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-6 pt-0', className)} {...props} />
+export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('p-6 pt-0', className)} {...props} />;
 }

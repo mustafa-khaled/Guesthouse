@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { AddOnPricingType, AddOnCategory } from "../../models/addOn.model";
+import { z } from 'zod';
+import { AddOnPricingType, AddOnCategory } from '../../models/addOn.model';
 
 const pricingSchema = z.object({
   type: z.nativeEnum(AddOnPricingType),
@@ -58,7 +58,7 @@ export const listAddOnsSchema = z.object({
     category: z.nativeEnum(AddOnCategory).optional(),
     isActive: z
       .string()
-      .transform((val) => val === "true")
+      .transform((val) => val === 'true')
       .optional(),
   }),
 });

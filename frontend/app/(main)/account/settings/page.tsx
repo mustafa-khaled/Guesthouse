@@ -1,19 +1,16 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import ProfileForm from '@/components/ProfileForm'
-import PasswordForm from '@/components/PasswordForm'
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import ProfileForm from '@/components/ProfileForm';
+import PasswordForm from '@/components/PasswordForm';
 
 export const metadata: Metadata = {
   title: 'Account settings',
-}
+};
 
 export default function AccountSettingsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <Link
-        href="/account"
-        className="mb-6 inline-block text-sm text-green-700 hover:underline"
-      >
+      <Link href="/account" className="mb-6 inline-block text-sm text-green-700 hover:underline">
         ← Back to account
       </Link>
 
@@ -31,5 +28,5 @@ export default function AccountSettingsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import { addOnService } from "./addOn.service";
-import { bookingService } from "../booking/booking.service";
+import { Request, Response, NextFunction } from 'express';
+import { addOnService } from './addOn.service';
+import { bookingService } from '../booking/booking.service';
 import {
   createAddOnSchema,
   updateAddOnSchema,
@@ -8,8 +8,8 @@ import {
   listAddOnsSchema,
   addToBookingSchema,
   removeFromBookingSchema,
-} from "./addOn.schema";
-import { HttpError } from "../../common/errors/http.errors";
+} from './addOn.schema';
+import { HttpError } from '../../common/errors/http.errors';
 
 class AddOnController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -20,18 +20,15 @@ class AddOnController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const addOn = await addOnService.create(
-        result.data.params.propertyId,
-        result.data.body
-      );
+      const addOn = await addOnService.create(result.data.params.propertyId, result.data.body);
 
       return res.status(201).json({
-        message: "Add-on created successfully",
+        message: 'Add-on created successfully',
         data: addOn,
       });
     } catch (error) {
@@ -47,7 +44,7 @@ class AddOnController {
       const result = getAddOnSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -73,18 +70,15 @@ class AddOnController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const addOn = await addOnService.update(
-        result.data.params.id,
-        result.data.body
-      );
+      const addOn = await addOnService.update(result.data.params.id, result.data.body);
 
       return res.status(200).json({
-        message: "Add-on updated successfully",
+        message: 'Add-on updated successfully',
         data: addOn,
       });
     } catch (error) {
@@ -100,7 +94,7 @@ class AddOnController {
       const result = getAddOnSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -108,7 +102,7 @@ class AddOnController {
       await addOnService.delete(result.data.params.id);
 
       return res.status(200).json({
-        message: "Add-on deleted successfully",
+        message: 'Add-on deleted successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {
@@ -126,7 +120,7 @@ class AddOnController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -134,7 +128,7 @@ class AddOnController {
       const addOns = await addOnService.listByProperty(
         result.data.params.propertyId,
         result.data.query.category,
-        result.data.query.isActive
+        result.data.query.isActive,
       );
 
       return res.status(200).json({
@@ -156,7 +150,7 @@ class AddOnController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -166,13 +160,13 @@ class AddOnController {
         result.data.body.addOnId,
         result.data.body.quantity,
         result.data.body.scheduledDate,
-        result.data.body.notes
+        result.data.body.notes,
       );
 
       await bookingService.recalculateTotals(result.data.params.bookingId);
 
       return res.status(201).json({
-        message: "Add-on added to booking successfully",
+        message: 'Add-on added to booking successfully',
         data: bookingAddOn,
       });
     } catch (error) {
@@ -188,20 +182,20 @@ class AddOnController {
       const result = removeFromBookingSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       await addOnService.removeFromBooking(
         result.data.params.bookingId,
-        result.data.params.addOnId
+        result.data.params.addOnId,
       );
 
       await bookingService.recalculateTotals(result.data.params.bookingId);
 
       return res.status(200).json({
-        message: "Add-on removed from booking successfully",
+        message: 'Add-on removed from booking successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {

@@ -1,35 +1,37 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import {
   uploadImage,
   uploadImageWithResize,
   deleteImage,
   isCloudinaryConfigured,
   ImageFolder,
-} from "../../lib/cloudinary";
-import { uploadSingle, uploadMultiple, handleMulterError } from "../../middleware/upload";
-import { BadRequestError } from "../../common/errors/http.errors";
+} from '../../lib/cloudinary';
+import { uploadSingle, uploadMultiple, handleMulterError } from '../../middleware/upload';
+import { BadRequestError } from '../../common/errors/http.errors';
+import { uploadResultSchema } from './upload.schema';
 
 class UploadController {
   async uploadPropertyImage(req: Request, res: Response, next: NextFunction): Promise<void> {
-    this.handleUpload(req, res, next, "properties");
+    this.handleUpload(req, res, next, 'properties');
   }
 
   async uploadRoomTypeImage(req: Request, res: Response, next: NextFunction): Promise<void> {
-    this.handleUpload(req, res, next, "room-types");
+    this.handleUpload(req, res, next, 'room-types');
   }
 
   async uploadGuestImage(req: Request, res: Response, next: NextFunction): Promise<void> {
-    this.handleUpload(req, res, next, "guests");
+    this.handleUpload(req, res, next, 'guests');
   }
 
   async uploadGeneralImage(req: Request, res: Response, next: NextFunction): Promise<void> {
-    this.handleUpload(req, res, next, "general");
+    this.handleUpload(req, res, next, 'general');
   }
 
   async uploadMultipleImages(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!isCloudinaryConfigured()) {
-        throw new BadRequestError("Image upload service is not configured");
+        throw new BadRequestError('Image upload service is not configured');
       }
 
       await new Promise<void>((resolve, reject) => {
@@ -42,25 +44,24 @@ class UploadController {
       const files = req.files as Express.Multer.File[] | undefined;
 
       if (!files || files.length === 0) {
-        throw new BadRequestError("No images provided");
+        throw new BadRequestError('No images provided');
       }
 
-      const folder = (req.query.folder as ImageFolder) || "general";
-      const validFolders: ImageFolder[] = ["properties", "room-types", "guests", "general"];
-      
+      const folder = (req.query.folder as ImageFolder) || 'general';
+      const validFolders: ImageFolder[] = ['properties', 'room-types', 'guests', 'general'];
+
       if (!validFolders.includes(folder)) {
-        throw new BadRequestError(`Invalid folder. Must be one of: ${validFolders.join(", ")}`);
+        throw new BadRequestError(`Invalid folder. Must be one of: ${validFolders.join(', ')}`);
       }
 
-      const uploadPromises = files.map((file) =>
-        uploadImageWithResize(file.buffer, folder)
-      );
+      const uploadPromises = files.map((file) => uploadImageWithResize(file.buffer, folder));
 
       const results = await Promise.all(uploadPromises);
+      const data = z.array(uploadResultSchema).parse(results);
 
       res.status(201).json({
-        message: `${results.length} images uploaded successfully`,
-        data: results,
+        message: `${data.length} images uploaded successfully`,
+        data,
       });
     } catch (error) {
       next(error);
@@ -70,27 +71,27 @@ class UploadController {
   async deleteImageByPublicId(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!isCloudinaryConfigured()) {
-        throw new BadRequestError("Image upload service is not configured");
+        throw new BadRequestError('Image upload service is not configured');
       }
 
       const { publicId } = req.params as { publicId: string };
 
       if (!publicId) {
-        throw new BadRequestError("Public ID is required");
+        throw new BadRequestError('Public ID is required');
       }
 
       const decodedPublicId = decodeURIComponent(publicId);
 
-      if (!decodedPublicId.startsWith("guesthouse/")) {
-        throw new BadRequestError("Invalid public ID - can only delete guesthouse images");
+      if (!decodedPublicId.startsWith('guesthouse/')) {
+        throw new BadRequestError('Invalid public ID - can only delete guesthouse images');
       }
 
       const deleted = await deleteImage(decodedPublicId);
 
       if (deleted) {
-        res.json({ message: "Image deleted successfully" });
+        res.json({ message: 'Image deleted successfully' });
       } else {
-        res.status(404).json({ message: "Image not found" });
+        res.status(404).json({ message: 'Image not found' });
       }
     } catch (error) {
       next(error);
@@ -101,11 +102,11 @@ class UploadController {
     req: Request,
     res: Response,
     next: NextFunction,
-    folder: ImageFolder
+    folder: ImageFolder,
   ): Promise<void> {
     try {
       if (!isCloudinaryConfigured()) {
-        throw new BadRequestError("Image upload service is not configured");
+        throw new BadRequestError('Image upload service is not configured');
       }
 
       await new Promise<void>((resolve, reject) => {
@@ -116,14 +117,15 @@ class UploadController {
       });
 
       if (!req.file) {
-        throw new BadRequestError("No image provided");
+        throw new BadRequestError('No image provided');
       }
 
       const result = await uploadImageWithResize(req.file.buffer, folder);
+      const data = uploadResultSchema.parse(result);
 
       res.status(201).json({
-        message: "Image uploaded successfully",
-        data: result,
+        message: 'Image uploaded successfully',
+        data,
       });
     } catch (error) {
       next(error);

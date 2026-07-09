@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 const variants = {
   default: 'bg-gray-100 text-gray-800',
@@ -6,7 +6,7 @@ const variants = {
   warning: 'bg-yellow-100 text-yellow-800',
   danger: 'bg-red-100 text-red-800',
   info: 'bg-blue-100 text-blue-800',
-} as const
+} as const;
 
 export function Badge({
   className,
@@ -22,5 +22,5 @@ export function Badge({
       )}
       {...props}
     />
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { inventoryService } from "./inventory.service";
+import { Request, Response, NextFunction } from 'express';
+import { inventoryService } from './inventory.service';
 import {
   searchAvailabilitySchema,
   getInventorySchema,
@@ -7,8 +7,8 @@ import {
   createHoldSchema,
   releaseHoldSchema,
   initializeInventorySchema,
-} from "./inventory.schema";
-import { HttpError } from "../../common/errors/http.errors";
+} from './inventory.schema';
+import { HttpError } from '../../common/errors/http.errors';
 
 class InventoryController {
   async searchAvailability(req: Request, res: Response, next: NextFunction) {
@@ -16,14 +16,12 @@ class InventoryController {
       const result = searchAvailabilitySchema.safeParse({ query: req.query });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const availability = await inventoryService.searchAvailability(
-        result.data.query
-      );
+      const availability = await inventoryService.searchAvailability(result.data.query);
 
       return res.status(200).json({
         data: availability,
@@ -44,7 +42,7 @@ class InventoryController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -53,7 +51,7 @@ class InventoryController {
         result.data.params.propertyId,
         result.data.query.startDate,
         result.data.query.endDate,
-        result.data.query.roomTypeId
+        result.data.query.roomTypeId,
       );
 
       return res.status(200).json({
@@ -72,20 +70,19 @@ class InventoryController {
       const result = bulkUpdateInventorySchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const { propertyId, roomTypeId, startDate, endDate, updates } =
-        result.data.body;
+      const { propertyId, roomTypeId, startDate, endDate, updates } = result.data.body;
 
       const updatedCount = await inventoryService.bulkUpdateInventory(
         propertyId,
         roomTypeId,
         startDate,
         endDate,
-        updates
+        updates,
       );
 
       return res.status(200).json({
@@ -105,20 +102,19 @@ class InventoryController {
       const result = initializeInventorySchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const { propertyId, roomTypeId, startDate, endDate, totalRooms } =
-        result.data.body;
+      const { propertyId, roomTypeId, startDate, endDate, totalRooms } = result.data.body;
 
       const createdCount = await inventoryService.initializeInventory(
         propertyId,
         roomTypeId,
         startDate,
         endDate,
-        totalRooms
+        totalRooms,
       );
 
       return res.status(201).json({
@@ -138,13 +134,12 @@ class InventoryController {
       const result = createHoldSchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const { propertyId, roomTypeId, checkIn, checkOut, rooms, sessionId } =
-        result.data.body;
+      const { propertyId, roomTypeId, checkIn, checkOut, rooms, sessionId } = result.data.body;
 
       const hold = await inventoryService.createHold(
         propertyId,
@@ -153,11 +148,11 @@ class InventoryController {
         checkOut,
         rooms,
         sessionId,
-        req.user?.id
+        req.user?.id,
       );
 
       return res.status(201).json({
-        message: "Hold created successfully",
+        message: 'Hold created successfully',
         data: hold,
       });
     } catch (error) {
@@ -173,7 +168,7 @@ class InventoryController {
       const result = releaseHoldSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -181,7 +176,7 @@ class InventoryController {
       await inventoryService.releaseHold(result.data.params.holdId);
 
       return res.status(200).json({
-        message: "Hold released successfully",
+        message: 'Hold released successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {

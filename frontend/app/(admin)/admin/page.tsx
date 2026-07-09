@@ -1,32 +1,28 @@
-'use client'
+'use client';
 
-import { useQuery } from '@tanstack/react-query'
-import { adminQueries } from '@/queries/admin.queries'
-import { Card, CardContent } from '@/components/ui/card'
-import Spinner from '@/components/Spinner'
+import { useQuery } from '@tanstack/react-query';
+import { adminQueries } from '@/queries/admin.queries';
+import { Card, CardContent } from '@/components/ui/card';
+import Spinner from '@/components/Spinner';
 
 export default function AdminDashboardPage() {
-  const { data, isLoading, isError, error } = useQuery(
-    adminQueries.managerDashboard(),
-  )
+  const { data, isLoading, isError, error } = useQuery(adminQueries.managerDashboard());
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Failed to load dashboard'}
       </div>
-    )
+    );
   }
 
-  const stats = data ?? {}
+  const stats = data ?? {};
   const statEntries = Object.entries(stats).filter(
     ([, value]) =>
-      typeof value === 'number' ||
-      typeof value === 'string' ||
-      typeof value === 'boolean',
-  )
+      typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean',
+  );
 
   return (
     <div className="space-y-6">
@@ -46,7 +42,7 @@ export default function AdminDashboardPage() {
           {statEntries.map(([key, value]) => (
             <Card key={key}>
               <CardContent className="pt-6">
-                <p className="text-sm text-gray-500 capitalize">
+                <p className="text-sm capitalize text-gray-500">
                   {key.replace(/([A-Z])/g, ' $1').trim()}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-gray-900">
@@ -58,5 +54,5 @@ export default function AdminDashboardPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

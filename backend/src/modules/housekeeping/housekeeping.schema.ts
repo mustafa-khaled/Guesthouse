@@ -1,10 +1,10 @@
-import { z } from "zod";
-import { dateStringSchema } from "../../common/utils/dateUtils";
+import { z } from 'zod';
+import { dateStringSchema } from '../../common/utils/dateUtils';
 import {
   HousekeepingTaskType,
   HousekeepingTaskStatus,
   HousekeepingPriority,
-} from "../../common/enums/roomStatus.enum";
+} from '../../common/enums/roomStatus.enum';
 
 export const createTaskSchema = z.object({
   body: z.object({
@@ -39,8 +39,8 @@ export const completeTaskSchema = z.object({
       .array(
         z.object({
           description: z.string().min(1),
-          severity: z.enum(["low", "medium", "high", "critical"]),
-        })
+          severity: z.enum(['low', 'medium', 'high', 'critical']),
+        }),
       )
       .optional(),
   }),
@@ -92,7 +92,7 @@ export const reportIssueSchema = z.object({
   }),
   body: z.object({
     description: z.string().min(1).max(500),
-    severity: z.enum(["low", "medium", "high", "critical"]),
+    severity: z.enum(['low', 'medium', 'high', 'critical']),
   }),
 });
 

@@ -1,5 +1,5 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
 
 export interface IIdDocument {
   type: string;
@@ -49,13 +49,13 @@ const idDocumentSchema = new Schema(
   {
     type: {
       type: String,
-      enum: ["passport", "national_id", "drivers_license", "other"],
+      enum: ['passport', 'national_id', 'drivers_license', 'other'],
     },
     number: String,
     expiryDate: Date,
     country: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 const addressSchema = new Schema(
@@ -66,7 +66,7 @@ const addressSchema = new Schema(
     country: String,
     postalCode: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 const preferencesSchema = new Schema(
@@ -75,14 +75,14 @@ const preferencesSchema = new Schema(
     dietaryRestrictions: [String],
     specialRequests: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 const guestSchema = new Schema<IGuest>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
     email: {
       type: String,
@@ -128,7 +128,7 @@ const guestSchema = new Schema<IGuest>(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 guestSchema.index({ email: 1 }, { unique: true });
@@ -138,15 +138,15 @@ guestSchema.index({ tags: 1 });
 guestSchema.index({ userId: 1 }, { sparse: true });
 
 guestSchema.index(
-  { firstName: "text", lastName: "text", email: "text", phone: "text" },
-  { weights: { firstName: 10, lastName: 10, email: 5, phone: 3 }, name: "guest_text_search" }
+  { firstName: 'text', lastName: 'text', email: 'text', phone: 'text' },
+  { weights: { firstName: 10, lastName: 10, email: 5, phone: 3 }, name: 'guest_text_search' },
 );
 
-guestSchema.virtual("fullName").get(function () {
+guestSchema.virtual('fullName').get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
 guestSchema.plugin(softDeletePlugin);
 guestSchema.plugin(toJSONPlugin);
 
-export const Guest = model<IGuest>("Guest", guestSchema);
+export const Guest = model<IGuest>('Guest', guestSchema);

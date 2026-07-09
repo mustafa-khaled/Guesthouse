@@ -1,12 +1,12 @@
-import { Booking } from "../../models/booking.model";
-import { Room } from "../../models/room.model";
-import { Payment } from "../../models/payment.model";
-import { Inventory } from "../../models/inventory.model";
-import { BadRequestError } from "../../common/errors/http.errors";
-import { BookingStatus, PaymentStatus } from "../../common/enums/bookingStatus.enum";
-import { PaymentStatusEnum } from "../../models/payment.model";
-import { parseDate, getDateRange, formatDate } from "../../common/utils/dateUtils";
-import { Types } from "mongoose";
+import { Booking } from '../../models/booking.model';
+import { Room } from '../../models/room.model';
+import { Payment } from '../../models/payment.model';
+import { Inventory } from '../../models/inventory.model';
+import { BadRequestError } from '../../common/errors/http.errors';
+import { BookingStatus, PaymentStatus } from '../../common/enums/bookingStatus.enum';
+import { PaymentStatusEnum } from '../../models/payment.model';
+import { parseDate, getDateRange, formatDate } from '../../common/utils/dateUtils';
+import { Types } from 'mongoose';
 
 export interface DailyMetrics {
   date: string;
@@ -38,10 +38,10 @@ class ReportsService {
     propertyId: string,
     startDate: string,
     endDate: string,
-    groupBy: "day" | "week" | "month" = "day"
+    groupBy: 'day' | 'week' | 'month' = 'day',
   ): Promise<DailyMetrics[]> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const start = parseDate(startDate);
@@ -64,27 +64,27 @@ class ReportsService {
         await Promise.all([
           Booking.countDocuments({
             propertyId: new Types.ObjectId(propertyId),
-            "dates.checkIn": { $lte: date },
-            "dates.checkOut": { $gt: date },
+            'dates.checkIn': { $lte: date },
+            'dates.checkOut': { $gt: date },
             status: { $in: [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN] },
           }),
           Booking.countDocuments({
             propertyId: new Types.ObjectId(propertyId),
-            "dates.checkIn": { $gte: date, $lt: nextDate },
+            'dates.checkIn': { $gte: date, $lt: nextDate },
             status: { $nin: [BookingStatus.CANCELLED] },
           }),
           Booking.countDocuments({
             propertyId: new Types.ObjectId(propertyId),
-            "dates.checkOut": { $gte: date, $lt: nextDate },
+            'dates.checkOut': { $gte: date, $lt: nextDate },
             status: BookingStatus.CHECKED_OUT,
           }),
           Booking.countDocuments({
             propertyId: new Types.ObjectId(propertyId),
-            "cancellation.cancelledAt": { $gte: date, $lt: nextDate },
+            'cancellation.cancelledAt': { $gte: date, $lt: nextDate },
           }),
           Booking.countDocuments({
             propertyId: new Types.ObjectId(propertyId),
-            "dates.checkIn": { $gte: date, $lt: nextDate },
+            'dates.checkIn': { $gte: date, $lt: nextDate },
             status: BookingStatus.NO_SHOW,
           }),
           this.getDailyRevenue(propertyId, date),
@@ -111,7 +111,7 @@ class ReportsService {
       });
     }
 
-    if (groupBy !== "day") {
+    if (groupBy !== 'day') {
       return this.aggregateByPeriod(results, groupBy);
     }
 
@@ -122,10 +122,10 @@ class ReportsService {
     propertyId: string,
     startDate: string,
     endDate: string,
-    groupBy: "day" | "week" | "month" = "day"
+    groupBy: 'day' | 'week' | 'month' = 'day',
   ): Promise<RevenueReport[]> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const start = parseDate(startDate);
@@ -140,27 +140,27 @@ class ReportsService {
       },
       {
         $lookup: {
-          from: "bookings",
-          localField: "bookingId",
-          foreignField: "_id",
-          as: "booking",
+          from: 'bookings',
+          localField: 'bookingId',
+          foreignField: '_id',
+          as: 'booking',
         },
       },
       {
-        $unwind: "$booking",
+        $unwind: '$booking',
       },
       {
         $match: {
-          "booking.propertyId": new Types.ObjectId(propertyId),
+          'booking.propertyId': new Types.ObjectId(propertyId),
         },
       },
       {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$processedAt" },
+            $dateToString: { format: '%Y-%m-%d', date: '$processedAt' },
           },
-          payments: { $sum: { $cond: [{ $gt: ["$amount", 0] }, "$amount", 0] } },
-          refunds: { $sum: { $cond: [{ $lt: ["$amount", 0] }, { $abs: "$amount" }, 0] } },
+          payments: { $sum: { $cond: [{ $gt: ['$amount', 0] }, '$amount', 0] } },
+          refunds: { $sum: { $cond: [{ $lt: ['$amount', 0] }, { $abs: '$amount' }, 0] } },
         },
       },
       {
@@ -183,10 +183,10 @@ class ReportsService {
   async getRoomTypePerformance(
     propertyId: string,
     startDate: string,
-    endDate: string
+    endDate: string,
   ): Promise<any[]> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const start = parseDate(startDate);
@@ -196,39 +196,39 @@ class ReportsService {
       {
         $match: {
           propertyId: new Types.ObjectId(propertyId),
-          "dates.checkIn": { $gte: start },
-          "dates.checkOut": { $lte: end },
+          'dates.checkIn': { $gte: start },
+          'dates.checkOut': { $lte: end },
           status: { $nin: [BookingStatus.CANCELLED] },
         },
       },
       {
         $group: {
-          _id: "$roomTypeId",
+          _id: '$roomTypeId',
           bookings: { $sum: 1 },
-          roomNights: { $sum: "$dates.nights" },
-          revenue: { $sum: "$pricing.roomTotal" },
-          avgRate: { $avg: "$pricing.roomRate" },
+          roomNights: { $sum: '$dates.nights' },
+          revenue: { $sum: '$pricing.roomTotal' },
+          avgRate: { $avg: '$pricing.roomRate' },
         },
       },
       {
         $lookup: {
-          from: "roomtypes",
-          localField: "_id",
-          foreignField: "_id",
-          as: "roomType",
+          from: 'roomtypes',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'roomType',
         },
       },
       {
-        $unwind: "$roomType",
+        $unwind: '$roomType',
       },
       {
         $project: {
-          roomTypeName: "$roomType.name",
-          roomTypeCode: "$roomType.code",
+          roomTypeName: '$roomType.name',
+          roomTypeCode: '$roomType.code',
           bookings: 1,
           roomNights: 1,
-          revenue: { $round: ["$revenue", 2] },
-          avgRate: { $round: ["$avgRate", 2] },
+          revenue: { $round: ['$revenue', 2] },
+          avgRate: { $round: ['$avgRate', 2] },
         },
       },
       {
@@ -239,13 +239,9 @@ class ReportsService {
     return performance;
   }
 
-  async getSourceAnalysis(
-    propertyId: string,
-    startDate: string,
-    endDate: string
-  ): Promise<any[]> {
+  async getSourceAnalysis(propertyId: string, startDate: string, endDate: string): Promise<any[]> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const start = parseDate(startDate);
@@ -260,22 +256,22 @@ class ReportsService {
       },
       {
         $group: {
-          _id: "$source",
+          _id: '$source',
           bookings: { $sum: 1 },
-          revenue: { $sum: "$pricing.grandTotal" },
+          revenue: { $sum: '$pricing.grandTotal' },
           cancelled: {
-            $sum: { $cond: [{ $eq: ["$status", BookingStatus.CANCELLED] }, 1, 0] },
+            $sum: { $cond: [{ $eq: ['$status', BookingStatus.CANCELLED] }, 1, 0] },
           },
         },
       },
       {
         $project: {
-          source: "$_id",
+          source: '$_id',
           bookings: 1,
-          revenue: { $round: ["$revenue", 2] },
+          revenue: { $round: ['$revenue', 2] },
           cancelled: 1,
           cancellationRate: {
-            $round: [{ $multiply: [{ $divide: ["$cancelled", "$bookings"] }, 100] }, 2],
+            $round: [{ $multiply: [{ $divide: ['$cancelled', '$bookings'] }, 100] }, 2],
           },
         },
       },
@@ -290,10 +286,10 @@ class ReportsService {
   async getCancellationAnalysis(
     propertyId: string,
     startDate: string,
-    endDate: string
+    endDate: string,
   ): Promise<any> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const start = parseDate(startDate);
@@ -307,21 +303,21 @@ class ReportsService {
       Booking.countDocuments({
         propertyId: new Types.ObjectId(propertyId),
         status: BookingStatus.CANCELLED,
-        "cancellation.cancelledAt": { $gte: start, $lte: end },
+        'cancellation.cancelledAt': { $gte: start, $lte: end },
       }),
       Booking.aggregate([
         {
           $match: {
             propertyId: new Types.ObjectId(propertyId),
             status: BookingStatus.CANCELLED,
-            "cancellation.cancelledAt": { $gte: start, $lte: end },
+            'cancellation.cancelledAt': { $gte: start, $lte: end },
           },
         },
         {
           $group: {
-            _id: "$cancellation.reason",
+            _id: '$cancellation.reason',
             count: { $sum: 1 },
-            refundTotal: { $sum: "$cancellation.refundAmount" },
+            refundTotal: { $sum: '$cancellation.refundAmount' },
           },
         },
       ]),
@@ -330,14 +326,15 @@ class ReportsService {
     return {
       totalBookings,
       cancellations,
-      cancellationRate: totalBookings > 0 ? Math.round((cancellations / totalBookings) * 10000) / 100 : 0,
+      cancellationRate:
+        totalBookings > 0 ? Math.round((cancellations / totalBookings) * 10000) / 100 : 0,
       byReason,
     };
   }
 
   async getDailySummary(propertyId: string, date?: string): Promise<any> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const targetDate = date ? parseDate(date) : new Date();
@@ -348,12 +345,12 @@ class ReportsService {
     const [arrivals, departures, inHouse, revenue, occupancy] = await Promise.all([
       Booking.countDocuments({
         propertyId: new Types.ObjectId(propertyId),
-        "dates.checkIn": { $gte: targetDate, $lt: nextDate },
+        'dates.checkIn': { $gte: targetDate, $lt: nextDate },
         status: { $in: [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN] },
       }),
       Booking.countDocuments({
         propertyId: new Types.ObjectId(propertyId),
-        "dates.checkOut": { $gte: targetDate, $lt: nextDate },
+        'dates.checkOut': { $gte: targetDate, $lt: nextDate },
         status: BookingStatus.CHECKED_IN,
       }),
       Booking.countDocuments({
@@ -376,7 +373,7 @@ class ReportsService {
 
   private async getDailyRevenue(
     propertyId: string,
-    date: Date
+    date: Date,
   ): Promise<{ roomRevenue: number; addOnRevenue: number; totalRevenue: number }> {
     const nextDate = new Date(date);
     nextDate.setDate(nextDate.getDate() + 1);
@@ -391,24 +388,24 @@ class ReportsService {
       },
       {
         $lookup: {
-          from: "bookings",
-          localField: "bookingId",
-          foreignField: "_id",
-          as: "booking",
+          from: 'bookings',
+          localField: 'bookingId',
+          foreignField: '_id',
+          as: 'booking',
         },
       },
       {
-        $unwind: "$booking",
+        $unwind: '$booking',
       },
       {
         $match: {
-          "booking.propertyId": new Types.ObjectId(propertyId),
+          'booking.propertyId': new Types.ObjectId(propertyId),
         },
       },
       {
         $group: {
           _id: null,
-          total: { $sum: "$amount" },
+          total: { $sum: '$amount' },
         },
       },
     ]);
@@ -424,7 +421,7 @@ class ReportsService {
 
   private async getDailyOccupancy(
     propertyId: string,
-    date: Date
+    date: Date,
   ): Promise<{ occupancyRate: number; roomsOccupied: number; totalRooms: number }> {
     const [totalRooms, occupiedRooms] = await Promise.all([
       Room.countDocuments({
@@ -434,8 +431,8 @@ class ReportsService {
       }),
       Booking.countDocuments({
         propertyId: new Types.ObjectId(propertyId),
-        "dates.checkIn": { $lte: date },
-        "dates.checkOut": { $gt: date },
+        'dates.checkIn': { $lte: date },
+        'dates.checkOut': { $gt: date },
         status: { $in: [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN] },
       }),
     ]);
@@ -449,22 +446,19 @@ class ReportsService {
     };
   }
 
-  private aggregateByPeriod(
-    dailyData: DailyMetrics[],
-    groupBy: "week" | "month"
-  ): DailyMetrics[] {
+  private aggregateByPeriod(dailyData: DailyMetrics[], groupBy: 'week' | 'month'): DailyMetrics[] {
     const groups = new Map<string, DailyMetrics[]>();
 
     for (const day of dailyData) {
       const date = new Date(day.date);
       let key: string;
 
-      if (groupBy === "week") {
+      if (groupBy === 'week') {
         const weekStart = new Date(date);
         weekStart.setDate(date.getDate() - date.getDay());
         key = formatDate(weekStart);
       } else {
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       }
 
       if (!groups.has(key)) {

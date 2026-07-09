@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const idDocumentSchema = z.object({
-  type: z.enum(["passport", "national_id", "drivers_license", "other"]),
+  type: z.enum(['passport', 'national_id', 'drivers_license', 'other']),
   number: z.string().min(1),
   expiryDate: z.coerce.date().optional(),
   country: z.string().optional(),
@@ -70,8 +70,8 @@ export const listGuestsSchema = z.object({
     limit: z.coerce.number().int().min(1).max(100).default(20),
     search: z.string().optional(),
     tag: z.string().optional(),
-    sortBy: z.enum(["lastName", "createdAt", "lastStayDate", "stayCount"]).default("lastName"),
-    sortOrder: z.enum(["asc", "desc"]).default("asc"),
+    sortBy: z.enum(['lastName', 'createdAt', 'lastStayDate', 'stayCount']).default('lastName'),
+    sortOrder: z.enum(['asc', 'desc']).default('asc'),
   }),
 });
 

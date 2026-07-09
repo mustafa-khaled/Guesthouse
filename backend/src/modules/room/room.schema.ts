@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { RoomStatus } from "../../common/enums/roomStatus.enum";
+import { z } from 'zod';
+import { RoomStatus } from '../../common/enums/roomStatus.enum';
 
 export const createRoomSchema = z.object({
   params: z.object({
@@ -58,11 +58,11 @@ export const listRoomsSchema = z.object({
     floor: z.coerce.number().int().optional(),
     isOccupied: z
       .string()
-      .transform((val) => val === "true")
+      .transform((val) => val === 'true')
       .optional(),
     isActive: z
       .string()
-      .transform((val) => val === "true")
+      .transform((val) => val === 'true')
       .optional(),
   }),
 });
@@ -77,7 +77,7 @@ export const bulkCreateRoomsSchema = z.object({
       z.object({
         floor: z.number().int(),
         roomNumbers: z.array(z.string().min(1)),
-      })
+      }),
     ),
     features: z.array(z.string()).default([]),
   }),

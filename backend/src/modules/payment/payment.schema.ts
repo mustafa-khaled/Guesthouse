@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { PaymentMethod } from "../../models/payment.model";
+import { z } from 'zod';
+import { PaymentMethod } from '../../models/payment.model';
 
 export const createPaymentIntentSchema = z.object({
   params: z.object({
@@ -54,7 +54,7 @@ export const addFolioChargeSchema = z.object({
     description: z.string().min(1).max(200),
     amount: z.number(),
     quantity: z.number().int().min(1).default(1),
-    category: z.enum(["room", "addon", "fee", "adjustment"]).default("fee"),
+    category: z.enum(['room', 'addon', 'fee', 'adjustment']).default('fee'),
   }),
 });
 

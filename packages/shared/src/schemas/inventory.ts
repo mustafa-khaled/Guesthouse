@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const availabilityResultSchema = z.object({
   propertyId: z.string(),
@@ -9,12 +9,12 @@ export const availabilityResultSchema = z.object({
   pricePerNight: z.number().optional(),
   currency: z.string().optional(),
   ratePlanId: z.string().optional(),
-})
+});
 
 export const inventoryHoldSchema = z.object({
   holdId: z.string(),
   expiresAt: z.string(),
-})
+});
 
-export type AvailabilityResult = z.infer<typeof availabilityResultSchema>
-export type InventoryHold = z.infer<typeof inventoryHoldSchema>
+export type AvailabilityResult = z.infer<typeof availabilityResultSchema>;
+export type InventoryHold = z.infer<typeof inventoryHoldSchema>;

@@ -1,0 +1,5 @@
+# Place TLS certificates here for production:
+# - fullchain.pem
+# - privkey.pem
+#
+# For Let's Encrypt, mount certbot volumes or copy certs into this directory.

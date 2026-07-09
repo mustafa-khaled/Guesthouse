@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
-import { z, ZodType, ZodError } from "zod";
-import { HttpError } from "../errors/http.errors";
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { z, ZodType, ZodError } from 'zod';
+import { HttpError } from '../errors/http.errors';
 
 type SchemaShape = {
   body?: ZodType;
@@ -9,25 +9,25 @@ type SchemaShape = {
 };
 
 type InferSchema<T extends SchemaShape> = {
-  body: T["body"] extends ZodType ? z.infer<T["body"]> : undefined;
-  params: T["params"] extends ZodType ? z.infer<T["params"]> : undefined;
-  query: T["query"] extends ZodType ? z.infer<T["query"]> : undefined;
+  body: T['body'] extends ZodType ? z.infer<T['body']> : undefined;
+  params: T['params'] extends ZodType ? z.infer<T['params']> : undefined;
+  query: T['query'] extends ZodType ? z.infer<T['query']> : undefined;
 };
 
 export interface ControllerContext<T extends SchemaShape = SchemaShape> {
   req: Request;
   res: Response;
   data: InferSchema<T>;
-  user: Request["user"];
+  user: Request['user'];
 }
 
 type ControllerHandler<T extends SchemaShape> = (
-  ctx: ControllerContext<T>
+  ctx: ControllerContext<T>,
 ) => Promise<void | Response>;
 
 export function wrapController<T extends SchemaShape>(
   schema: T | null,
-  handler: ControllerHandler<T>
+  handler: ControllerHandler<T>,
 ): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -60,7 +60,7 @@ export function wrapController<T extends SchemaShape>(
 
         if (!result.success) {
           return res.status(400).json({
-            message: "Validation failed",
+            message: 'Validation failed',
             errors: result.error.flatten(),
           });
         }
@@ -82,7 +82,7 @@ export function wrapController<T extends SchemaShape>(
       }
       if (error instanceof ZodError) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: error.flatten(),
         });
       }
@@ -92,23 +92,19 @@ export function wrapController<T extends SchemaShape>(
 }
 
 export function wrap(
-  handler: (ctx: ControllerContext<{}>) => Promise<void | Response>
+  handler: (ctx: ControllerContext<{}>) => Promise<void | Response>,
 ): RequestHandler {
   return wrapController(null, handler);
 }
 
 export const created = <T>(res: Response, data: T, message?: string) =>
-  res.status(201).json({ message: message || "Created successfully", data });
+  res.status(201).json({ message: message || 'Created successfully', data });
 
 export const ok = <T>(res: Response, data: T, message?: string) =>
-  message
-    ? res.status(200).json({ message, data })
-    : res.status(200).json({ data });
+  message ? res.status(200).json({ message, data }) : res.status(200).json({ data });
 
-export const okMessage = (res: Response, message: string) =>
-  res.status(200).json({ message });
+export const okMessage = (res: Response, message: string) => res.status(200).json({ message });
 
-export const okPaginated = <T>(res: Response, result: T) =>
-  res.status(200).json(result);
+export const okPaginated = <T>(res: Response, result: T) => res.status(200).json(result);
 
 export const noContent = (res: Response) => res.status(204).send();

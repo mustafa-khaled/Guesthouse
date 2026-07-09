@@ -1,11 +1,11 @@
-import { Request, Response } from "express";
-import Stripe from "stripe";
-import { Payment, PaymentStatusEnum } from "../../models/payment.model";
-import { Booking } from "../../models/booking.model";
-import { RatePlan } from "../../models/ratePlan.model";
-import { BookingStatus, PaymentStatus } from "../../common/enums/bookingStatus.enum";
-import { env } from "../../config/env";
-import { logger } from "../../lib/logger";
+import { Request, Response } from 'express';
+import Stripe from 'stripe';
+import { Payment, PaymentStatusEnum } from '../../models/payment.model';
+import { Booking } from '../../models/booking.model';
+import { RatePlan } from '../../models/ratePlan.model';
+import { BookingStatus, PaymentStatus } from '../../common/enums/bookingStatus.enum';
+import { env } from '../../config/env';
+import { logger } from '../../lib/logger';
 
 function getStripe(): Stripe | null {
   if (!env.STRIPE_SECRET_KEY) {
@@ -18,7 +18,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   const { bookingId } = paymentIntent.metadata;
 
   if (!bookingId) {
-    logger.warn({ paymentIntentId: paymentIntent.id }, "Payment intent missing bookingId metadata");
+    logger.warn({ paymentIntentId: paymentIntent.id }, 'Payment intent missing bookingId metadata');
     return;
   }
 
@@ -27,12 +27,15 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   });
 
   if (!payment) {
-    logger.warn({ paymentIntentId: paymentIntent.id }, "Payment record not found for payment intent");
+    logger.warn(
+      { paymentIntentId: paymentIntent.id },
+      'Payment record not found for payment intent',
+    );
     return;
   }
 
   if (payment.status === PaymentStatusEnum.COMPLETED) {
-    logger.info({ paymentIntentId: paymentIntent.id }, "Payment already processed, skipping");
+    logger.info({ paymentIntentId: paymentIntent.id }, 'Payment already processed, skipping');
     return;
   }
 
@@ -42,8 +45,8 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   const charge = paymentIntent.latest_charge as Stripe.Charge | null;
   if (charge?.payment_method_details?.card) {
     payment.metadata = {
-      cardLast4: charge.payment_method_details.card.last4,
-      cardBrand: charge.payment_method_details.card.brand,
+      cardLast4: charge.payment_method_details.card.last4 ?? undefined,
+      cardBrand: charge.payment_method_details.card.brand ?? undefined,
     };
   }
 
@@ -66,7 +69,10 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         ? (booking.pricing.grandTotal * ratePlan.depositPercentage) / 100
         : 0;
 
-      if (booking.payment.amountPaid >= requiredDeposit || ratePlan?.paymentPolicy === "pay-at-hotel") {
+      if (
+        booking.payment.amountPaid >= requiredDeposit ||
+        ratePlan?.paymentPolicy === 'pay-at-hotel'
+      ) {
         booking.status = BookingStatus.CONFIRMED;
       }
     }
@@ -74,7 +80,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     await booking.save();
   }
 
-  logger.info({ paymentIntentId: paymentIntent.id, bookingId }, "Payment succeeded via webhook");
+  logger.info({ paymentIntentId: paymentIntent.id, bookingId }, 'Payment succeeded via webhook');
 }
 
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): Promise<void> {
@@ -83,12 +89,18 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): P
   });
 
   if (!payment) {
-    logger.warn({ paymentIntentId: paymentIntent.id }, "Payment record not found for failed payment");
+    logger.warn(
+      { paymentIntentId: paymentIntent.id },
+      'Payment record not found for failed payment',
+    );
     return;
   }
 
   if (payment.status === PaymentStatusEnum.FAILED) {
-    logger.info({ paymentIntentId: paymentIntent.id }, "Payment already marked as failed, skipping");
+    logger.info(
+      { paymentIntentId: paymentIntent.id },
+      'Payment already marked as failed, skipping',
+    );
     return;
   }
 
@@ -101,13 +113,12 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): P
 
   await payment.save();
 
-  logger.info({ paymentIntentId: paymentIntent.id }, "Payment failed via webhook");
+  logger.info({ paymentIntentId: paymentIntent.id }, 'Payment failed via webhook');
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
-  const paymentIntentId = typeof charge.payment_intent === "string" 
-    ? charge.payment_intent 
-    : charge.payment_intent?.id;
+  const paymentIntentId =
+    typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
 
   if (!paymentIntentId) {
     return;
@@ -126,7 +137,7 @@ async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
     await payment.save();
   }
 
-  logger.info({ chargeId: charge.id, paymentIntentId }, "Charge refunded via webhook");
+  logger.info({ chargeId: charge.id, paymentIntentId }, 'Charge refunded via webhook');
 }
 
 class WebhookController {
@@ -135,64 +146,60 @@ class WebhookController {
     const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
 
     if (!stripe) {
-      logger.error("Stripe not configured");
-      res.status(500).json({ error: "Stripe not configured" });
+      logger.error('Stripe not configured');
+      res.status(500).json({ error: 'Stripe not configured' });
       return;
     }
 
     if (!webhookSecret) {
-      logger.error("Stripe webhook secret not configured");
-      res.status(500).json({ error: "Webhook secret not configured" });
+      logger.error('Stripe webhook secret not configured');
+      res.status(500).json({ error: 'Webhook secret not configured' });
       return;
     }
 
-    const signature = req.headers["stripe-signature"];
+    const signature = req.headers['stripe-signature'];
 
     if (!signature) {
-      logger.warn("Missing Stripe signature header");
-      res.status(400).json({ error: "Missing signature" });
+      logger.warn('Missing Stripe signature header');
+      res.status(400).json({ error: 'Missing signature' });
       return;
     }
 
     let event: Stripe.Event;
 
     try {
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        signature,
-        webhookSecret
-      );
+      event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      logger.error({ err }, "Webhook signature verification failed");
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      logger.error({ err }, 'Webhook signature verification failed');
       res.status(400).json({ error: `Webhook Error: ${message}` });
       return;
     }
 
-    logger.info({ eventType: event.type, eventId: event.id }, "Received Stripe webhook");
+    logger.info({ eventType: event.type, eventId: event.id }, 'Received Stripe webhook');
 
     try {
       switch (event.type) {
-        case "payment_intent.succeeded":
+        case 'payment_intent.succeeded':
           await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
           break;
 
-        case "payment_intent.payment_failed":
+        case 'payment_intent.payment_failed':
           await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
           break;
 
-        case "charge.refunded":
+        case 'charge.refunded':
           await handleChargeRefunded(event.data.object as Stripe.Charge);
           break;
 
         default:
-          logger.debug({ eventType: event.type }, "Unhandled webhook event type");
+          logger.debug({ eventType: event.type }, 'Unhandled webhook event type');
       }
 
       res.json({ received: true });
     } catch (err) {
-      logger.error({ err, eventType: event.type }, "Error processing webhook event");
-      res.status(500).json({ error: "Webhook processing failed" });
+      logger.error({ err, eventType: event.type }, 'Error processing webhook event');
+      res.status(500).json({ error: 'Webhook processing failed' });
     }
   }
 }

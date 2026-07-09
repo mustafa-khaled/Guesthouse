@@ -20,9 +20,7 @@ export function generateOpenAPI() {
         get: {
           tags: ['Properties'],
           summary: 'Get property details',
-          parameters: [
-            { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-          ],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
           responses: { '200': { description: 'Property details' } },
         },
       },
@@ -60,9 +58,7 @@ export function generateOpenAPI() {
         get: {
           tags: ['Bookings'],
           summary: 'Get booking details',
-          parameters: [
-            { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-          ],
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
           responses: { '200': { description: 'Booking details' } },
         },
       },
@@ -222,5 +218,5 @@ export function generateOpenAPI() {
       },
     },
     security: [{ bearerAuth: [] }],
-  }
+  };
 }

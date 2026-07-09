@@ -1,14 +1,14 @@
-import { Request, Response, NextFunction } from "express";
-import { Booking } from "../../models/booking.model";
-import { Guest } from "../../models/guest.model";
-import { Payment } from "../../models/payment.model";
-import { BadRequestError } from "../../common/errors/http.errors";
+import { Request, Response, NextFunction } from 'express';
+import { Booking } from '../../models/booking.model';
+import { Guest } from '../../models/guest.model';
+import { Payment } from '../../models/payment.model';
+import { BadRequestError } from '../../common/errors/http.errors';
 import {
   sendCSVResponse,
   bookingExportFields,
   guestExportFields,
   paymentExportFields,
-} from "../../lib/export";
+} from '../../lib/export';
 
 class ExportController {
   async exportBookings(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -16,7 +16,7 @@ class ExportController {
       const { propertyId, startDate, endDate, status } = req.query;
 
       if (!propertyId) {
-        throw new BadRequestError("propertyId is required");
+        throw new BadRequestError('propertyId is required');
       }
 
       const query: any = {
@@ -25,12 +25,12 @@ class ExportController {
       };
 
       if (startDate || endDate) {
-        query["dates.checkIn"] = {};
+        query['dates.checkIn'] = {};
         if (startDate) {
-          query["dates.checkIn"].$gte = new Date(startDate as string);
+          query['dates.checkIn'].$gte = new Date(startDate as string);
         }
         if (endDate) {
-          query["dates.checkIn"].$lte = new Date(endDate as string);
+          query['dates.checkIn'].$lte = new Date(endDate as string);
         }
       }
 
@@ -39,10 +39,10 @@ class ExportController {
       }
 
       const bookings = await Booking.find(query)
-        .populate("guestId", "firstName lastName email phone")
-        .populate("propertyId", "name slug")
-        .populate("roomTypeId", "name code")
-        .sort({ "dates.checkIn": -1 })
+        .populate('guestId', 'firstName lastName email phone')
+        .populate('propertyId', 'name slug')
+        .populate('roomTypeId', 'name code')
+        .sort({ 'dates.checkIn': -1 })
         .limit(10000)
         .lean();
 
@@ -74,11 +74,11 @@ class ExportController {
       }
 
       if (tags) {
-        const tagArray = (tags as string).split(",").map((t) => t.trim());
+        const tagArray = (tags as string).split(',').map((t) => t.trim());
         query.tags = { $in: tagArray };
       }
 
-      if (marketingConsent === "true") {
+      if (marketingConsent === 'true') {
         query.marketingConsent = true;
       }
 
@@ -88,7 +88,7 @@ class ExportController {
         .lean();
 
       sendCSVResponse(res, guests, {
-        filename: "guests_export",
+        filename: 'guests_export',
         fields: guestExportFields,
       });
     } catch (error) {
@@ -122,24 +122,25 @@ class ExportController {
 
       let payments = await Payment.find(query)
         .populate({
-          path: "bookingId",
-          select: "confirmationNumber propertyId",
-          populate: { path: "propertyId", select: "name" },
+          path: 'bookingId',
+          select: 'confirmationNumber propertyId',
+          populate: { path: 'propertyId', select: 'name' },
         })
-        .populate("guestId", "firstName lastName email")
+        .populate('guestId', 'firstName lastName email')
         .sort({ createdAt: -1 })
         .limit(10000)
         .lean();
 
       if (propertyId) {
-        payments = payments.filter((p: any) => 
-          p.bookingId?.propertyId?._id?.toString() === propertyId ||
-          p.bookingId?.propertyId?.toString() === propertyId
+        payments = payments.filter(
+          (p: any) =>
+            p.bookingId?.propertyId?._id?.toString() === propertyId ||
+            p.bookingId?.propertyId?.toString() === propertyId,
         );
       }
 
       sendCSVResponse(res, payments, {
-        filename: "payments_export",
+        filename: 'payments_export',
         fields: paymentExportFields,
       });
     } catch (error) {

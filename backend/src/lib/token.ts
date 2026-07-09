@@ -1,6 +1,6 @@
-import jwt from "jsonwebtoken";
-import { Role } from "../common/enums/role.enum";
-import { env } from "../config/env";
+import jwt from 'jsonwebtoken';
+import { Role } from '../common/enums/role.enum';
+import { env } from '../config/env';
 
 export interface AccessTokenPayload {
   sub: string;
@@ -13,15 +13,11 @@ export interface RefreshTokenPayload {
   tokenVersion: number;
 }
 
-export function createAccessToken(
-  userId: string,
-  role: Role,
-  tokenVersion: number,
-) {
+export function createAccessToken(userId: string, role: Role, tokenVersion: number) {
   const payload: AccessTokenPayload = { sub: userId, role, tokenVersion };
 
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: "30m",
+    expiresIn: '30m',
   });
 }
 
@@ -29,7 +25,7 @@ export function createRefreshToken(userId: string, tokenVersion: number) {
   const payload: RefreshTokenPayload = { sub: userId, tokenVersion };
 
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: "7d",
+    expiresIn: '7d',
   });
 }
 

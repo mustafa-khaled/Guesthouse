@@ -1,9 +1,9 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const dateStringSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
-  .refine((date) => !isNaN(Date.parse(date)), "Invalid date");
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+  .refine((date) => !isNaN(Date.parse(date)), 'Invalid date');
 
 export const dateRangeSchema = z
   .object({
@@ -12,7 +12,7 @@ export const dateRangeSchema = z
   })
   .refine(
     (data) => new Date(data.startDate) <= new Date(data.endDate),
-    "Start date must be before or equal to end date"
+    'Start date must be before or equal to end date',
   );
 
 export function parseDate(dateString: string): Date {
@@ -22,7 +22,7 @@ export function parseDate(dateString: string): Date {
 }
 
 export function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0];
+  return date.toISOString().split('T')[0];
 }
 
 export function getDateRange(startDate: Date, endDate: Date): Date[] {
@@ -51,11 +51,7 @@ export function getNightsBetween(checkIn: Date, checkOut: Date): number {
   return Math.round((end.getTime() - start.getTime()) / oneDay);
 }
 
-export function isDateInRange(
-  date: Date,
-  startDate: Date,
-  endDate: Date
-): boolean {
+export function isDateInRange(date: Date, startDate: Date, endDate: Date): boolean {
   const d = new Date(date);
   d.setUTCHours(0, 0, 0, 0);
   const start = new Date(startDate);
@@ -122,7 +118,7 @@ export function getMonthRange(year: number, month: number): { start: Date; end: 
 }
 
 export function parseTimeString(timeString: string): { hours: number; minutes: number } {
-  const [hours, minutes] = timeString.split(":").map(Number);
+  const [hours, minutes] = timeString.split(':').map(Number);
   return { hours, minutes };
 }
 

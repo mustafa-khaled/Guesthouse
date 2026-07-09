@@ -1,10 +1,10 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
 
 export enum ReviewStatus {
-  PENDING = "pending",
-  APPROVED = "approved",
-  REJECTED = "rejected",
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
 }
 
 export interface IReviewRatings {
@@ -50,35 +50,35 @@ const ratingsSchema = new Schema(
     service: { type: Number, min: 1, max: 5 },
     value: { type: Number, min: 1, max: 5 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const responseSchema = new Schema(
   {
     text: { type: String, required: true },
     respondedAt: { type: Date, default: Date.now },
-    respondedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    respondedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const reviewSchema = new Schema<IReview>(
   {
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       required: true,
       index: true,
     },
     bookingId: {
       type: Schema.Types.ObjectId,
-      ref: "Booking",
+      ref: 'Booking',
       required: true,
       unique: true,
     },
     guestId: {
       type: Schema.Types.ObjectId,
-      ref: "Guest",
+      ref: 'Guest',
       required: true,
       index: true,
     },
@@ -112,14 +112,14 @@ const reviewSchema = new Schema<IReview>(
       default: 0,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 reviewSchema.index({ propertyId: 1, status: 1, createdAt: -1 });
 reviewSchema.index({ guestId: 1, createdAt: -1 });
-reviewSchema.index({ "ratings.overall": -1 });
+reviewSchema.index({ 'ratings.overall': -1 });
 
 reviewSchema.plugin(softDeletePlugin);
 reviewSchema.plugin(toJSONPlugin);
 
-export const Review = model<IReview>("Review", reviewSchema);
+export const Review = model<IReview>('Review', reviewSchema);

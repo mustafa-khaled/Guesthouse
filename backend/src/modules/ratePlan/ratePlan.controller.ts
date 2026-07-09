@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { ratePlanService } from "./ratePlan.service";
+import { Request, Response, NextFunction } from 'express';
+import { ratePlanService } from './ratePlan.service';
 import {
   createRatePlanSchema,
   updateRatePlanSchema,
@@ -7,8 +7,9 @@ import {
   listRatePlansSchema,
   createPriceRuleSchema,
   updatePriceRuleSchema,
-} from "./ratePlan.schema";
-import { HttpError } from "../../common/errors/http.errors";
+} from './ratePlan.schema';
+import { asParam } from '../../common/utils/params';
+import { HttpError } from '../../common/errors/http.errors';
 
 class RatePlanController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -19,18 +20,18 @@ class RatePlanController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const ratePlan = await ratePlanService.create(
         result.data.params.roomTypeId,
-        result.data.body
+        result.data.body,
       );
 
       return res.status(201).json({
-        message: "Rate plan created successfully",
+        message: 'Rate plan created successfully',
         data: ratePlan,
       });
     } catch (error) {
@@ -46,7 +47,7 @@ class RatePlanController {
       const result = getRatePlanSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -72,18 +73,15 @@ class RatePlanController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const ratePlan = await ratePlanService.update(
-        result.data.params.id,
-        result.data.body
-      );
+      const ratePlan = await ratePlanService.update(result.data.params.id, result.data.body);
 
       return res.status(200).json({
-        message: "Rate plan updated successfully",
+        message: 'Rate plan updated successfully',
         data: ratePlan,
       });
     } catch (error) {
@@ -99,7 +97,7 @@ class RatePlanController {
       const result = getRatePlanSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -107,7 +105,7 @@ class RatePlanController {
       await ratePlanService.delete(result.data.params.id);
 
       return res.status(200).json({
-        message: "Rate plan deleted successfully",
+        message: 'Rate plan deleted successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {
@@ -125,14 +123,14 @@ class RatePlanController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const ratePlans = await ratePlanService.listByRoomType(
         result.data.params.roomTypeId,
-        result.data.query.isActive
+        result.data.query.isActive,
       );
 
       return res.status(200).json({
@@ -154,18 +152,18 @@ class RatePlanController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const priceRule = await ratePlanService.createPriceRule(
         result.data.params.ratePlanId,
-        result.data.body
+        result.data.body,
       );
 
       return res.status(201).json({
-        message: "Price rule created successfully",
+        message: 'Price rule created successfully',
         data: priceRule,
       });
     } catch (error) {
@@ -184,18 +182,18 @@ class RatePlanController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const priceRule = await ratePlanService.updatePriceRule(
         result.data.params.id,
-        result.data.body
+        result.data.body,
       );
 
       return res.status(200).json({
-        message: "Price rule updated successfully",
+        message: 'Price rule updated successfully',
         data: priceRule,
       });
     } catch (error) {
@@ -210,13 +208,13 @@ class RatePlanController {
     try {
       const id = req.params.id;
       if (!id) {
-        return res.status(400).json({ message: "Price rule ID is required" });
+        return res.status(400).json({ message: 'Price rule ID is required' });
       }
 
-      await ratePlanService.deletePriceRule(id);
+      await ratePlanService.deletePriceRule(asParam(id));
 
       return res.status(200).json({
-        message: "Price rule deleted successfully",
+        message: 'Price rule deleted successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {
@@ -230,10 +228,10 @@ class RatePlanController {
     try {
       const ratePlanId = req.params.ratePlanId;
       if (!ratePlanId) {
-        return res.status(400).json({ message: "Rate plan ID is required" });
+        return res.status(400).json({ message: 'Rate plan ID is required' });
       }
 
-      const priceRules = await ratePlanService.listPriceRules(ratePlanId);
+      const priceRules = await ratePlanService.listPriceRules(asParam(ratePlanId));
 
       return res.status(200).json({
         data: priceRules,

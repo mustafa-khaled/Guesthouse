@@ -1,41 +1,32 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { use } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { guestQueries } from '@/queries/bookings.queries'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import Spinner from '@/components/Spinner'
-import { formatCurrency, formatDate, getId } from '@/lib/utils'
+import Link from 'next/link';
+import { use } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { guestQueries } from '@/queries/bookings.queries';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Spinner from '@/components/Spinner';
+import { formatCurrency, formatDate, getId } from '@/lib/utils';
 
-export default function StaffGuestDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = use(params)
+export default function StaffGuestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
 
-  const { data: guest, isLoading, isError, error } = useQuery(
-    guestQueries.detail(id),
-  )
+  const { data: guest, isLoading, isError, error } = useQuery(guestQueries.detail(id));
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError || !guest) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Guest not found'}
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          href="/staff/guests"
-          className="text-sm text-green-700 hover:underline"
-        >
+        <Link href="/staff/guests" className="text-sm text-green-700 hover:underline">
           &larr; Back to guests
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">
@@ -64,9 +55,7 @@ export default function StaffGuestDetailPage({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Date of Birth</span>
-              <span>
-                {guest.dateOfBirth ? formatDate(guest.dateOfBirth) : '—'}
-              </span>
+              <span>{guest.dateOfBirth ? formatDate(guest.dateOfBirth) : '—'}</span>
             </div>
           </CardContent>
         </Card>
@@ -83,9 +72,7 @@ export default function StaffGuestDetailPage({
             <div className="flex justify-between">
               <span className="text-gray-500">Total Spent</span>
               <span>
-                {guest.stats?.totalSpent != null
-                  ? formatCurrency(guest.stats.totalSpent)
-                  : '—'}
+                {guest.stats?.totalSpent != null ? formatCurrency(guest.stats.totalSpent) : '—'}
               </span>
             </div>
             {guest.userId && (
@@ -98,5 +85,5 @@ export default function StaffGuestDetailPage({
         </Card>
       </div>
     </div>
-  )
+  );
 }

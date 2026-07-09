@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { adminQueries } from '@/queries/admin.queries'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { adminQueries } from '@/queries/admin.queries';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -12,31 +12,31 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import Spinner from '@/components/Spinner'
-import { formatDate, getId, getRefLabel } from '@/lib/utils'
-import type { AuditLog } from '@/types'
+} from '@/components/ui/table';
+import Spinner from '@/components/Spinner';
+import { formatDate, getId, getRefLabel } from '@/lib/utils';
+import type { AuditLog } from '@/types';
 
 export default function AdminAuditLogsPage() {
-  const [page, setPage] = useState(1)
-  const limit = 30
+  const [page, setPage] = useState(1);
+  const limit = 30;
 
   const { data, isLoading, isError, error, isFetching } = useQuery(
     adminQueries.auditLogs({ page: String(page), limit: String(limit) }),
-  )
+  );
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Failed to load audit logs'}
       </div>
-    )
+    );
   }
 
-  const logs = data?.data ?? []
-  const pagination = data?.pagination
+  const logs = data?.data ?? [];
+  const pagination = data?.pagination;
 
   return (
     <div className="space-y-6">
@@ -80,9 +80,7 @@ export default function AdminAuditLogsPage() {
                         {log.resourceId?.slice(0, 12) ?? '—'}
                       </TableCell>
                       <TableCell>{getRefLabel(log.userId as never)}</TableCell>
-                      <TableCell className="text-gray-500">
-                        {log.ipAddress || '—'}
-                      </TableCell>
+                      <TableCell className="text-gray-500">{log.ipAddress || '—'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -118,5 +116,5 @@ export default function AdminAuditLogsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

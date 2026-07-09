@@ -1,9 +1,9 @@
-import nodemailer from "nodemailer";
-import type SMTPTransport from "nodemailer/lib/smtp-transport";
-import type { Transporter } from "nodemailer";
-import { env } from "../config/env";
-import { logger } from "./logger";
-import { addEmailJob } from "./queue";
+import nodemailer from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
+import type { Transporter } from 'nodemailer';
+import { env } from '../config/env';
+import { logger } from './logger';
+import { addEmailJob } from './queue';
 
 let transporter: Transporter<SMTPTransport.SentMessageInfo> | null = null;
 
@@ -36,11 +36,11 @@ export async function sendEmail(
   to: string,
   subject: string,
   html: string,
-  options: { sync?: boolean; priority?: number } = {}
+  options: { sync?: boolean; priority?: number } = {},
 ): Promise<boolean> {
   const config = getTransporter();
   if (!config) {
-    logger.warn("SMTP configuration is incomplete; email not sent");
+    logger.warn('SMTP configuration is incomplete; email not sent');
     return false;
   }
 
@@ -49,7 +49,7 @@ export async function sendEmail(
     if (jobId) {
       return true;
     }
-    logger.info({ to, subject }, "Queue unavailable, sending email synchronously");
+    logger.info({ to, subject }, 'Queue unavailable, sending email synchronously');
   }
 
   try {
@@ -59,19 +59,15 @@ export async function sendEmail(
       subject,
       html,
     });
-    logger.info({ to, subject }, "Email sent synchronously");
+    logger.info({ to, subject }, 'Email sent synchronously');
     return true;
   } catch (error) {
-    logger.error({ err: error, to, subject }, "Failed to send email");
+    logger.error({ err: error, to, subject }, 'Failed to send email');
     throw error;
   }
 }
 
-export async function sendEmailSync(
-  to: string,
-  subject: string,
-  html: string
-): Promise<boolean> {
+export async function sendEmailSync(to: string, subject: string, html: string): Promise<boolean> {
   return sendEmail(to, subject, html, { sync: true });
 }
 
@@ -79,7 +75,7 @@ export async function queueEmail(
   to: string,
   subject: string,
   html: string,
-  priority: number = 0
+  priority: number = 0,
 ): Promise<string | null> {
   return addEmailJob({ to, subject, html }, priority);
 }

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const promotionSchema = z.object({
   id: z.string().optional(),
@@ -13,6 +13,6 @@ export const promotionSchema = z.object({
   maxUses: z.number().optional(),
   usedCount: z.number().optional(),
   isActive: z.boolean().optional(),
-})
+});
 
-export type Promotion = z.infer<typeof promotionSchema>
+export type Promotion = z.infer<typeof promotionSchema>;

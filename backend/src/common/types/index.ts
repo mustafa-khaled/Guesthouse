@@ -1,2 +1,2 @@
-export * from "./model.types";
-export * from "./express.d";
+export * from './model.types';
+export * from './express.d';

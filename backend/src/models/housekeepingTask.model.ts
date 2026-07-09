@@ -1,10 +1,10 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { toJSONPlugin } from '../common/plugins';
 import {
   HousekeepingTaskType,
   HousekeepingTaskStatus,
   HousekeepingPriority,
-} from "../common/enums/roomStatus.enum";
+} from '../common/enums/roomStatus.enum';
 
 export interface ITaskIssue {
   description: string;
@@ -38,32 +38,32 @@ const issueSchema = new Schema(
     description: { type: String, required: true },
     severity: {
       type: String,
-      enum: ["low", "medium", "high", "critical"],
-      default: "medium",
+      enum: ['low', 'medium', 'high', 'critical'],
+      default: 'medium',
     },
     reportedAt: { type: Date, default: Date.now },
     resolvedAt: Date,
   },
-  { _id: true }
+  { _id: true },
 );
 
 const housekeepingTaskSchema = new Schema<IHousekeepingTask>(
   {
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       required: true,
       index: true,
     },
     roomId: {
       type: Schema.Types.ObjectId,
-      ref: "Room",
+      ref: 'Room',
       required: true,
       index: true,
     },
     bookingId: {
       type: Schema.Types.ObjectId,
-      ref: "Booking",
+      ref: 'Booking',
     },
     type: {
       type: String,
@@ -83,7 +83,7 @@ const housekeepingTaskSchema = new Schema<IHousekeepingTask>(
     },
     assignedTo: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
     scheduledDate: {
       type: Date,
@@ -95,13 +95,13 @@ const housekeepingTaskSchema = new Schema<IHousekeepingTask>(
     verifiedAt: Date,
     verifiedBy: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
     notes: String,
     issues: [issueSchema],
     duration: Number,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 housekeepingTaskSchema.index({ propertyId: 1, scheduledDate: 1, status: 1 });
@@ -111,6 +111,6 @@ housekeepingTaskSchema.index({ roomId: 1, scheduledDate: 1 });
 housekeepingTaskSchema.plugin(toJSONPlugin);
 
 export const HousekeepingTask = model<IHousekeepingTask>(
-  "HousekeepingTask",
-  housekeepingTaskSchema
+  'HousekeepingTask',
+  housekeepingTaskSchema,
 );

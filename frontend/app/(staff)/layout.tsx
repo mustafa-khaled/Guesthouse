@@ -1,17 +1,13 @@
-import Link from 'next/link'
+import Link from 'next/link';
 
 const navItems = [
   { href: '/staff/front-desk', label: 'Front Desk' },
   { href: '/staff/bookings', label: 'Bookings' },
   { href: '/staff/guests', label: 'Guests' },
   { href: '/staff/housekeeping', label: 'Housekeeping' },
-]
+];
 
-export default function StaffLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function StaffLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <aside className="w-56 shrink-0 border-r border-gray-200 bg-white">
@@ -42,5 +38,5 @@ export default function StaffLayout({
       </aside>
       <main className="flex-1 overflow-auto p-6">{children}</main>
     </div>
-  )
+  );
 }

@@ -1,12 +1,12 @@
-import { cn } from '@/lib/utils'
-import { Container } from '@/components/ui/container'
+import { cn } from '@/lib/utils';
+import { Container } from '@/components/ui/container';
 
 interface SectionProps extends React.HTMLAttributes<HTMLElement> {
-  id?: string
-  variant?: 'default' | 'divider' | 'section'
-  eyebrow?: string
-  title?: string
-  description?: string
+  id?: string;
+  variant?: 'default' | 'divider' | 'section';
+  eyebrow?: string;
+  title?: string;
+  description?: string;
 }
 
 export function Section({
@@ -24,7 +24,7 @@ export function Section({
       id={id}
       className={cn(
         'py-16 md:py-24',
-        variant === 'divider' && 'border-b border-matcha-border',
+        variant === 'divider' && 'border-matcha-border border-b',
         variant === 'section' && 'bg-matcha-section',
         className,
       )}
@@ -32,17 +32,17 @@ export function Section({
     >
       <Container>
         {eyebrow && (
-          <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-matcha-brand">
+          <p className="text-matcha-brand mb-4 text-xs font-medium uppercase tracking-[0.2em]">
             {eyebrow}
           </p>
         )}
         {title && (
-          <h2 className="font-serif text-3xl font-medium text-matcha-heading md:text-4xl">
+          <h2 className="text-matcha-heading font-serif text-3xl font-medium md:text-4xl">
             {title}
           </h2>
         )}
         {description && (
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-matcha-body md:text-lg">
+          <p className="text-matcha-body mt-4 max-w-2xl text-base leading-relaxed md:text-lg">
             {description}
           </p>
         )}
@@ -50,5 +50,5 @@ export function Section({
         {children}
       </Container>
     </section>
-  )
+  );
 }

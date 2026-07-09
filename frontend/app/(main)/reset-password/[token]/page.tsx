@@ -1,44 +1,44 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import toast from 'react-hot-toast'
-import { clientFetch } from '@/lib/api/client'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { clientFetch } from '@/lib/api/client';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ResetPasswordPage() {
-  const params = useParams()
-  const router = useRouter()
-  const token = String(params.token)
-  const [password, setPassword] = useState('')
-  const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const params = useParams();
+  const router = useRouter();
+  const token = String(params.token);
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
 
     if (password !== passwordConfirm) {
-      toast.error('Passwords do not match')
-      return
+      toast.error('Passwords do not match');
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       await clientFetch('/auth/reset-password', {
         method: 'POST',
         body: JSON.stringify({ token, password }),
-      })
-      toast.success('Password reset successfully')
-      setTimeout(() => router.push('/login'), 1500)
+      });
+      toast.success('Password reset successfully');
+      setTimeout(() => router.push('/login'), 1500);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Reset failed')
+      toast.error(err instanceof Error ? err.message : 'Reset failed');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -86,5 +86,5 @@ export default function ResetPasswordPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,5 +1,5 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { toJSONPlugin } from '../common/plugins';
 
 export interface IInventory extends Document {
   propertyId: Types.ObjectId;
@@ -22,12 +22,12 @@ const inventorySchema = new Schema<IInventory>(
   {
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       required: true,
     },
     roomTypeId: {
       type: Schema.Types.ObjectId,
-      ref: "RoomType",
+      ref: 'RoomType',
       required: true,
     },
     date: {
@@ -70,27 +70,24 @@ const inventorySchema = new Schema<IInventory>(
     minStay: { type: Number, min: 1 },
     maxStay: { type: Number, min: 1 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-inventorySchema.index(
-  { propertyId: 1, roomTypeId: 1, date: 1 },
-  { unique: true }
-);
+inventorySchema.index({ propertyId: 1, roomTypeId: 1, date: 1 }, { unique: true });
 inventorySchema.index({ propertyId: 1, date: 1 });
 inventorySchema.index({ roomTypeId: 1, date: 1, availableRooms: 1 });
 
-inventorySchema.pre("save", function (next) {
+inventorySchema.pre('save', function (next) {
   this.availableRooms = Math.max(
     0,
-    this.totalRooms - this.bookedRooms - this.heldRooms - this.blockedRooms
+    this.totalRooms - this.bookedRooms - this.heldRooms - this.blockedRooms,
   );
   next();
 });
 
 inventorySchema.plugin(toJSONPlugin);
 
-export const Inventory = model<IInventory>("Inventory", inventorySchema);
+export const Inventory = model<IInventory>('Inventory', inventorySchema);
 
 export interface IInventoryHold extends Document {
   propertyId: Types.ObjectId;
@@ -108,12 +105,12 @@ const inventoryHoldSchema = new Schema<IInventoryHold>(
   {
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       required: true,
     },
     roomTypeId: {
       type: Schema.Types.ObjectId,
-      ref: "RoomType",
+      ref: 'RoomType',
       required: true,
     },
     checkIn: {
@@ -135,7 +132,7 @@ const inventoryHoldSchema = new Schema<IInventoryHold>(
     },
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
     expiresAt: {
       type: Date,
@@ -143,7 +140,7 @@ const inventoryHoldSchema = new Schema<IInventoryHold>(
       index: { expireAfterSeconds: 0 },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 inventoryHoldSchema.index({ propertyId: 1, roomTypeId: 1, checkIn: 1, checkOut: 1 });
@@ -151,4 +148,4 @@ inventoryHoldSchema.index({ sessionId: 1 });
 
 inventoryHoldSchema.plugin(toJSONPlugin);
 
-export const InventoryHold = model<IInventoryHold>("InventoryHold", inventoryHoldSchema);
+export const InventoryHold = model<IInventoryHold>('InventoryHold', inventoryHoldSchema);

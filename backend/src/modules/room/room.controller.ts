@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { roomService } from "./room.service";
+import { Request, Response, NextFunction } from 'express';
+import { roomService } from './room.service';
 import {
   createRoomSchema,
   updateRoomSchema,
@@ -7,8 +7,9 @@ import {
   getRoomSchema,
   listRoomsSchema,
   bulkCreateRoomsSchema,
-} from "./room.schema";
-import { HttpError } from "../../common/errors/http.errors";
+} from './room.schema';
+import { HttpError } from '../../common/errors/http.errors';
+import { asParam } from '../../common/utils/params';
 
 class RoomController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -19,18 +20,15 @@ class RoomController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const room = await roomService.create(
-        result.data.params.propertyId,
-        result.data.body
-      );
+      const room = await roomService.create(result.data.params.propertyId, result.data.body);
 
       return res.status(201).json({
-        message: "Room created successfully",
+        message: 'Room created successfully',
         data: room,
       });
     } catch (error) {
@@ -46,7 +44,7 @@ class RoomController {
       const result = getRoomSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -72,18 +70,15 @@ class RoomController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const room = await roomService.update(
-        result.data.params.id,
-        result.data.body
-      );
+      const room = await roomService.update(result.data.params.id, result.data.body);
 
       return res.status(200).json({
-        message: "Room updated successfully",
+        message: 'Room updated successfully',
         data: room,
       });
     } catch (error) {
@@ -102,7 +97,7 @@ class RoomController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -110,11 +105,11 @@ class RoomController {
       const room = await roomService.updateStatus(
         result.data.params.id,
         result.data.body.status,
-        result.data.body.notes
+        result.data.body.notes,
       );
 
       return res.status(200).json({
-        message: "Room status updated successfully",
+        message: 'Room status updated successfully',
         data: room,
       });
     } catch (error) {
@@ -130,7 +125,7 @@ class RoomController {
       const result = getRoomSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -138,7 +133,7 @@ class RoomController {
       await roomService.delete(result.data.params.id);
 
       return res.status(200).json({
-        message: "Room deleted successfully",
+        message: 'Room deleted successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {
@@ -156,7 +151,7 @@ class RoomController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -167,7 +162,7 @@ class RoomController {
         result.data.params.propertyId,
         filters,
         page,
-        limit
+        limit,
       );
 
       return res.status(200).json(rooms);
@@ -187,7 +182,7 @@ class RoomController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -196,7 +191,7 @@ class RoomController {
         result.data.params.propertyId,
         result.data.body.roomTypeId,
         result.data.body.floors,
-        result.data.body.features
+        result.data.body.features,
       );
 
       return res.status(201).json({
@@ -215,10 +210,10 @@ class RoomController {
     try {
       const propertyId = req.params.propertyId;
       if (!propertyId) {
-        return res.status(400).json({ message: "Property ID is required" });
+        return res.status(400).json({ message: 'Property ID is required' });
       }
 
-      const summary = await roomService.getStatusSummary(propertyId);
+      const summary = await roomService.getStatusSummary(asParam(propertyId));
 
       return res.status(200).json({
         data: summary,

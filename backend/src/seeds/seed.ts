@@ -1,22 +1,22 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 dotenv.config();
 
-import mongoose from "mongoose";
-import { env } from "../config/env";
-import { logger } from "../lib/logger";
-import { hashPassword } from "../lib/hash";
+import mongoose from 'mongoose';
+import { env } from '../config/env';
+import { logger } from '../lib/logger';
+import { hashPassword } from '../lib/hash';
 
-import { User } from "../models/user.model";
-import { Property } from "../models/property.model";
-import { RoomType } from "../models/roomType.model";
-import { Room } from "../models/room.model";
-import { RatePlan } from "../models/ratePlan.model";
-import { Guest } from "../models/guest.model";
-import { AddOn } from "../models/addOn.model";
+import { User } from '../models/user.model';
+import { Property } from '../models/property.model';
+import { RoomType } from '../models/roomType.model';
+import { Room } from '../models/room.model';
+import { RatePlan } from '../models/ratePlan.model';
+import { Guest } from '../models/guest.model';
+import { AddOn } from '../models/addOn.model';
 
-import { usersSeed } from "./data/users.seed";
-import { propertiesSeed } from "./data/properties.seed";
-import { roomTypesSeed } from "./data/roomTypes.seed";
+import { usersSeed } from './data/users.seed';
+import { propertiesSeed } from './data/properties.seed';
+import { roomTypesSeed } from './data/roomTypes.seed';
 
 interface SeedOptions {
   clean?: boolean;
@@ -33,21 +33,21 @@ interface SeedOptions {
 async function connectDB(): Promise<void> {
   try {
     await mongoose.connect(env.MONGODB_URI);
-    logger.info("Connected to MongoDB for seeding");
+    logger.info('Connected to MongoDB for seeding');
   } catch (error) {
-    logger.error({ err: error }, "Failed to connect to MongoDB");
+    logger.error({ err: error }, 'Failed to connect to MongoDB');
     process.exit(1);
   }
 }
 
 async function cleanDatabase(): Promise<void> {
-  logger.info("Cleaning database...");
+  logger.info('Cleaning database...');
   await mongoose.connection.dropDatabase();
-  logger.info("Database cleaned (dropped and recreated)");
+  logger.info('Database cleaned (dropped and recreated)');
 }
 
 async function seedUsers(): Promise<Map<string, string>> {
-  logger.info("Seeding users...");
+  logger.info('Seeding users...');
   const userIdMap = new Map<string, string>();
 
   for (const userData of usersSeed) {
@@ -65,7 +65,7 @@ async function seedUsers(): Promise<Map<string, string>> {
 }
 
 async function seedProperties(ownerId?: string): Promise<Map<string, string>> {
-  logger.info("Seeding properties...");
+  logger.info('Seeding properties...');
   const propertyIdMap = new Map<string, string>();
 
   for (const propertyData of propertiesSeed) {
@@ -82,7 +82,7 @@ async function seedProperties(ownerId?: string): Promise<Map<string, string>> {
 }
 
 async function seedRoomTypes(propertyIdMap: Map<string, string>): Promise<Map<string, string>> {
-  logger.info("Seeding room types...");
+  logger.info('Seeding room types...');
   const roomTypeIdMap = new Map<string, string>();
   let count = 0;
 
@@ -110,27 +110,27 @@ async function seedRoomTypes(propertyIdMap: Map<string, string>): Promise<Map<st
 
 async function seedRooms(
   propertyIdMap: Map<string, string>,
-  roomTypeIdMap: Map<string, string>
+  roomTypeIdMap: Map<string, string>,
 ): Promise<void> {
-  logger.info("Seeding rooms...");
+  logger.info('Seeding rooms...');
 
   let count = 0;
 
   const roomConfigs: Record<string, { code: string; count: number; floor: number }[]> = {
-    "seaside-resort-spa": [
-      { code: "OVS", count: 5, floor: 3 },
-      { code: "DLX", count: 10, floor: 2 },
-      { code: "FAM", count: 3, floor: 4 },
+    'seaside-resort-spa': [
+      { code: 'OVS', count: 5, floor: 3 },
+      { code: 'DLX', count: 10, floor: 2 },
+      { code: 'FAM', count: 3, floor: 4 },
     ],
-    "mountain-lodge-inn": [
-      { code: "MTV", count: 8, floor: 2 },
-      { code: "LGS", count: 4, floor: 3 },
-      { code: "STD", count: 12, floor: 1 },
+    'mountain-lodge-inn': [
+      { code: 'MTV', count: 8, floor: 2 },
+      { code: 'LGS', count: 4, floor: 3 },
+      { code: 'STD', count: 12, floor: 1 },
     ],
-    "urban-boutique-hotel": [
-      { code: "CVK", count: 15, floor: 5 },
-      { code: "EXE", count: 5, floor: 8 },
-      { code: "TWN", count: 10, floor: 4 },
+    'urban-boutique-hotel': [
+      { code: 'CVK', count: 15, floor: 5 },
+      { code: 'EXE', count: 5, floor: 8 },
+      { code: 'TWN', count: 10, floor: 4 },
     ],
   };
 
@@ -144,13 +144,13 @@ async function seedRooms(
       if (!roomTypeId) continue;
 
       for (let i = 1; i <= config.count; i++) {
-        const roomNumber = `${config.floor}${String(i).padStart(2, "0")}`;
+        const roomNumber = `${config.floor}${String(i).padStart(2, '0')}`;
         rooms.push({
           propertyId: new mongoose.Types.ObjectId(propertyId),
           roomTypeId: new mongoose.Types.ObjectId(roomTypeId),
           roomNumber,
           floor: config.floor,
-          status: "clean",
+          status: 'clean',
           isOccupied: false,
           isActive: true,
         });
@@ -165,32 +165,32 @@ async function seedRooms(
 
 async function seedRatePlans(
   propertyIdMap: Map<string, string>,
-  roomTypeIdMap: Map<string, string>
+  roomTypeIdMap: Map<string, string>,
 ): Promise<void> {
-  logger.info("Seeding rate plans...");
+  logger.info('Seeding rate plans...');
   let count = 0;
 
   const ratePlanTemplates = [
     {
-      name: "Standard Rate",
-      code: "STD",
+      name: 'Standard Rate',
+      code: 'STD',
       priceMultiplier: 1.0,
-      cancellationPolicy: { type: "flexible", deadlineHours: 48, penaltyPercentage: 0 },
-      mealPlan: "room_only",
+      cancellationPolicy: { type: 'flexible', deadlineHours: 48, penaltyPercentage: 0 },
+      mealPlan: 'room_only',
     },
     {
-      name: "Breakfast Included",
-      code: "BNB",
+      name: 'Breakfast Included',
+      code: 'BNB',
       priceMultiplier: 1.15,
-      cancellationPolicy: { type: "moderate", deadlineHours: 72, penaltyPercentage: 50 },
-      mealPlan: "breakfast",
+      cancellationPolicy: { type: 'moderate', deadlineHours: 72, penaltyPercentage: 50 },
+      mealPlan: 'breakfast',
     },
     {
-      name: "Non-Refundable",
-      code: "NRF",
+      name: 'Non-Refundable',
+      code: 'NRF',
       priceMultiplier: 0.85,
-      cancellationPolicy: { type: "non-refundable", deadlineHours: 0, penaltyPercentage: 100 },
-      mealPlan: "room_only",
+      cancellationPolicy: { type: 'non-refundable', deadlineHours: 0, penaltyPercentage: 100 },
+      mealPlan: 'room_only',
     },
   ];
 
@@ -204,7 +204,7 @@ async function seedRatePlans(
 
       for (const template of ratePlanTemplates) {
         const basePrice = Math.round(roomType.basePrice * template.priceMultiplier);
-        
+
         await RatePlan.create({
           propertyId: new mongoose.Types.ObjectId(propertyId),
           roomTypeId: new mongoose.Types.ObjectId(roomTypeId),
@@ -225,46 +225,46 @@ async function seedRatePlans(
 }
 
 async function seedGuests(): Promise<void> {
-  logger.info("Seeding guests...");
+  logger.info('Seeding guests...');
 
   const guests = [
     {
-      email: "john.doe@email.com",
-      firstName: "John",
-      lastName: "Doe",
-      phone: "+1-555-0101",
-      address: { city: "New York", country: "USA" },
-      preferences: { roomPreferences: ["High Floor", "Non-Smoking"] },
+      email: 'john.doe@email.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      phone: '+1-555-0101',
+      address: { city: 'New York', country: 'USA' },
+      preferences: { roomPreferences: ['High Floor', 'Non-Smoking'] },
     },
     {
-      email: "jane.smith@email.com",
-      firstName: "Jane",
-      lastName: "Smith",
-      phone: "+1-555-0102",
-      address: { city: "Los Angeles", country: "USA" },
-      preferences: { roomPreferences: ["Ocean View", "Quiet Room"] },
+      email: 'jane.smith@email.com',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      phone: '+1-555-0102',
+      address: { city: 'Los Angeles', country: 'USA' },
+      preferences: { roomPreferences: ['Ocean View', 'Quiet Room'] },
     },
     {
-      email: "bob.wilson@email.com",
-      firstName: "Bob",
-      lastName: "Wilson",
-      phone: "+1-555-0103",
-      address: { city: "Chicago", country: "USA" },
-      preferences: { dietaryRestrictions: ["Vegetarian"] },
+      email: 'bob.wilson@email.com',
+      firstName: 'Bob',
+      lastName: 'Wilson',
+      phone: '+1-555-0103',
+      address: { city: 'Chicago', country: 'USA' },
+      preferences: { dietaryRestrictions: ['Vegetarian'] },
     },
     {
-      email: "alice.johnson@email.com",
-      firstName: "Alice",
-      lastName: "Johnson",
-      phone: "+44-20-5550104",
-      address: { city: "London", country: "UK" },
+      email: 'alice.johnson@email.com',
+      firstName: 'Alice',
+      lastName: 'Johnson',
+      phone: '+44-20-5550104',
+      address: { city: 'London', country: 'UK' },
     },
     {
-      email: "carlos.garcia@email.com",
-      firstName: "Carlos",
-      lastName: "Garcia",
-      phone: "+34-91-5550105",
-      address: { city: "Madrid", country: "Spain" },
+      email: 'carlos.garcia@email.com',
+      firstName: 'Carlos',
+      lastName: 'Garcia',
+      phone: '+34-91-5550105',
+      address: { city: 'Madrid', country: 'Spain' },
     },
   ];
 
@@ -276,18 +276,58 @@ async function seedGuests(): Promise<void> {
 }
 
 async function seedAddOns(propertyIdMap: Map<string, string>): Promise<void> {
-  logger.info("Seeding add-ons...");
+  logger.info('Seeding add-ons...');
   let count = 0;
 
   const addOns = [
-    { name: "Airport Transfer", code: "TRANSFER", category: "transport", pricing: { type: "per-stay" as const, amount: 75 } },
-    { name: "Late Checkout", code: "LATE-CO", category: "amenity", pricing: { type: "per-stay" as const, amount: 50 } },
-    { name: "Early Check-in", code: "EARLY-CI", category: "amenity", pricing: { type: "per-stay" as const, amount: 50 } },
-    { name: "Spa Package", code: "SPA", category: "spa", pricing: { type: "per-person" as const, amount: 150 } },
-    { name: "Romantic Dinner", code: "DINNER", category: "dining", pricing: { type: "per-person" as const, amount: 120 } },
-    { name: "Extra Bed", code: "XBED", category: "amenity", pricing: { type: "per-night" as const, amount: 40 } },
-    { name: "Parking", code: "PARK", category: "transport", pricing: { type: "per-night" as const, amount: 25 } },
-    { name: "Pet Fee", code: "PET", category: "other", pricing: { type: "per-night" as const, amount: 30 } },
+    {
+      name: 'Airport Transfer',
+      code: 'TRANSFER',
+      category: 'transport',
+      pricing: { type: 'per-stay' as const, amount: 75 },
+    },
+    {
+      name: 'Late Checkout',
+      code: 'LATE-CO',
+      category: 'amenity',
+      pricing: { type: 'per-stay' as const, amount: 50 },
+    },
+    {
+      name: 'Early Check-in',
+      code: 'EARLY-CI',
+      category: 'amenity',
+      pricing: { type: 'per-stay' as const, amount: 50 },
+    },
+    {
+      name: 'Spa Package',
+      code: 'SPA',
+      category: 'spa',
+      pricing: { type: 'per-person' as const, amount: 150 },
+    },
+    {
+      name: 'Romantic Dinner',
+      code: 'DINNER',
+      category: 'dining',
+      pricing: { type: 'per-person' as const, amount: 120 },
+    },
+    {
+      name: 'Extra Bed',
+      code: 'XBED',
+      category: 'amenity',
+      pricing: { type: 'per-night' as const, amount: 40 },
+    },
+    {
+      name: 'Parking',
+      code: 'PARK',
+      category: 'transport',
+      pricing: { type: 'per-night' as const, amount: 25 },
+    },
+    {
+      name: 'Pet Fee',
+      code: 'PET',
+      category: 'other',
+      pricing: { type: 'per-night' as const, amount: 30 },
+    },
   ];
 
   for (const propertyId of propertyIdMap.values()) {
@@ -305,8 +345,13 @@ async function seedAddOns(propertyIdMap: Map<string, string>): Promise<void> {
 }
 
 async function seed(options: SeedOptions = {}): Promise<void> {
+  if (env.NODE_ENV === 'production') {
+    logger.error('Seed script cannot run in production');
+    process.exit(1);
+  }
+
   const startTime = Date.now();
-  
+
   try {
     await connectDB();
 
@@ -314,7 +359,15 @@ async function seed(options: SeedOptions = {}): Promise<void> {
       await cleanDatabase();
     }
 
-    const seedAll = options.all || (!options.users && !options.properties && !options.roomTypes && !options.rooms && !options.ratePlans && !options.guests && !options.addOns);
+    const seedAll =
+      options.all ||
+      (!options.users &&
+        !options.properties &&
+        !options.roomTypes &&
+        !options.rooms &&
+        !options.ratePlans &&
+        !options.guests &&
+        !options.addOns);
 
     let userIdMap = new Map<string, string>();
     let propertyIdMap = new Map<string, string>();
@@ -325,7 +378,7 @@ async function seed(options: SeedOptions = {}): Promise<void> {
     }
 
     if (seedAll || options.properties) {
-      const managerId = userIdMap.get("manager@guesthouse.com");
+      const managerId = userIdMap.get('manager@guesthouse.com');
       propertyIdMap = await seedProperties(managerId);
     } else {
       const properties = await Property.find({});
@@ -337,7 +390,7 @@ async function seed(options: SeedOptions = {}): Promise<void> {
     if (seedAll || options.roomTypes) {
       roomTypeIdMap = await seedRoomTypes(propertyIdMap);
     } else {
-      const roomTypes = await RoomType.find({}).populate("propertyId");
+      const roomTypes = await RoomType.find({}).populate('propertyId');
       for (const rt of roomTypes) {
         const property = rt.propertyId as any;
         if (property?.slug) {
@@ -364,13 +417,12 @@ async function seed(options: SeedOptions = {}): Promise<void> {
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     logger.info(`Seeding completed in ${duration}s`);
-
   } catch (error) {
-    logger.error({ err: error }, "Seeding failed");
+    logger.error({ err: error }, 'Seeding failed');
     throw error;
   } finally {
     await mongoose.disconnect();
-    logger.info("Disconnected from MongoDB");
+    logger.info('Disconnected from MongoDB');
   }
 }
 
@@ -380,43 +432,43 @@ function parseArgs(): SeedOptions {
 
   for (const arg of args) {
     switch (arg) {
-      case "--clean":
-      case "-c":
+      case '--clean':
+      case '-c':
         options.clean = true;
         break;
-      case "--users":
-      case "-u":
+      case '--users':
+      case '-u':
         options.users = true;
         break;
-      case "--properties":
-      case "-p":
+      case '--properties':
+      case '-p':
         options.properties = true;
         break;
-      case "--room-types":
-      case "-rt":
+      case '--room-types':
+      case '-rt':
         options.roomTypes = true;
         break;
-      case "--rooms":
-      case "-r":
+      case '--rooms':
+      case '-r':
         options.rooms = true;
         break;
-      case "--rate-plans":
-      case "-rp":
+      case '--rate-plans':
+      case '-rp':
         options.ratePlans = true;
         break;
-      case "--guests":
-      case "-g":
+      case '--guests':
+      case '-g':
         options.guests = true;
         break;
-      case "--add-ons":
-      case "-a":
+      case '--add-ons':
+      case '-a':
         options.addOns = true;
         break;
-      case "--all":
+      case '--all':
         options.all = true;
         break;
-      case "--help":
-      case "-h":
+      case '--help':
+      case '-h':
         console.log(`
 Guesthouse Database Seeder
 

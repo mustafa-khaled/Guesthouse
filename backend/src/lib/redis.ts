@@ -1,6 +1,6 @@
-import Redis from "ioredis";
-import { env } from "../config/env";
-import { logger } from "./logger";
+import Redis from 'ioredis';
+import { env } from '../config/env';
+import { logger } from './logger';
 
 let redis: Redis | null = null;
 
@@ -14,7 +14,7 @@ export function getRedisClient(): Redis | null {
       maxRetriesPerRequest: 3,
       retryStrategy(times) {
         if (times > 3) {
-          logger.error("Redis connection failed after 3 retries");
+          logger.error('Redis connection failed after 3 retries');
           return null;
         }
         const delay = Math.min(times * 200, 2000);
@@ -23,16 +23,16 @@ export function getRedisClient(): Redis | null {
       lazyConnect: true,
     });
 
-    redis.on("connect", () => {
-      logger.info("Redis connected");
+    redis.on('connect', () => {
+      logger.info('Redis connected');
     });
 
-    redis.on("error", (err) => {
-      logger.error({ err }, "Redis error");
+    redis.on('error', (err) => {
+      logger.error({ err }, 'Redis error');
     });
 
-    redis.on("close", () => {
-      logger.info("Redis connection closed");
+    redis.on('close', () => {
+      logger.info('Redis connection closed');
     });
   }
 
@@ -45,7 +45,7 @@ export async function connectRedis(): Promise<void> {
     try {
       await client.connect();
     } catch (err) {
-      logger.warn({ err }, "Redis connection failed, caching disabled");
+      logger.warn({ err }, 'Redis connection failed, caching disabled');
     }
   }
 }
@@ -58,5 +58,5 @@ export async function disconnectRedis(): Promise<void> {
 }
 
 export function isRedisConnected(): boolean {
-  return redis?.status === "ready";
+  return redis?.status === 'ready';
 }

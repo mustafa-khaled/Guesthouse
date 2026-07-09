@@ -1,18 +1,14 @@
-import { RoomType, IRoomType } from "../../models/roomType.model";
-import { Property } from "../../models/property.model";
-import { Room } from "../../models/room.model";
-import { RatePlan } from "../../models/ratePlan.model";
-import {
-  NotFoundError,
-  ConflictError,
-  BadRequestError,
-} from "../../common/errors/http.errors";
+import { RoomType, IRoomType } from '../../models/roomType.model';
+import { Property } from '../../models/property.model';
+import { Room } from '../../models/room.model';
+import { RatePlan } from '../../models/ratePlan.model';
+import { NotFoundError, ConflictError, BadRequestError } from '../../common/errors/http.errors';
 import {
   getPaginationParams,
   createPaginatedResult,
   PaginatedResult,
-} from "../../common/utils/pagination";
-import { Types } from "mongoose";
+} from '../../common/utils/pagination';
+import { Types } from 'mongoose';
 
 export interface CreateRoomTypeData {
   name: string;
@@ -58,12 +54,12 @@ export interface ListRoomTypesFilters {
 class RoomTypeService {
   async create(propertyId: string, data: CreateRoomTypeData): Promise<IRoomType> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const property = await Property.findById(propertyId);
     if (!property) {
-      throw new NotFoundError("Property not found");
+      throw new NotFoundError('Property not found');
     }
 
     const existingCode = await RoomType.findOne({
@@ -72,7 +68,7 @@ class RoomTypeService {
     });
     if (existingCode) {
       throw new ConflictError(
-        `Room type with code "${data.code}" already exists for this property`
+        `Room type with code "${data.code}" already exists for this property`,
       );
     }
 
@@ -87,12 +83,12 @@ class RoomTypeService {
 
   async findById(id: string): Promise<IRoomType> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid room type ID");
+      throw new BadRequestError('Invalid room type ID');
     }
 
-    const roomType = await RoomType.findById(id).populate("propertyId", "name slug");
+    const roomType = await RoomType.findById(id).populate('propertyId', 'name slug');
     if (!roomType) {
-      throw new NotFoundError("Room type not found");
+      throw new NotFoundError('Room type not found');
     }
 
     return roomType;
@@ -109,7 +105,7 @@ class RoomTypeService {
       });
       if (existingCode) {
         throw new ConflictError(
-          `Room type with code "${data.code}" already exists for this property`
+          `Room type with code "${data.code}" already exists for this property`,
         );
       }
     }
@@ -129,9 +125,7 @@ class RoomTypeService {
     });
 
     if (roomsCount > 0) {
-      throw new ConflictError(
-        "Cannot delete room type with existing rooms. Delete rooms first."
-      );
+      throw new ConflictError('Cannot delete room type with existing rooms. Delete rooms first.');
     }
 
     const ratePlansCount = await RatePlan.countDocuments({
@@ -141,7 +135,7 @@ class RoomTypeService {
 
     if (ratePlansCount > 0) {
       throw new ConflictError(
-        "Cannot delete room type with existing rate plans. Delete rate plans first."
+        'Cannot delete room type with existing rate plans. Delete rate plans first.',
       );
     }
 
@@ -152,10 +146,10 @@ class RoomTypeService {
     propertyId: string,
     filters: ListRoomTypesFilters,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<PaginatedResult<IRoomType>> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const query: any = {
@@ -175,16 +169,13 @@ class RoomTypeService {
     }
 
     if (filters.minOccupancy !== undefined) {
-      query["maxOccupancy.total"] = { $gte: filters.minOccupancy };
+      query['maxOccupancy.total'] = { $gte: filters.minOccupancy };
     }
 
     const pagination = getPaginationParams(page, limit);
 
     const [roomTypes, total] = await Promise.all([
-      RoomType.find(query)
-        .sort({ basePrice: 1 })
-        .skip(pagination.skip)
-        .limit(pagination.limit),
+      RoomType.find(query).sort({ basePrice: 1 }).skip(pagination.skip).limit(pagination.limit),
       RoomType.countDocuments(query),
     ]);
 

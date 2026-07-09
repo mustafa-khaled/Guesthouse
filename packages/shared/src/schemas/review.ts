@@ -1,10 +1,10 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const reviewSchema = z.object({
   id: z.string().optional(),
   _id: z.string().optional(),
-  propertyId: z.union([z.string(), z.record(z.unknown())]),
-  userId: z.union([z.string(), z.record(z.unknown())]).optional(),
+  propertyId: z.union([z.string(), z.record(z.string(), z.unknown())]),
+  userId: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
   bookingId: z.string().optional(),
   rating: z.number().min(1).max(5),
   title: z.string().optional(),
@@ -13,6 +13,6 @@ export const reviewSchema = z.object({
   response: z.string().optional(),
   helpfulCount: z.number().optional(),
   createdAt: z.string().optional(),
-})
+});
 
-export type Review = z.infer<typeof reviewSchema>
+export type Review = z.infer<typeof reviewSchema>;

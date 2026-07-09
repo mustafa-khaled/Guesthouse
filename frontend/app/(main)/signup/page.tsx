@@ -1,36 +1,36 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import toast from 'react-hot-toast'
-import { useAuth } from '@/hooks/useAuth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function SignupPage() {
-  const { signup } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
+  const { signup } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setLoading(true)
-    const fd = new FormData(e.currentTarget)
+    e.preventDefault();
+    setLoading(true);
+    const fd = new FormData(e.currentTarget);
     try {
       await signup(
         String(fd.get('name')),
         String(fd.get('email')),
         String(fd.get('password')),
         String(fd.get('passwordConfirm')),
-      )
-      setDone(true)
-      toast.success('Check your email to verify your account')
+      );
+      setDone(true);
+      toast.success('Check your email to verify your account');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Signup failed')
+      toast.error(err instanceof Error ? err.message : 'Signup failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -41,8 +41,7 @@ export default function SignupPage() {
           <CardContent className="p-8">
             <h1 className="text-xl font-bold">Verify your email</h1>
             <p className="mt-4 text-gray-600">
-              We sent a verification link to your inbox. Please verify before
-              logging in.
+              We sent a verification link to your inbox. Please verify before logging in.
             </p>
             <Link href="/login" className="mt-6 inline-block text-green-700">
               Go to login
@@ -50,7 +49,7 @@ export default function SignupPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -90,5 +89,5 @@ export default function SignupPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

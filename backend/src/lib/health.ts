@@ -1,14 +1,14 @@
-import mongoose from "mongoose";
-import { getRedisClient, isRedisConnected } from "./redis";
-import { logger } from "./logger";
+import mongoose from 'mongoose';
+import { getRedisClient, isRedisConnected } from './redis';
+import { logger } from './logger';
 
 export interface HealthCheckResult {
-  status: "healthy" | "unhealthy" | "degraded";
+  status: 'healthy' | 'unhealthy' | 'degraded';
   timestamp: string;
   uptime: number;
   checks: {
     [key: string]: {
-      status: "pass" | "fail" | "warn";
+      status: 'pass' | 'fail' | 'warn';
       responseTime?: number;
       message?: string;
     };
@@ -16,16 +16,16 @@ export interface HealthCheckResult {
 }
 
 export interface LivenessResult {
-  status: "alive";
+  status: 'alive';
   timestamp: string;
 }
 
 export interface ReadinessResult {
-  status: "ready" | "not_ready";
+  status: 'ready' | 'not_ready';
   timestamp: string;
   checks: {
-    mongodb: { status: "pass" | "fail"; message?: string };
-    redis: { status: "pass" | "fail" | "skip"; message?: string };
+    mongodb: { status: 'pass' | 'fail'; message?: string };
+    redis: { status: 'pass' | 'fail' | 'skip'; message?: string };
   };
 }
 
@@ -36,7 +36,7 @@ export function getUptime(): number {
 }
 
 export async function checkMongoDB(): Promise<{
-  status: "pass" | "fail";
+  status: 'pass' | 'fail';
   responseTime: number;
   message?: string;
 }> {
@@ -47,7 +47,7 @@ export async function checkMongoDB(): Promise<{
 
     if (state !== 1) {
       return {
-        status: "fail",
+        status: 'fail',
         responseTime: Date.now() - start,
         message: `MongoDB not connected (state: ${state})`,
       };
@@ -56,21 +56,21 @@ export async function checkMongoDB(): Promise<{
     await mongoose.connection.db?.admin().ping();
 
     return {
-      status: "pass",
+      status: 'pass',
       responseTime: Date.now() - start,
     };
   } catch (err) {
-    logger.error({ err }, "MongoDB health check failed");
+    logger.error({ err }, 'MongoDB health check failed');
     return {
-      status: "fail",
+      status: 'fail',
       responseTime: Date.now() - start,
-      message: err instanceof Error ? err.message : "Unknown error",
+      message: err instanceof Error ? err.message : 'Unknown error',
     };
   }
 }
 
 export async function checkRedis(): Promise<{
-  status: "pass" | "fail" | "skip";
+  status: 'pass' | 'fail' | 'skip';
   responseTime: number;
   message?: string;
 }> {
@@ -79,56 +79,53 @@ export async function checkRedis(): Promise<{
 
   if (!redis) {
     return {
-      status: "skip",
+      status: 'skip',
       responseTime: Date.now() - start,
-      message: "Redis not configured",
+      message: 'Redis not configured',
     };
   }
 
   try {
     if (!isRedisConnected()) {
       return {
-        status: "fail",
+        status: 'fail',
         responseTime: Date.now() - start,
-        message: "Redis not connected",
+        message: 'Redis not connected',
       };
     }
 
     await redis.ping();
 
     return {
-      status: "pass",
+      status: 'pass',
       responseTime: Date.now() - start,
     };
   } catch (err) {
-    logger.error({ err }, "Redis health check failed");
+    logger.error({ err }, 'Redis health check failed');
     return {
-      status: "fail",
+      status: 'fail',
       responseTime: Date.now() - start,
-      message: err instanceof Error ? err.message : "Unknown error",
+      message: err instanceof Error ? err.message : 'Unknown error',
     };
   }
 }
 
 export async function getHealthStatus(): Promise<HealthCheckResult> {
-  const [mongoCheck, redisCheck] = await Promise.all([
-    checkMongoDB(),
-    checkRedis(),
-  ]);
+  const [mongoCheck, redisCheck] = await Promise.all([checkMongoDB(), checkRedis()]);
 
-  const allPassed = mongoCheck.status === "pass" &&
-    (redisCheck.status === "pass" || redisCheck.status === "skip");
+  const allPassed =
+    mongoCheck.status === 'pass' && (redisCheck.status === 'pass' || redisCheck.status === 'skip');
 
-  const hasCriticalFailure = mongoCheck.status === "fail";
-  const hasWarning = redisCheck.status === "fail";
+  const hasCriticalFailure = mongoCheck.status === 'fail';
+  const hasWarning = redisCheck.status === 'fail';
 
-  let status: "healthy" | "unhealthy" | "degraded";
+  let status: 'healthy' | 'unhealthy' | 'degraded';
   if (hasCriticalFailure) {
-    status = "unhealthy";
+    status = 'unhealthy';
   } else if (hasWarning) {
-    status = "degraded";
+    status = 'degraded';
   } else {
-    status = "healthy";
+    status = 'healthy';
   }
 
   return {
@@ -137,21 +134,21 @@ export async function getHealthStatus(): Promise<HealthCheckResult> {
     uptime: getUptime(),
     checks: {
       mongodb: mongoCheck,
-      redis: redisCheck,
+      redis: {
+        ...redisCheck,
+        status: redisCheck.status === 'skip' ? 'warn' : redisCheck.status,
+      },
     },
   };
 }
 
 export async function getReadinessStatus(): Promise<ReadinessResult> {
-  const [mongoCheck, redisCheck] = await Promise.all([
-    checkMongoDB(),
-    checkRedis(),
-  ]);
+  const [mongoCheck, redisCheck] = await Promise.all([checkMongoDB(), checkRedis()]);
 
-  const isReady = mongoCheck.status === "pass";
+  const isReady = mongoCheck.status === 'pass';
 
   return {
-    status: isReady ? "ready" : "not_ready",
+    status: isReady ? 'ready' : 'not_ready',
     timestamp: new Date().toISOString(),
     checks: {
       mongodb: {
@@ -168,7 +165,7 @@ export async function getReadinessStatus(): Promise<ReadinessResult> {
 
 export function getLivenessStatus(): LivenessResult {
   return {
-    status: "alive",
+    status: 'alive',
     timestamp: new Date().toISOString(),
   };
 }

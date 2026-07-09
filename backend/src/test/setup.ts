@@ -1,21 +1,27 @@
-import { beforeAll, afterAll, afterEach } from "vitest";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
+import { beforeAll, afterAll, afterEach, inject } from 'vitest';
+import mongoose from 'mongoose';
 
-let mongoServer: MongoMemoryServer;
+declare module 'vitest' {
+  export interface ProvidedContext {
+    MONGODB_URI: string;
+  }
+}
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri);
+  const uri = inject('MONGODB_URI');
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(uri);
+  }
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
 });
 
 afterEach(async () => {
+  if (mongoose.connection.readyState === 0) return;
   const collections = mongoose.connection.collections;
   for (const key in collections) {
     await collections[key].deleteMany({});

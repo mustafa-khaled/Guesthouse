@@ -1,14 +1,9 @@
-import { Request } from "express";
-import { Types } from "mongoose";
-import {
-  AuditLog,
-  AuditAction,
-  AuditResource,
-  IAuditLog,
-} from "../models/auditLog.model";
-import { logger } from "./logger";
+import { Request } from 'express';
+import { Types } from 'mongoose';
+import { AuditLog, AuditAction, AuditResource, IAuditLog } from '../models/auditLog.model';
+import { logger } from './logger';
 
-export { AuditAction, AuditResource } from "../models/auditLog.model";
+export { AuditAction, AuditResource } from '../models/auditLog.model';
 
 export interface AuditOptions {
   action: AuditAction;
@@ -38,8 +33,7 @@ function extractContextFromRequest(req?: Request): AuditContext {
   }
 
   const user = req.user as
-    | { _id?: string; id?: string; email?: string; name?: string; role?: string }
-    | undefined;
+    { _id?: string; id?: string; email?: string; name?: string; role?: string } | undefined;
 
   return {
     userId: user?._id || user?.id,
@@ -47,40 +41,40 @@ function extractContextFromRequest(req?: Request): AuditContext {
     userName: user?.name,
     userRole: user?.role,
     ipAddress:
-      (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
       req.socket?.remoteAddress ||
       req.ip,
-    userAgent: req.headers["user-agent"],
+    userAgent: req.headers['user-agent'],
     requestId: (req as Request & { id?: string }).id,
   };
 }
 
 function sanitizeData(
-  data: Record<string, unknown> | undefined
+  data: Record<string, unknown> | undefined,
 ): Record<string, unknown> | undefined {
   if (!data) return undefined;
 
   const sensitiveFields = [
-    "password",
-    "passwordConfirm",
-    "currentPassword",
-    "newPassword",
-    "token",
-    "accessToken",
-    "refreshToken",
-    "resetPasswordToken",
-    "secret",
-    "apiKey",
-    "creditCard",
-    "cvv",
-    "ssn",
+    'password',
+    'passwordConfirm',
+    'currentPassword',
+    'newPassword',
+    'token',
+    'accessToken',
+    'refreshToken',
+    'resetPasswordToken',
+    'secret',
+    'apiKey',
+    'creditCard',
+    'cvv',
+    'ssn',
   ];
 
   const sanitized = { ...data };
 
   for (const field of sensitiveFields) {
     if (field in sanitized) {
-      sanitized[field] = "[REDACTED]";
+      sanitized[field] = '[REDACTED]';
     }
   }
 
@@ -89,11 +83,11 @@ function sanitizeData(
 
 export async function audit(
   options: AuditOptions,
-  reqOrContext?: Request | AuditContext
+  reqOrContext?: Request | AuditContext,
 ): Promise<IAuditLog | null> {
   try {
     const context =
-      reqOrContext && "headers" in reqOrContext
+      reqOrContext && 'headers' in reqOrContext
         ? extractContextFromRequest(reqOrContext as Request)
         : (reqOrContext as AuditContext) || {};
 
@@ -104,9 +98,7 @@ export async function audit(
         ? new Types.ObjectId(options.resourceId.toString())
         : undefined,
       resourceName: options.resourceName,
-      userId: context.userId
-        ? new Types.ObjectId(context.userId.toString())
-        : undefined,
+      userId: context.userId ? new Types.ObjectId(context.userId.toString()) : undefined,
       userEmail: context.userEmail,
       userName: context.userName,
       userRole: context.userRole,
@@ -129,26 +121,26 @@ export async function audit(
         resourceId: options.resourceId,
         userId: context.userId,
       },
-      "Audit log created"
+      'Audit log created',
     );
 
     return saved;
   } catch (err) {
-    logger.error({ err, options }, "Failed to create audit log");
+    logger.error({ err, options }, 'Failed to create audit log');
     return null;
   }
 }
 
 export async function auditSuccess(
-  options: Omit<AuditOptions, "success" | "errorMessage">,
-  reqOrContext?: Request | AuditContext
+  options: Omit<AuditOptions, 'success' | 'errorMessage'>,
+  reqOrContext?: Request | AuditContext,
 ): Promise<IAuditLog | null> {
   return audit({ ...options, success: true }, reqOrContext);
 }
 
 export async function auditFailure(
-  options: Omit<AuditOptions, "success"> & { errorMessage: string },
-  reqOrContext?: Request | AuditContext
+  options: Omit<AuditOptions, 'success'> & { errorMessage: string },
+  reqOrContext?: Request | AuditContext,
 ): Promise<IAuditLog | null> {
   return audit({ ...options, success: false }, reqOrContext);
 }
@@ -164,7 +156,7 @@ export interface AuditQueryOptions {
   endDate?: Date;
   page?: number;
   limit?: number;
-  sort?: "asc" | "desc";
+  sort?: 'asc' | 'desc';
 }
 
 export async function queryAuditLogs(options: AuditQueryOptions = {}): Promise<{
@@ -185,7 +177,7 @@ export async function queryAuditLogs(options: AuditQueryOptions = {}): Promise<{
     endDate,
     page = 1,
     limit = 50,
-    sort = "desc",
+    sort = 'desc',
   } = options;
 
   const query: Record<string, unknown> = {};
@@ -207,10 +199,10 @@ export async function queryAuditLogs(options: AuditQueryOptions = {}): Promise<{
   }
 
   if (userEmail) {
-    query.userEmail = { $regex: userEmail, $options: "i" };
+    query.userEmail = { $regex: userEmail, $options: 'i' };
   }
 
-  if (typeof success === "boolean") {
+  if (typeof success === 'boolean') {
     query.success = success;
   }
 
@@ -225,19 +217,15 @@ export async function queryAuditLogs(options: AuditQueryOptions = {}): Promise<{
   }
 
   const skip = (page - 1) * limit;
-  const sortOrder = sort === "asc" ? 1 : -1;
+  const sortOrder = sort === 'asc' ? 1 : -1;
 
   const [logs, total] = await Promise.all([
-    AuditLog.find(query)
-      .sort({ createdAt: sortOrder })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
+    AuditLog.find(query).sort({ createdAt: sortOrder }).skip(skip).limit(limit).lean(),
     AuditLog.countDocuments(query),
   ]);
 
   return {
-    logs: logs as IAuditLog[],
+    logs: logs as unknown as IAuditLog[],
     total,
     page,
     limit,
@@ -248,7 +236,7 @@ export async function queryAuditLogs(options: AuditQueryOptions = {}): Promise<{
 export async function getResourceHistory(
   resource: AuditResource,
   resourceId: string,
-  limit: number = 100
+  limit: number = 100,
 ): Promise<IAuditLog[]> {
   return AuditLog.find({
     resource,
@@ -256,17 +244,14 @@ export async function getResourceHistory(
   })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .lean() as Promise<IAuditLog[]>;
+    .lean() as unknown as Promise<IAuditLog[]>;
 }
 
-export async function getUserActivity(
-  userId: string,
-  limit: number = 100
-): Promise<IAuditLog[]> {
+export async function getUserActivity(userId: string, limit: number = 100): Promise<IAuditLog[]> {
   return AuditLog.find({
     userId: new Types.ObjectId(userId),
   })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .lean() as Promise<IAuditLog[]>;
+    .lean() as unknown as Promise<IAuditLog[]>;
 }

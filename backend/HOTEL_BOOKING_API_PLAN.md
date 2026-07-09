@@ -15,13 +15,13 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 
 ## Role Mapping
 
-| Hotel Role | System Role | Permissions |
-|------------|-------------|-------------|
-| Manager | ADMIN | Full access to all operations |
-| Front Desk | MODERATOR | Bookings, check-in/out, guests, payments |
-| Housekeeping | EDITOR | Room status, housekeeping tasks |
-| Guest | USER | Own bookings, profile, reviews |
-| Read-only Staff | VIEWER | View-only access |
+| Hotel Role      | System Role | Permissions                              |
+| --------------- | ----------- | ---------------------------------------- |
+| Manager         | ADMIN       | Full access to all operations            |
+| Front Desk      | MODERATOR   | Bookings, check-in/out, guests, payments |
+| Housekeeping    | EDITOR      | Room status, housekeeping tasks          |
+| Guest           | USER        | Own bookings, profile, reviews           |
+| Read-only Staff | VIEWER      | View-only access                         |
 
 ---
 
@@ -74,6 +74,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ### Models
 
 #### Property Model
+
 ```
 - name, slug (unique)
 - description, type (hotel, resort, etc.)
@@ -86,6 +87,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### RoomType Model
+
 ```
 - propertyId (ref: Property)
 - name, code (unique per property)
@@ -97,6 +99,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### Room Model
+
 ```
 - propertyId (ref: Property)
 - roomTypeId (ref: RoomType)
@@ -108,6 +111,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### RatePlan Model
+
 ```
 - roomTypeId (ref: RoomType)
 - name, code (unique per room type)
@@ -122,6 +126,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### PriceRule Model
+
 ```
 - ratePlanId (ref: RatePlan)
 - dateFrom, dateTo
@@ -131,6 +136,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### Inventory Model
+
 ```
 - propertyId, roomTypeId, date (compound unique)
 - totalRooms, bookedRooms, heldRooms
@@ -139,6 +145,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### InventoryHold Model
+
 ```
 - propertyId, roomTypeId
 - dateFrom, dateTo, roomsHeld
@@ -149,27 +156,27 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 
 ### Endpoints
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | /api/properties | List properties | Manager |
-| POST | /api/properties | Create property | Manager |
-| GET | /api/properties/:id | Get property | Manager |
-| PUT | /api/properties/:id | Update property | Manager |
-| DELETE | /api/properties/:id | Delete property | Manager |
-| GET | /api/properties/:propertyId/room-types | List room types | Public |
-| POST | /api/properties/:propertyId/room-types | Create room type | Manager |
-| GET | /api/room-types/:id | Get room type | Public |
-| PUT | /api/room-types/:id | Update room type | Manager |
-| DELETE | /api/room-types/:id | Delete room type | Manager |
-| GET | /api/properties/:propertyId/rooms | List rooms | Front Desk |
-| POST | /api/properties/:propertyId/rooms | Create room | Manager |
-| PATCH | /api/rooms/:id/status | Update room status | Housekeeping |
-| GET | /api/room-types/:roomTypeId/rate-plans | List rate plans | Public |
-| POST | /api/room-types/:roomTypeId/rate-plans | Create rate plan | Manager |
-| GET | /api/inventory/search | Search availability | Public |
-| POST | /api/inventory/bulk-update | Bulk update inventory | Manager |
-| POST | /api/inventory/hold | Create hold | Auth |
-| DELETE | /api/inventory/hold/:token | Release hold | Auth |
+| Method | Path                                   | Description           | Auth         |
+| ------ | -------------------------------------- | --------------------- | ------------ |
+| GET    | /api/properties                        | List properties       | Manager      |
+| POST   | /api/properties                        | Create property       | Manager      |
+| GET    | /api/properties/:id                    | Get property          | Manager      |
+| PUT    | /api/properties/:id                    | Update property       | Manager      |
+| DELETE | /api/properties/:id                    | Delete property       | Manager      |
+| GET    | /api/properties/:propertyId/room-types | List room types       | Public       |
+| POST   | /api/properties/:propertyId/room-types | Create room type      | Manager      |
+| GET    | /api/room-types/:id                    | Get room type         | Public       |
+| PUT    | /api/room-types/:id                    | Update room type      | Manager      |
+| DELETE | /api/room-types/:id                    | Delete room type      | Manager      |
+| GET    | /api/properties/:propertyId/rooms      | List rooms            | Front Desk   |
+| POST   | /api/properties/:propertyId/rooms      | Create room           | Manager      |
+| PATCH  | /api/rooms/:id/status                  | Update room status    | Housekeeping |
+| GET    | /api/room-types/:roomTypeId/rate-plans | List rate plans       | Public       |
+| POST   | /api/room-types/:roomTypeId/rate-plans | Create rate plan      | Manager      |
+| GET    | /api/inventory/search                  | Search availability   | Public       |
+| POST   | /api/inventory/bulk-update             | Bulk update inventory | Manager      |
+| POST   | /api/inventory/hold                    | Create hold           | Auth         |
+| DELETE | /api/inventory/hold/:token             | Release hold          | Auth         |
 
 ---
 
@@ -178,6 +185,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ### Models
 
 #### Guest Model
+
 ```
 - userId (optional, ref: User)
 - email (unique), phone
@@ -190,6 +198,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### Booking Model
+
 ```
 - confirmationNumber (unique, e.g., HBK-ABC123)
 - propertyId, guestId, roomTypeId, ratePlanId
@@ -208,6 +217,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### AddOn Model
+
 ```
 - propertyId
 - name, code (unique per property)
@@ -218,6 +228,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### BookingAddOn Model
+
 ```
 - bookingId, addOnId
 - quantity, unitPrice, totalPrice
@@ -226,6 +237,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### Promotion Model
+
 ```
 - propertyId (optional for global promotions)
 - code (unique), name, description
@@ -238,29 +250,29 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 
 ### Endpoints
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | /api/guests | List guests | Front Desk |
-| POST | /api/guests | Create guest | Front Desk |
-| GET | /api/guests/:id | Get guest | Front Desk |
-| PUT | /api/guests/:id | Update guest | Front Desk |
-| GET | /api/guests/:id/bookings | Get guest bookings | Front Desk |
-| POST | /api/bookings | Create booking | Auth |
-| GET | /api/bookings | List bookings | Front Desk |
-| GET | /api/bookings/:id | Get booking | Auth |
-| PUT | /api/bookings/:id | Update booking | Front Desk |
-| POST | /api/bookings/:id/cancel | Cancel booking | Auth |
-| POST | /api/bookings/:id/confirm | Confirm booking | Front Desk |
-| POST | /api/bookings/:id/check-in | Check in | Front Desk |
-| POST | /api/bookings/:id/check-out | Check out | Front Desk |
-| POST | /api/bookings/:id/assign-room | Assign room | Front Desk |
-| GET | /api/user/me/bookings | Get my bookings | Auth |
-| GET | /api/properties/:propertyId/add-ons | List add-ons | Public |
-| POST | /api/bookings/:bookingId/add-ons | Add add-on to booking | Front Desk |
-| DELETE | /api/bookings/:bookingId/add-ons/:addOnId | Remove add-on | Front Desk |
-| GET | /api/promotions | List promotions | Manager |
-| POST | /api/promotions | Create promotion | Manager |
-| POST | /api/promotions/validate | Validate promo code | Auth |
+| Method | Path                                      | Description           | Auth       |
+| ------ | ----------------------------------------- | --------------------- | ---------- |
+| GET    | /api/guests                               | List guests           | Front Desk |
+| POST   | /api/guests                               | Create guest          | Front Desk |
+| GET    | /api/guests/:id                           | Get guest             | Front Desk |
+| PUT    | /api/guests/:id                           | Update guest          | Front Desk |
+| GET    | /api/guests/:id/bookings                  | Get guest bookings    | Front Desk |
+| POST   | /api/bookings                             | Create booking        | Auth       |
+| GET    | /api/bookings                             | List bookings         | Front Desk |
+| GET    | /api/bookings/:id                         | Get booking           | Auth       |
+| PUT    | /api/bookings/:id                         | Update booking        | Front Desk |
+| POST   | /api/bookings/:id/cancel                  | Cancel booking        | Auth       |
+| POST   | /api/bookings/:id/confirm                 | Confirm booking       | Front Desk |
+| POST   | /api/bookings/:id/check-in                | Check in              | Front Desk |
+| POST   | /api/bookings/:id/check-out               | Check out             | Front Desk |
+| POST   | /api/bookings/:id/assign-room             | Assign room           | Front Desk |
+| GET    | /api/user/me/bookings                     | Get my bookings       | Auth       |
+| GET    | /api/properties/:propertyId/add-ons       | List add-ons          | Public     |
+| POST   | /api/bookings/:bookingId/add-ons          | Add add-on to booking | Front Desk |
+| DELETE | /api/bookings/:bookingId/add-ons/:addOnId | Remove add-on         | Front Desk |
+| GET    | /api/promotions                           | List promotions       | Manager    |
+| POST   | /api/promotions                           | Create promotion      | Manager    |
+| POST   | /api/promotions/validate                  | Validate promo code   | Auth       |
 
 ---
 
@@ -269,6 +281,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ### Models
 
 #### Payment Model
+
 ```
 - bookingId, guestId
 - type (deposit, payment, refund, charge)
@@ -281,6 +294,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ```
 
 #### Folio Model
+
 ```
 - bookingId (unique), folioNumber (unique)
 - lineItems [{date, description, category, amount, quantity, total, reference}]
@@ -292,18 +306,19 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 
 ### Endpoints
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| POST | /api/bookings/:bookingId/payments/intent | Create payment intent | Auth |
-| POST | /api/bookings/:bookingId/payments/confirm | Confirm payment | Auth |
-| POST | /api/bookings/:bookingId/payments/cash | Record cash payment | Front Desk |
-| POST | /api/bookings/:bookingId/refund | Process refund | Manager |
-| GET | /api/bookings/:bookingId/folio | Get folio | Auth |
-| POST | /api/bookings/:bookingId/folio/charge | Add charge | Front Desk |
-| GET | /api/bookings/:bookingId/payments | Payment history | Front Desk |
-| POST | /api/bookings/:bookingId/resend-confirmation | Resend email | Front Desk |
+| Method | Path                                         | Description           | Auth       |
+| ------ | -------------------------------------------- | --------------------- | ---------- |
+| POST   | /api/bookings/:bookingId/payments/intent     | Create payment intent | Auth       |
+| POST   | /api/bookings/:bookingId/payments/confirm    | Confirm payment       | Auth       |
+| POST   | /api/bookings/:bookingId/payments/cash       | Record cash payment   | Front Desk |
+| POST   | /api/bookings/:bookingId/refund              | Process refund        | Manager    |
+| GET    | /api/bookings/:bookingId/folio               | Get folio             | Auth       |
+| POST   | /api/bookings/:bookingId/folio/charge        | Add charge            | Front Desk |
+| GET    | /api/bookings/:bookingId/payments            | Payment history       | Front Desk |
+| POST   | /api/bookings/:bookingId/resend-confirmation | Resend email          | Front Desk |
 
 ### Email Templates
+
 - Booking Confirmation
 - Cancellation Notice
 - Pre-Arrival Reminder
@@ -317,6 +332,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ### Models
 
 #### HousekeepingTask Model
+
 ```
 - propertyId, roomId, bookingId (optional)
 - type (daily, checkout, deep, turndown, inspection)
@@ -331,24 +347,24 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 
 ### Endpoints
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | /api/housekeeping/tasks | List tasks | Housekeeping |
-| GET | /api/housekeeping/dashboard | Dashboard stats | Housekeeping |
-| POST | /api/housekeeping/tasks | Create task | Front Desk |
-| PATCH | /api/housekeeping/tasks/:id/status | Update status | Housekeeping |
-| POST | /api/housekeeping/tasks/:id/complete | Complete task | Housekeeping |
-| POST | /api/housekeeping/tasks/:id/verify | Verify task | Front Desk |
-| POST | /api/housekeeping/tasks/:id/assign | Assign task | Front Desk |
-| POST | /api/housekeeping/tasks/:id/issue | Report issue | Housekeeping |
-| GET | /api/front-desk/arrivals | Today's arrivals | Front Desk |
-| GET | /api/front-desk/departures | Today's departures | Front Desk |
-| GET | /api/front-desk/in-house | In-house guests | Front Desk |
-| GET | /api/front-desk/room-rack | Room rack view | Front Desk |
-| POST | /api/front-desk/walk-in | Create walk-in | Front Desk |
-| POST | /api/front-desk/room-move | Move guest to new room | Front Desk |
-| POST | /api/front-desk/extend-stay | Extend stay | Front Desk |
-| POST | /api/front-desk/early-checkout | Early checkout | Front Desk |
+| Method | Path                                 | Description            | Auth         |
+| ------ | ------------------------------------ | ---------------------- | ------------ |
+| GET    | /api/housekeeping/tasks              | List tasks             | Housekeeping |
+| GET    | /api/housekeeping/dashboard          | Dashboard stats        | Housekeeping |
+| POST   | /api/housekeeping/tasks              | Create task            | Front Desk   |
+| PATCH  | /api/housekeeping/tasks/:id/status   | Update status          | Housekeeping |
+| POST   | /api/housekeeping/tasks/:id/complete | Complete task          | Housekeeping |
+| POST   | /api/housekeeping/tasks/:id/verify   | Verify task            | Front Desk   |
+| POST   | /api/housekeeping/tasks/:id/assign   | Assign task            | Front Desk   |
+| POST   | /api/housekeeping/tasks/:id/issue    | Report issue           | Housekeeping |
+| GET    | /api/front-desk/arrivals             | Today's arrivals       | Front Desk   |
+| GET    | /api/front-desk/departures           | Today's departures     | Front Desk   |
+| GET    | /api/front-desk/in-house             | In-house guests        | Front Desk   |
+| GET    | /api/front-desk/room-rack            | Room rack view         | Front Desk   |
+| POST   | /api/front-desk/walk-in              | Create walk-in         | Front Desk   |
+| POST   | /api/front-desk/room-move            | Move guest to new room | Front Desk   |
+| POST   | /api/front-desk/extend-stay          | Extend stay            | Front Desk   |
+| POST   | /api/front-desk/early-checkout       | Early checkout         | Front Desk   |
 
 ---
 
@@ -356,18 +372,19 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 
 ### Endpoints
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | /api/reports/occupancy | Occupancy report | Manager |
-| GET | /api/reports/revenue | Revenue report | Manager |
-| GET | /api/reports/room-type-performance | Room type performance | Manager |
-| GET | /api/reports/source-analysis | Booking source analysis | Manager |
-| GET | /api/reports/cancellation-analysis | Cancellation analysis | Manager |
-| GET | /api/reports/daily-summary | Daily summary | Front Desk |
-| GET | /api/dashboard/property | Property dashboard | Front Desk |
-| GET | /api/dashboard/manager | Manager dashboard | Manager |
+| Method | Path                               | Description             | Auth       |
+| ------ | ---------------------------------- | ----------------------- | ---------- |
+| GET    | /api/reports/occupancy             | Occupancy report        | Manager    |
+| GET    | /api/reports/revenue               | Revenue report          | Manager    |
+| GET    | /api/reports/room-type-performance | Room type performance   | Manager    |
+| GET    | /api/reports/source-analysis       | Booking source analysis | Manager    |
+| GET    | /api/reports/cancellation-analysis | Cancellation analysis   | Manager    |
+| GET    | /api/reports/daily-summary         | Daily summary           | Front Desk |
+| GET    | /api/dashboard/property            | Property dashboard      | Front Desk |
+| GET    | /api/dashboard/manager             | Manager dashboard       | Manager    |
 
 ### Key Metrics
+
 - **Occupancy Rate**: Rooms occupied / Total rooms
 - **ADR (Average Daily Rate)**: Room revenue / Rooms sold
 - **RevPAR (Revenue Per Available Room)**: Room revenue / Total rooms
@@ -380,6 +397,7 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 ### Models
 
 #### Review Model
+
 ```
 - propertyId, bookingId (unique), guestId
 - ratings {overall (1-5), cleanliness, comfort, location, service, value}
@@ -391,18 +409,18 @@ A comprehensive Express.js API for hotel booking and management, supporting both
 
 ### Endpoints
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | /api/reviews | List reviews (admin) | Manager |
-| POST | /api/reviews | Submit review | Auth |
-| PUT | /api/reviews/:id | Update review | Auth |
-| DELETE | /api/reviews/:id | Delete review | Auth |
-| POST | /api/reviews/:id/moderate | Approve/reject review | Manager |
-| POST | /api/reviews/:id/respond | Respond to review | Manager |
-| POST | /api/reviews/:id/helpful | Mark as helpful | Public |
-| GET | /api/properties/:propertyId/reviews | Property reviews | Public |
-| GET | /api/properties/:propertyId/reviews/summary | Rating summary | Public |
-| GET | /api/user/me/reviews | My reviews | Auth |
+| Method | Path                                        | Description           | Auth    |
+| ------ | ------------------------------------------- | --------------------- | ------- |
+| GET    | /api/reviews                                | List reviews (admin)  | Manager |
+| POST   | /api/reviews                                | Submit review         | Auth    |
+| PUT    | /api/reviews/:id                            | Update review         | Auth    |
+| DELETE | /api/reviews/:id                            | Delete review         | Auth    |
+| POST   | /api/reviews/:id/moderate                   | Approve/reject review | Manager |
+| POST   | /api/reviews/:id/respond                    | Respond to review     | Manager |
+| POST   | /api/reviews/:id/helpful                    | Mark as helpful       | Public  |
+| GET    | /api/properties/:propertyId/reviews         | Property reviews      | Public  |
+| GET    | /api/properties/:propertyId/reviews/summary | Rating summary        | Public  |
+| GET    | /api/user/me/reviews                        | My reviews            | Auth    |
 
 ---
 
@@ -496,6 +514,7 @@ npm start
 ## API Base URL
 
 All hotel management endpoints are prefixed with `/api`:
+
 - Auth: `/auth/*`
 - User: `/user/*`
 - Admin: `/admin/*`

@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { dateStringSchema } from "../../common/utils/dateUtils";
+import { z } from 'zod';
+import { dateStringSchema } from '../../common/utils/dateUtils';
 
 export const searchAvailabilitySchema = z.object({
   query: z.object({

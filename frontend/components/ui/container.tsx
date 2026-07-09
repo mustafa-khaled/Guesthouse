@@ -1,20 +1,13 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
-type ContainerProps<T extends keyof JSX.IntrinsicElements = 'div'> =
-  React.HTMLAttributes<HTMLElement> & {
-    as?: T
-  }
+type ContainerElement = 'div' | 'nav' | 'section' | 'main' | 'article';
 
-export function Container<T extends keyof JSX.IntrinsicElements = 'div'>({
-  as,
-  className,
-  ...props
-}: ContainerProps<T>) {
-  const Component = as || 'div'
-  return (
-    <Component
-      className={cn('mx-auto max-w-7xl px-6 md:px-8', className)}
-      {...props}
-    />
-  )
+type ContainerProps = React.HTMLAttributes<HTMLElement> & {
+  as?: ContainerElement;
+};
+
+export function Container({ as = 'div', className, ...props }: ContainerProps) {
+  const Component = as;
+
+  return <Component className={cn('mx-auto max-w-7xl px-6 md:px-8', className)} {...props} />;
 }

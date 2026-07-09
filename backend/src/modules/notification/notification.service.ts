@@ -1,11 +1,11 @@
-import { Booking, IBooking } from "../../models/booking.model";
-import { Guest } from "../../models/guest.model";
-import { Property } from "../../models/property.model";
-import { Payment, IPayment } from "../../models/payment.model";
-import { sendEmail } from "../../lib/email";
-import { formatDate } from "../../common/utils/dateUtils";
-import { env } from "../../config/env";
-import { logger } from "../../lib/logger";
+import { Booking, IBooking } from '../../models/booking.model';
+import { Guest } from '../../models/guest.model';
+import { Property } from '../../models/property.model';
+import { Payment, IPayment } from '../../models/payment.model';
+import { sendEmail } from '../../lib/email';
+import { formatDate } from '../../common/utils/dateUtils';
+import { env } from '../../config/env';
+import { logger } from '../../lib/logger';
 
 interface EmailData {
   to: string;
@@ -16,9 +16,9 @@ interface EmailData {
 class NotificationService {
   async sendBookingConfirmation(booking: IBooking): Promise<void> {
     const populatedBooking = await Booking.findById(booking._id)
-      .populate("guestId")
-      .populate("propertyId")
-      .populate("roomTypeId");
+      .populate('guestId')
+      .populate('propertyId')
+      .populate('roomTypeId');
 
     if (!populatedBooking) return;
 
@@ -41,22 +41,19 @@ class NotificationService {
         guests: populatedBooking.occupancy.adults + populatedBooking.occupancy.children,
         rooms: populatedBooking.occupancy.rooms,
         totalAmount: populatedBooking.pricing.grandTotal,
-        currency: property.settings?.currency || "USD",
-        checkInTime: property.settings?.checkInTime || "15:00",
-        checkOutTime: property.settings?.checkOutTime || "11:00",
+        currency: property.settings?.currency || 'USD',
+        checkInTime: property.settings?.checkInTime || '15:00',
+        checkOutTime: property.settings?.checkOutTime || '11:00',
       }),
     };
 
     await this.send(email);
   }
 
-  async sendCancellationNotice(
-    booking: IBooking,
-    refundAmount: number
-  ): Promise<void> {
+  async sendCancellationNotice(booking: IBooking, refundAmount: number): Promise<void> {
     const populatedBooking = await Booking.findById(booking._id)
-      .populate("guestId")
-      .populate("propertyId");
+      .populate('guestId')
+      .populate('propertyId');
 
     if (!populatedBooking) return;
 
@@ -73,7 +70,7 @@ class NotificationService {
         checkIn: formatDate(populatedBooking.dates.checkIn),
         checkOut: formatDate(populatedBooking.dates.checkOut),
         refundAmount,
-        currency: property.settings?.currency || "USD",
+        currency: property.settings?.currency || 'USD',
       }),
     };
 
@@ -82,9 +79,9 @@ class NotificationService {
 
   async sendPreArrivalReminder(booking: IBooking): Promise<void> {
     const populatedBooking = await Booking.findById(booking._id)
-      .populate("guestId")
-      .populate("propertyId")
-      .populate("roomTypeId");
+      .populate('guestId')
+      .populate('propertyId')
+      .populate('roomTypeId');
 
     if (!populatedBooking) return;
 
@@ -102,7 +99,7 @@ class NotificationService {
         propertyAddress: this.formatAddress(property.address),
         roomType: roomType.name,
         checkIn: formatDate(populatedBooking.dates.checkIn),
-        checkInTime: property.settings?.checkInTime || "15:00",
+        checkInTime: property.settings?.checkInTime || '15:00',
         contactPhone: property.contact?.phone,
         contactEmail: property.contact?.email,
       }),
@@ -113,8 +110,8 @@ class NotificationService {
 
   async sendReviewRequest(booking: IBooking): Promise<void> {
     const populatedBooking = await Booking.findById(booking._id)
-      .populate("guestId")
-      .populate("propertyId");
+      .populate('guestId')
+      .populate('propertyId');
 
     if (!populatedBooking) return;
 
@@ -140,8 +137,8 @@ class NotificationService {
 
   async sendPaymentReceipt(booking: IBooking, payment: IPayment): Promise<void> {
     const populatedBooking = await Booking.findById(booking._id)
-      .populate("guestId")
-      .populate("propertyId");
+      .populate('guestId')
+      .populate('propertyId');
 
     if (!populatedBooking) return;
 
@@ -169,7 +166,7 @@ class NotificationService {
   async sendTestEmail(to: string): Promise<void> {
     const email: EmailData = {
       to,
-      subject: "Test Email - Hotel Booking System",
+      subject: 'Test Email - Hotel Booking System',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">Test Email</h1>
@@ -187,12 +184,15 @@ class NotificationService {
     try {
       await sendEmail(email.to, email.subject, email.html);
     } catch (error) {
-      logger.error({ err: error, to: email.to, subject: email.subject }, "Failed to send notification email");
+      logger.error(
+        { err: error, to: email.to, subject: email.subject },
+        'Failed to send notification email',
+      );
     }
   }
 
   private formatAddress(address: any): string {
-    if (!address) return "";
+    if (!address) return '';
     const parts = [
       address.street,
       address.city,
@@ -200,7 +200,7 @@ class NotificationService {
       address.postalCode,
       address.country,
     ].filter(Boolean);
-    return parts.join(", ");
+    return parts.join(', ');
   }
 
   private getBookingConfirmationTemplate(data: {
@@ -297,10 +297,14 @@ class NotificationService {
           <p><strong>Confirmation Number:</strong> ${data.confirmationNumber}</p>
           <p><strong>Property:</strong> ${data.propertyName}</p>
           <p><strong>Original Dates:</strong> ${data.checkIn} - ${data.checkOut}</p>
-          ${data.refundAmount > 0 ? `
+          ${
+            data.refundAmount > 0
+              ? `
             <p style="color: #27ae60;"><strong>Refund Amount:</strong> ${data.currency} ${data.refundAmount.toFixed(2)}</p>
             <p style="font-size: 12px; color: #666;">Refunds typically take 5-10 business days to process.</p>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
         
         <p>We hope to welcome you in the future.</p>
@@ -342,11 +346,15 @@ class NotificationService {
           <li>This confirmation email</li>
         </ul>
         
-        ${data.contactPhone || data.contactEmail ? `
+        ${
+          data.contactPhone || data.contactEmail
+            ? `
           <p><strong>Contact us:</strong></p>
           ${data.contactPhone ? `<p>Phone: ${data.contactPhone}</p>` : ''}
           ${data.contactEmail ? `<p>Email: ${data.contactEmail}</p>` : ''}
-        ` : ''}
+        `
+            : ''
+        }
         
         <p>See you soon!</p>
       </div>
@@ -393,8 +401,8 @@ class NotificationService {
     paymentDate: string;
     isRefund: boolean;
   }): string {
-    const title = data.isRefund ? "Refund Receipt" : "Payment Receipt";
-    const color = data.isRefund ? "#e74c3c" : "#27ae60";
+    const title = data.isRefund ? 'Refund Receipt' : 'Payment Receipt';
+    const color = data.isRefund ? '#e74c3c' : '#27ae60';
 
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

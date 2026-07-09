@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from "express";
-import { reviewService } from "./review.service";
+import { Request, Response, NextFunction } from 'express';
+import { reviewService } from './review.service';
 import {
   createReviewSchema,
   updateReviewSchema,
@@ -7,8 +7,9 @@ import {
   listReviewsSchema,
   moderateReviewSchema,
   respondToReviewSchema,
-} from "./review.schema";
-import { HttpError } from "../../common/errors/http.errors";
+} from './review.schema';
+import { HttpError } from '../../common/errors/http.errors';
+import { asParam } from '../../common/utils/params';
 
 class ReviewController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -16,7 +17,7 @@ class ReviewController {
       const result = createReviewSchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -24,7 +25,7 @@ class ReviewController {
       const review = await reviewService.create(result.data.body, req.user!.id);
 
       return res.status(201).json({
-        message: "Review submitted successfully",
+        message: 'Review submitted successfully',
         data: review,
       });
     } catch (error) {
@@ -40,7 +41,7 @@ class ReviewController {
       const result = getReviewSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -66,19 +67,19 @@ class ReviewController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const review = await reviewService.update(
         result.data.params.id,
-        result.data.body,
-        req.user!.id
+        result.data.body as any,
+        req.user!.id,
       );
 
       return res.status(200).json({
-        message: "Review updated successfully",
+        message: 'Review updated successfully',
         data: review,
       });
     } catch (error) {
@@ -94,7 +95,7 @@ class ReviewController {
       const result = getReviewSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -102,7 +103,7 @@ class ReviewController {
       await reviewService.delete(result.data.params.id, req.user!.id);
 
       return res.status(200).json({
-        message: "Review deleted successfully",
+        message: 'Review deleted successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {
@@ -120,7 +121,7 @@ class ReviewController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -129,7 +130,7 @@ class ReviewController {
         result.data.params.id,
         result.data.body.action,
         req.user!.id,
-        result.data.body.reason
+        result.data.body.reason,
       );
 
       return res.status(200).json({
@@ -152,7 +153,7 @@ class ReviewController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -160,11 +161,11 @@ class ReviewController {
       const review = await reviewService.respond(
         result.data.params.id,
         result.data.body.text,
-        req.user!.id
+        req.user!.id,
       );
 
       return res.status(200).json({
-        message: "Response added successfully",
+        message: 'Response added successfully',
         data: review,
       });
     } catch (error) {
@@ -180,7 +181,7 @@ class ReviewController {
       const result = getReviewSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -188,7 +189,7 @@ class ReviewController {
       const review = await reviewService.markHelpful(result.data.params.id);
 
       return res.status(200).json({
-        message: "Marked as helpful",
+        message: 'Marked as helpful',
         data: review,
       });
     } catch (error) {
@@ -204,20 +205,14 @@ class ReviewController {
       const result = listReviewsSchema.safeParse({ query: req.query });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const { page, limit, sortBy, sortOrder, ...filters } = result.data.query;
 
-      const reviews = await reviewService.list(
-        filters,
-        page,
-        limit,
-        sortBy,
-        sortOrder
-      );
+      const reviews = await reviewService.list(filters, page, limit, sortBy, sortOrder);
 
       return res.status(200).json(reviews);
     } catch (error) {
@@ -234,7 +229,7 @@ class ReviewController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const reviews = await reviewService.getPropertyReviews(propertyId, page, limit);
+      const reviews = await reviewService.getPropertyReviews(asParam(propertyId), page, limit);
 
       return res.status(200).json(reviews);
     } catch (error) {
@@ -249,7 +244,7 @@ class ReviewController {
     try {
       const propertyId = req.params.propertyId;
 
-      const summary = await reviewService.getPropertyRatingSummary(propertyId);
+      const summary = await reviewService.getPropertyRatingSummary(asParam(propertyId));
 
       return res.status(200).json({
         data: summary,

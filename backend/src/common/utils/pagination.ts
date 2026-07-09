@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export interface PaginationParams {
   page: number;
@@ -23,10 +23,7 @@ export const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-export function getPaginationParams(
-  page: number = 1,
-  limit: number = 20
-): PaginationParams {
+export function getPaginationParams(page: number = 1, limit: number = 20): PaginationParams {
   const validPage = Math.max(1, page);
   const validLimit = Math.min(100, Math.max(1, limit));
   const skip = (validPage - 1) * validLimit;
@@ -41,7 +38,7 @@ export function getPaginationParams(
 export function createPaginatedResult<T>(
   data: T[],
   total: number,
-  params: PaginationParams
+  params: PaginationParams,
 ): PaginatedResult<T> {
   const totalPages = Math.ceil(total / params.limit);
 
@@ -60,17 +57,17 @@ export function createPaginatedResult<T>(
 
 export interface SortParams {
   sortBy: string;
-  sortOrder: "asc" | "desc";
+  sortOrder: 'asc' | 'desc';
 }
 
 export const sortSchema = z.object({
-  sortBy: z.string().default("createdAt"),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  sortBy: z.string().default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
 
 export function getSortParams(
-  sortBy: string = "createdAt",
-  sortOrder: "asc" | "desc" = "desc"
+  sortBy: string = 'createdAt',
+  sortOrder: 'asc' | 'desc' = 'desc',
 ): Record<string, 1 | -1> {
-  return { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+  return { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
 }

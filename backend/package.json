@@ -8,13 +8,16 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
+    "lint": "echo 'no eslint yet'",
+    "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "seed": "ts-node-dev --transpile-only src/seeds/seed.ts",
     "seed:clean": "ts-node-dev --transpile-only src/seeds/seed.ts --clean",
     "seed:users": "ts-node-dev --transpile-only src/seeds/seed.ts --users",
-    "seed:properties": "ts-node-dev --transpile-only src/seeds/seed.ts --properties --room-types --rooms --rate-plans --add-ons"
+    "seed:properties": "ts-node-dev --transpile-only src/seeds/seed.ts --properties --room-types --rooms --rate-plans --add-ons",
+    "ensure-indexes": "ts-node-dev --transpile-only src/scripts/ensure-indexes.ts"
   },
   "keywords": [
     "guesthouse",
@@ -27,6 +30,7 @@
   "type": "commonjs",
   "dependencies": {
     "@guesthouse/shared": "workspace:*",
+    "@sentry/node": "^10.64.0",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.78.1",
     "cloudinary": "^2.10.0",
@@ -47,7 +51,7 @@
     "mongoose": "^8.24.0",
     "multer": "^2.2.0",
     "nanoid": "^3.3.7",
-    "nodemailer": "^8.0.11",
+    "nodemailer": "^9.0.3",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
     "rate-limit-redis": "^5.0.0",

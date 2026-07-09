@@ -1,76 +1,86 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { backendFetchApi } from '@/lib/api/server'
-import { SearchBar } from '@/components/guest/SearchBar'
-import StarRating from '@/components/StarRating'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Property, Review, RoomType } from '@/types'
-import { formatCurrency, getId } from '@/lib/utils'
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { backendFetchApi } from '@/lib/api/server';
+import { SearchBar } from '@/components/guest/SearchBar';
+import StarRating from '@/components/StarRating';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Property, Review, RoomType } from '@/types';
+import { formatCurrency, getId } from '@/lib/utils';
 
 interface PropertyPageProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: PropertyPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const res = await backendFetchApi<{ data: Property }>(`/slug/${slug}`, { auth: false });
+    const property = res.data;
+    return {
+      title: property.name,
+      description: property.description?.slice(0, 160) || `Book your stay at ${property.name}`,
+      openGraph: {
+        title: property.name,
+        description: property.description?.slice(0, 160),
+        type: 'website',
+      },
+    };
+  } catch {
+    return { title: 'Property' };
+  }
 }
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
-  const { slug } = await params
+  const { slug } = await params;
 
-  let property: Property | null = null
-  let roomTypes: RoomType[] = []
-  let reviews: Review[] = []
-  let reviewSummary: { averageRating: number; totalReviews: number } | null = null
+  let property: Property | null = null;
+  let roomTypes: RoomType[] = [];
+  let reviews: Review[] = [];
+  let reviewSummary: { averageRating: number; totalReviews: number } | null = null;
 
   try {
-    const propertyRes = await backendFetchApi<{ data: Property }>(
-      `/slug/${slug}`,
-      { auth: false },
-    )
-    property = propertyRes.data
+    const propertyRes = await backendFetchApi<{ data: Property }>(`/slug/${slug}`, { auth: false });
+    property = propertyRes.data;
   } catch {
-    notFound()
+    notFound();
   }
 
-  if (!property) notFound()
+  if (!property) notFound();
 
-  const propertyId = getId(property)
+  const propertyId = getId(property);
 
   try {
     const [roomTypesRes, reviewsRes, summaryRes] = await Promise.all([
-      backendFetchApi<{ data: RoomType[] }>(
-        `/properties/${propertyId}/room-types`,
-        { auth: false },
-      ),
-      backendFetchApi<{ data: Review[] }>(
-        `/properties/${propertyId}/reviews`,
-        { auth: false },
-      ),
+      backendFetchApi<{ data: RoomType[] }>(`/properties/${propertyId}/room-types`, {
+        auth: false,
+      }),
+      backendFetchApi<{ data: Review[] }>(`/properties/${propertyId}/reviews`, { auth: false }),
       backendFetchApi<{ data: { averageRating: number; totalReviews: number } }>(
         `/properties/${propertyId}/reviews/summary`,
         { auth: false },
       ),
-    ])
-    roomTypes = roomTypesRes.data
-    reviews = reviewsRes.data
-    reviewSummary = summaryRes.data
+    ]);
+    roomTypes = roomTypesRes.data;
+    reviews = reviewsRes.data;
+    reviewSummary = summaryRes.data;
   } catch {
     // Non-critical data — page still renders
   }
 
-  const images = property.images ?? []
-  const primaryImage = images.find((i: { url: string; isPrimary?: boolean }) => i.isPrimary)?.url || images[0]?.url
-  const galleryImages = images.filter((i: { url: string }) => i.url !== primaryImage)
+  const images = property.images ?? [];
+  const primaryImage =
+    images.find((i: { url: string; isPrimary?: boolean }) => i.isPrimary)?.url || images[0]?.url;
+  const galleryImages = images.filter((i: { url: string }) => i.url !== primaryImage);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8 grid gap-4 md:grid-cols-2">
-        <div className="aspect-[16/10] overflow-hidden rounded-lg bg-gray-200">
+        <div className="aspect-16/10 overflow-hidden rounded-lg bg-gray-200">
           {primaryImage ? (
-            <img
-              src={primaryImage}
-              alt={property.name}
-              className="h-full w-full object-cover"
-            />
+            <img src={primaryImage} alt={property.name} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-gray-400">
               No image available
@@ -79,50 +89,40 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
         </div>
         {galleryImages.length > 0 && (
           <div className="grid grid-cols-2 gap-2">
-            {galleryImages.slice(0, 4).map((img: { url: string; caption?: string }, idx: number) => (
-              <div
-                key={idx}
-                className="aspect-[4/3] overflow-hidden rounded-lg bg-gray-200"
-              >
-                <img
-                  src={img.url}
-                  alt={img.caption || property.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ))}
+            {galleryImages
+              .slice(0, 4)
+              .map((img: { url: string; caption?: string }, idx: number) => (
+                <div key={idx} className="aspect-4/3 overflow-hidden rounded-lg bg-gray-200">
+                  <img
+                    src={img.url}
+                    alt={img.caption || property.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ))}
           </div>
         )}
       </div>
 
       <div className="mb-8 grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
+        <div className="space-y-8 lg:col-span-2">
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-bold text-gray-900">{property.name}</h1>
-              {property.starRating && (
-                <StarRating rating={property.starRating} />
-              )}
+              {property.starRating && <StarRating rating={property.starRating} />}
               {reviewSummary && reviewSummary.totalReviews > 0 && (
                 <span className="text-sm text-gray-600">
-                  {reviewSummary.averageRating.toFixed(1)} ({reviewSummary.totalReviews}{' '}
-                  reviews)
+                  {reviewSummary.averageRating.toFixed(1)} ({reviewSummary.totalReviews} reviews)
                 </span>
               )}
             </div>
             <p className="mt-2 text-gray-600">
-              {[
-                property.address?.city,
-                property.address?.state,
-                property.address?.country,
-              ]
+              {[property.address?.city, property.address?.state, property.address?.country]
                 .filter(Boolean)
                 .join(', ')}
             </p>
             {property.description && (
-              <p className="mt-4 text-gray-700 leading-relaxed">
-                {property.description}
-              </p>
+              <p className="mt-4 leading-relaxed text-gray-700">{property.description}</p>
             )}
           </div>
 
@@ -145,12 +145,12 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
               <div className="grid gap-4 sm:grid-cols-2">
                 {roomTypes.map((roomType) => {
                   const image =
-                    roomType.images?.find((i: { isPrimary?: boolean; url: string }) => i.isPrimary)?.url ||
-                    roomType.images?.[0]?.url
+                    roomType.images?.find((i: { isPrimary?: boolean; url: string }) => i.isPrimary)
+                      ?.url || roomType.images?.[0]?.url;
                   return (
                     <Card key={getId(roomType)}>
                       {image && (
-                        <div className="aspect-[16/9] overflow-hidden">
+                        <div className="aspect-video overflow-hidden">
                           <img
                             src={image}
                             alt={roomType.name}
@@ -161,7 +161,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                       <CardHeader>
                         <CardTitle className="text-lg">{roomType.name}</CardTitle>
                         {roomType.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2">
+                          <p className="line-clamp-2 text-sm text-gray-600">
                             {roomType.description}
                           </p>
                         )}
@@ -179,7 +179,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                         </div>
                       </CardContent>
                     </Card>
-                  )
+                  );
                 })}
               </div>
             ) : (
@@ -193,28 +193,22 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
               <div className="space-y-4">
                 {reviews.slice(0, 6).map((review) => {
                   const extended = review as Review & {
-                    text?: string
-                    ratings?: { overall?: number }
-                    guestId?: { firstName?: string; lastName?: string }
-                  }
-                  const rating =
-                    extended.rating ??
-                    extended.ratings?.overall ??
-                    0
-                  const text = extended.comment ?? extended.text ?? ''
+                    text?: string;
+                    ratings?: { overall?: number };
+                    guestId?: { firstName?: string; lastName?: string };
+                  };
+                  const rating = extended.rating ?? extended.ratings?.overall ?? 0;
+                  const text = extended.comment ?? extended.text ?? '';
                   const guestName = extended.guestId
                     ? [extended.guestId.firstName, extended.guestId.lastName]
                         .filter(Boolean)
                         .join(' ')
-                    : 'Guest'
+                    : 'Guest';
 
                   return (
-                    <div
-                      key={getId(review)}
-                      className="rounded-lg bg-white p-6 shadow-md"
-                    >
+                    <div key={getId(review)} className="rounded-lg bg-white p-6 shadow-md">
                       <div className="mb-4 flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-700 font-semibold">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 font-semibold text-green-700">
                           {guestName.charAt(0)}
                         </div>
                         <div>
@@ -222,12 +216,10 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                           <StarRating rating={rating} />
                         </div>
                       </div>
-                      {extended.title && (
-                        <p className="mb-1 font-medium">{extended.title}</p>
-                      )}
+                      {extended.title && <p className="mb-1 font-medium">{extended.title}</p>}
                       {text && <p className="text-gray-600">{text}</p>}
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -252,23 +244,17 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                 <CardTitle className="text-base">Property info</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-gray-600">
-                {property.settings.checkInTime && (
-                  <p>Check-in: {property.settings.checkInTime}</p>
-                )}
+                {property.settings.checkInTime && <p>Check-in: {property.settings.checkInTime}</p>}
                 {property.settings.checkOutTime && (
                   <p>Check-out: {property.settings.checkOutTime}</p>
                 )}
-                {property.contact?.phone && (
-                  <p>Phone: {property.contact.phone}</p>
-                )}
-                {property.contact?.email && (
-                  <p>Email: {property.contact.email}</p>
-                )}
+                {property.contact?.phone && <p>Phone: {property.contact.phone}</p>}
+                {property.contact?.email && <p>Email: {property.contact.email}</p>}
               </CardContent>
             </Card>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

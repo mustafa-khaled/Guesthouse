@@ -1,4 +1,4 @@
-import { Schema, Query } from "mongoose";
+import { Schema, Query } from 'mongoose';
 
 export interface SoftDeleteDocument {
   isDeleted: boolean;
@@ -50,10 +50,10 @@ export function softDeletePlugin(schema: Schema) {
     delete conditions.includeDeleted;
   };
 
-  schema.pre("find", excludeDeleted);
-  schema.pre("findOne", excludeDeleted);
-  schema.pre("countDocuments", excludeDeleted);
-  schema.pre("findOneAndUpdate", excludeDeleted);
+  schema.pre('find', excludeDeleted);
+  schema.pre('findOne', excludeDeleted);
+  schema.pre('countDocuments', excludeDeleted);
+  schema.pre('findOneAndUpdate', excludeDeleted);
 }
 
 export interface AuditDocument {
@@ -65,33 +65,35 @@ export function auditPlugin(schema: Schema) {
   schema.add({
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
     updatedBy: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
   });
 }
 
 export function toJSONPlugin(schema: Schema) {
-  schema.set("toJSON", {
+  schema.set('toJSON', {
     virtuals: true,
     transform: (_doc, ret) => {
-      ret.id = ret._id?.toString();
-      delete ret._id;
-      delete ret.__v;
-      return ret;
+      const record = ret as Record<string, unknown>;
+      record.id = record._id?.toString();
+      delete record._id;
+      delete record.__v;
+      return record;
     },
   });
 
-  schema.set("toObject", {
+  schema.set('toObject', {
     virtuals: true,
     transform: (_doc, ret) => {
-      ret.id = ret._id?.toString();
-      delete ret._id;
-      delete ret.__v;
-      return ret;
+      const record = ret as Record<string, unknown>;
+      record.id = record._id?.toString();
+      delete record._id;
+      delete record.__v;
+      return record;
     },
   });
 }

@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 export function Textarea({
   className,
@@ -12,5 +12,5 @@ export function Textarea({
       )}
       {...props}
     />
-  )
+  );
 }

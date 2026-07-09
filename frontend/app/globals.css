@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-matcha-surface: #F6F2E8;
-  --color-matcha-section: #DBF2D0;
+  --color-matcha-surface: #f6f2e8;
+  --color-matcha-section: #dbf2d0;
   --color-matcha-brand: #314535;
-  --color-matcha-brand-medium: #AEC2A4;
-  --color-matcha-heading: #2B3A2E;
-  --color-matcha-body: #4A5547;
-  --color-matcha-border: #C8D4BC;
-  --color-matcha-white: #FFFFFF;
+  --color-matcha-brand-medium: #aec2a4;
+  --color-matcha-heading: #2b3a2e;
+  --color-matcha-body: #4a5547;
+  --color-matcha-border: #c8d4bc;
+  --color-matcha-white: #ffffff;
   --color-matcha-shadow: rgba(43, 58, 46, 0.08);
 }
 

@@ -4,12 +4,12 @@ export class ApiError extends Error {
     public status: number,
     public errors?: unknown,
   ) {
-    super(message)
-    this.name = 'ApiError'
+    super(message);
+    this.name = 'ApiError';
   }
 }
 
 export async function parseApiError(res: Response): Promise<ApiError> {
-  const body = await res.json().catch(() => ({ message: res.statusText }))
-  return new ApiError(body.message || res.statusText, res.status, body.errors)
+  const body = await res.json().catch(() => ({ message: res.statusText }));
+  return new ApiError(body.message || res.statusText, res.status, body.errors);
 }

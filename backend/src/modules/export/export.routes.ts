@@ -1,28 +1,28 @@
-import { Router } from "express";
-import { exportController } from "./export.controller";
-import { requireAuth, requireManager } from "../../middleware";
+import { Router } from 'express';
+import { exportController } from './export.controller';
+import { requireAuth, requireManager } from '../../middleware';
 
 const router = Router();
 
 router.get(
-  "/bookings",
+  '/bookings',
   requireAuth,
   requireManager,
-  exportController.exportBookings.bind(exportController)
+  exportController.exportBookings.bind(exportController),
 );
 
 router.get(
-  "/guests",
+  '/guests',
   requireAuth,
   requireManager,
-  exportController.exportGuests.bind(exportController)
+  exportController.exportGuests.bind(exportController),
 );
 
 router.get(
-  "/payments",
+  '/payments',
   requireAuth,
   requireManager,
-  exportController.exportPayments.bind(exportController)
+  exportController.exportPayments.bind(exportController),
 );
 
 export default router;

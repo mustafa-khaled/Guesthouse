@@ -1,4 +1,4 @@
-import { Role } from "../enums/role.enum";
+import { Role } from '../enums/role.enum';
 
 export interface AuthUser {
   id: string;
@@ -12,7 +12,14 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      requestId?: string;
     }
+  }
+}
+
+declare module 'express-serve-static-core' {
+  interface ParamsDictionary {
+    [key: string]: string;
   }
 }
 

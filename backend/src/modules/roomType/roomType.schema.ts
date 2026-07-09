@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const occupancySchema = z.object({
   adults: z.number().int().min(1),
@@ -8,7 +8,7 @@ const occupancySchema = z.object({
 
 const sizeSchema = z.object({
   value: z.number().positive(),
-  unit: z.enum(["sqm", "sqft"]).default("sqm"),
+  unit: z.enum(['sqm', 'sqft']).default('sqm'),
 });
 
 const imageSchema = z.object({
@@ -67,7 +67,7 @@ export const listRoomTypesSchema = z.object({
     limit: z.coerce.number().int().min(1).max(100).default(20),
     isActive: z
       .string()
-      .transform((val) => val === "true")
+      .transform((val) => val === 'true')
       .optional(),
     minPrice: z.coerce.number().optional(),
     maxPrice: z.coerce.number().optional(),

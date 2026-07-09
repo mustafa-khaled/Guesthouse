@@ -1,33 +1,33 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import toast from 'react-hot-toast'
-import { useAuth } from '@/hooks/useAuth'
-import { clientFetch } from '@/lib/api/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { clientFetch } from '@/lib/api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function ProfileForm() {
-  const { user, refreshUser } = useAuth()
-  const [name, setName] = useState(user?.name || '')
-  const [email, setEmail] = useState(user?.email || '')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { user, refreshUser } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
     try {
       await clientFetch('/auth/me', {
         method: 'PATCH',
         body: JSON.stringify({ name, email }),
-      })
-      toast.success('Profile updated successfully')
-      await refreshUser()
+      });
+      toast.success('Profile updated successfully');
+      await refreshUser();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Update failed')
+      toast.error(err instanceof Error ? err.message : 'Update failed');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -54,5 +54,5 @@ export default function ProfileForm() {
         </Button>
       </form>
     </div>
-  )
+  );
 }

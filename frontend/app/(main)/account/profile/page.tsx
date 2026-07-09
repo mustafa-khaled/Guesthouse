@@ -1,25 +1,25 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
-import { clientFetch } from '@/lib/api/client'
-import type { Guest } from '@/types'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import Spinner from '@/components/Spinner'
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { clientFetch } from '@/lib/api/client';
+import type { Guest } from '@/types';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Spinner from '@/components/Spinner';
 
 const guestProfileQuery = {
   queryKey: ['guest-profile'] as const,
   queryFn: () => clientFetch<{ data: Guest }>('/v1/user/me/guest-profile'),
-}
+};
 
 export default function GuestProfilePage() {
-  const queryClient = useQueryClient()
-  const { data, isLoading, isError } = useQuery(guestProfileQuery)
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError } = useQuery(guestProfileQuery);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -27,20 +27,20 @@ export default function GuestProfilePage() {
     email: '',
     phone: '',
     nationality: '',
-  })
+  });
 
   useEffect(() => {
     if (data?.data) {
-      const guest = data.data
+      const guest = data.data;
       setForm({
         firstName: guest.firstName ?? '',
         lastName: guest.lastName ?? '',
         email: guest.email ?? '',
         phone: guest.phone ?? '',
         nationality: guest.nationality ?? '',
-      })
+      });
     }
-  }, [data])
+  }, [data]);
 
   const updateMutation = useMutation({
     mutationFn: (body: typeof form) =>
@@ -49,20 +49,20 @@ export default function GuestProfilePage() {
         body: JSON.stringify(body),
       }),
     onSuccess: () => {
-      toast.success('Profile updated')
-      queryClient.invalidateQueries({ queryKey: guestProfileQuery.queryKey })
+      toast.success('Profile updated');
+      queryClient.invalidateQueries({ queryKey: guestProfileQuery.queryKey });
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Update failed')
+      toast.error(err instanceof Error ? err.message : 'Update failed');
     },
-  })
+  });
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-24">
         <Spinner />
       </div>
-    )
+    );
   }
 
   if (isError) {
@@ -73,15 +73,12 @@ export default function GuestProfilePage() {
           ← Back to account
         </Link>
       </div>
-    )
+    );
   }
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
-      <Link
-        href="/account"
-        className="mb-6 inline-block text-sm text-green-700 hover:underline"
-      >
+      <Link href="/account" className="mb-6 inline-block text-sm text-green-700 hover:underline">
         ← Back to account
       </Link>
 
@@ -93,8 +90,8 @@ export default function GuestProfilePage() {
           <form
             className="space-y-4"
             onSubmit={(e) => {
-              e.preventDefault()
-              updateMutation.mutate(form)
+              e.preventDefault();
+              updateMutation.mutate(form);
             }}
           >
             <div className="grid gap-4 sm:grid-cols-2">
@@ -103,9 +100,7 @@ export default function GuestProfilePage() {
                 <Input
                   id="firstName"
                   value={form.firstName}
-                  onChange={(e) =>
-                    setForm({ ...form, firstName: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                   required
                 />
               </div>
@@ -114,9 +109,7 @@ export default function GuestProfilePage() {
                 <Input
                   id="lastName"
                   value={form.lastName}
-                  onChange={(e) =>
-                    setForm({ ...form, lastName: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                   required
                 />
               </div>
@@ -145,9 +138,7 @@ export default function GuestProfilePage() {
               <Input
                 id="nationality"
                 value={form.nationality}
-                onChange={(e) =>
-                  setForm({ ...form, nationality: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, nationality: e.target.value })}
               />
             </div>
             <Button type="submit" disabled={updateMutation.isPending}>
@@ -157,5 +148,5 @@ export default function GuestProfilePage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

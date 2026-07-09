@@ -1,8 +1,5 @@
-import { z } from "zod";
-import {
-  CancellationPolicyType,
-  PaymentPolicyType,
-} from "../../models/ratePlan.model";
+import { z } from 'zod';
+import { CancellationPolicyType, PaymentPolicyType } from '../../models/ratePlan.model';
 
 const cancellationPolicySchema = z.object({
   type: z.nativeEnum(CancellationPolicyType).default(CancellationPolicyType.FLEXIBLE),
@@ -72,7 +69,7 @@ export const listRatePlansSchema = z.object({
   query: z.object({
     isActive: z
       .string()
-      .transform((val) => val === "true")
+      .transform((val) => val === 'true')
       .optional(),
   }),
 });
@@ -87,11 +84,9 @@ export const createPriceRuleSchema = z.object({
       start: z.coerce.date(),
       end: z.coerce.date(),
     }),
-    daysOfWeek: z
-      .array(z.number().int().min(0).max(6))
-      .optional(),
+    daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
     priceAdjustment: z.object({
-      type: z.enum(["fixed", "percentage", "absolute"]),
+      type: z.enum(['fixed', 'percentage', 'absolute']),
       value: z.number(),
     }),
     priority: z.number().int().default(0),
@@ -111,12 +106,10 @@ export const updatePriceRuleSchema = z.object({
         end: z.coerce.date(),
       })
       .optional(),
-    daysOfWeek: z
-      .array(z.number().int().min(0).max(6))
-      .optional(),
+    daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
     priceAdjustment: z
       .object({
-        type: z.enum(["fixed", "percentage", "absolute"]),
+        type: z.enum(['fixed', 'percentage', 'absolute']),
         value: z.number(),
       })
       .optional(),

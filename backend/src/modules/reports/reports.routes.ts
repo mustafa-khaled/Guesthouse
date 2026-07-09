@@ -1,49 +1,39 @@
-import { Router } from "express";
-import { reportsController } from "./reports.controller";
-import { requireAuth, requireManager, requireFrontDesk } from "../../middleware";
+import { Router } from 'express';
+import { reportsController } from './reports.controller';
+import { requireAuth, requireManager, requireFrontDesk } from '../../middleware';
 
 const router = Router();
 
+router.get('/reports/occupancy', requireAuth, requireManager, reportsController.getOccupancy);
+
+router.get('/reports/revenue', requireAuth, requireManager, reportsController.getRevenue);
+
 router.get(
-  "/reports/occupancy",
+  '/reports/room-type-performance',
   requireAuth,
   requireManager,
-  reportsController.getOccupancy
+  reportsController.getRoomTypePerformance,
 );
 
 router.get(
-  "/reports/revenue",
+  '/reports/source-analysis',
   requireAuth,
   requireManager,
-  reportsController.getRevenue
+  reportsController.getSourceAnalysis,
 );
 
 router.get(
-  "/reports/room-type-performance",
+  '/reports/cancellation-analysis',
   requireAuth,
   requireManager,
-  reportsController.getRoomTypePerformance
+  reportsController.getCancellationAnalysis,
 );
 
 router.get(
-  "/reports/source-analysis",
-  requireAuth,
-  requireManager,
-  reportsController.getSourceAnalysis
-);
-
-router.get(
-  "/reports/cancellation-analysis",
-  requireAuth,
-  requireManager,
-  reportsController.getCancellationAnalysis
-);
-
-router.get(
-  "/reports/daily-summary",
+  '/reports/daily-summary',
   requireAuth,
   requireFrontDesk,
-  reportsController.getDailySummary
+  reportsController.getDailySummary,
 );
 
 export default router;

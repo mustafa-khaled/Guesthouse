@@ -1,38 +1,38 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import toast from 'react-hot-toast'
-import { clientFetch } from '@/lib/api/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { clientFetch } from '@/lib/api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function PasswordForm() {
-  const [passwordCurrent, setPasswordCurrent] = useState('')
-  const [password, setPassword] = useState('')
-  const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [passwordCurrent, setPasswordCurrent] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     if (password !== passwordConfirm) {
-      toast.error('Passwords do not match')
-      return
+      toast.error('Passwords do not match');
+      return;
     }
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       await clientFetch('/auth/me', {
         method: 'PATCH',
         body: JSON.stringify({ passwordCurrent, password }),
-      })
-      toast.success('Password updated successfully')
-      setPasswordCurrent('')
-      setPassword('')
-      setPasswordConfirm('')
+      });
+      toast.success('Password updated successfully');
+      setPasswordCurrent('');
+      setPassword('');
+      setPasswordConfirm('');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Update failed')
+      toast.error(err instanceof Error ? err.message : 'Update failed');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -77,5 +77,5 @@ export default function PasswordForm() {
         </Button>
       </form>
     </div>
-  )
+  );
 }

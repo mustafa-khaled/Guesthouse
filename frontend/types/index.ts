@@ -19,11 +19,11 @@ export type {
   PaginatedResponse,
   AvailabilityResult,
   CreateBookingInput,
-} from '@guesthouse/shared'
+} from '@guesthouse/shared';
 
 export {
   hasMinimumRole,
   BookingStatusEnum,
   RoomStatusEnum,
   PaymentStatusEnum,
-} from '@guesthouse/shared'
+} from '@guesthouse/shared';

@@ -1,10 +1,10 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
 
 export enum PriceAdjustmentType {
-  FIXED = "fixed",
-  PERCENTAGE = "percentage",
-  ABSOLUTE = "absolute",
+  FIXED = 'fixed',
+  PERCENTAGE = 'percentage',
+  ABSOLUTE = 'absolute',
 }
 
 export interface IDateRange {
@@ -36,7 +36,7 @@ const dateRangeSchema = new Schema(
     start: { type: Date, required: true },
     end: { type: Date, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const priceAdjustmentSchema = new Schema(
@@ -48,14 +48,14 @@ const priceAdjustmentSchema = new Schema(
     },
     value: { type: Number, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const priceRuleSchema = new Schema<IPriceRule>(
   {
     ratePlanId: {
       type: Schema.Types.ObjectId,
-      ref: "RatePlan",
+      ref: 'RatePlan',
       required: true,
       index: true,
     },
@@ -71,9 +71,8 @@ const priceRuleSchema = new Schema<IPriceRule>(
     daysOfWeek: {
       type: [Number],
       validate: {
-        validator: (arr: number[]) =>
-          arr.every((d) => d >= 0 && d <= 6),
-        message: "Days of week must be between 0 (Sunday) and 6 (Saturday)",
+        validator: (arr: number[]) => arr.every((d) => d >= 0 && d <= 6),
+        message: 'Days of week must be between 0 (Sunday) and 6 (Saturday)',
       },
     },
     priceAdjustment: {
@@ -89,13 +88,13 @@ const priceRuleSchema = new Schema<IPriceRule>(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-priceRuleSchema.index({ ratePlanId: 1, "dateRange.start": 1, "dateRange.end": 1 });
+priceRuleSchema.index({ ratePlanId: 1, 'dateRange.start': 1, 'dateRange.end': 1 });
 priceRuleSchema.index({ ratePlanId: 1, isActive: 1, priority: -1 });
 
 priceRuleSchema.plugin(softDeletePlugin);
 priceRuleSchema.plugin(toJSONPlugin);
 
-export const PriceRule = model<IPriceRule>("PriceRule", priceRuleSchema);
+export const PriceRule = model<IPriceRule>('PriceRule', priceRuleSchema);

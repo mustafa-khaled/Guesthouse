@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from "express";
-import { dashboardService } from "./dashboard.service";
-import { HttpError } from "../../common/errors/http.errors";
-import { z } from "zod";
+import { Request, Response, NextFunction } from 'express';
+import { dashboardService } from './dashboard.service';
+import { HttpError } from '../../common/errors/http.errors';
+import { z } from 'zod';
 
 const propertyDashboardSchema = z.object({
   propertyId: z.string().min(1),
@@ -17,14 +17,12 @@ class DashboardController {
       const result = propertyDashboardSchema.safeParse(req.query);
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const dashboard = await dashboardService.getPropertyDashboard(
-        result.data.propertyId
-      );
+      const dashboard = await dashboardService.getPropertyDashboard(result.data.propertyId);
 
       return res.status(200).json({
         data: dashboard,
@@ -42,14 +40,12 @@ class DashboardController {
       const result = managerDashboardSchema.safeParse(req.query);
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const dashboard = await dashboardService.getManagerDashboard(
-        result.data.propertyId
-      );
+      const dashboard = await dashboardService.getManagerDashboard(result.data.propertyId);
 
       return res.status(200).json({
         data: dashboard,

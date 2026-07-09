@@ -1,21 +1,21 @@
-import { Router } from "express";
-import { dashboardController } from "./dashboard.controller";
-import { requireAuth, requireFrontDesk, requireManager } from "../../middleware";
+import { Router } from 'express';
+import { dashboardController } from './dashboard.controller';
+import { requireAuth, requireFrontDesk, requireManager } from '../../middleware';
 
 const router = Router();
 
 router.get(
-  "/dashboard/property",
+  '/dashboard/property',
   requireAuth,
   requireFrontDesk,
-  dashboardController.getPropertyDashboard
+  dashboardController.getPropertyDashboard,
 );
 
 router.get(
-  "/dashboard/manager",
+  '/dashboard/manager',
   requireAuth,
   requireManager,
-  dashboardController.getManagerDashboard
+  dashboardController.getManagerDashboard,
 );
 
 export default router;

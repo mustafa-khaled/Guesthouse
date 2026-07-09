@@ -4,48 +4,48 @@ export class HttpError extends Error {
     message: string,
   ) {
     super(message);
-    this.name = "HttpError";
+    this.name = 'HttpError';
   }
 }
 
 export class BadRequestError extends HttpError {
-  constructor(message: string = "Bad request") {
+  constructor(message: string = 'Bad request') {
     super(400, message);
-    this.name = "BadRequestError";
+    this.name = 'BadRequestError';
   }
 }
 
 export class UnauthorizedError extends HttpError {
-  constructor(message: string = "Unauthorized") {
+  constructor(message: string = 'Unauthorized') {
     super(401, message);
-    this.name = "UnauthorizedError";
+    this.name = 'UnauthorizedError';
   }
 }
 
 export class ForbiddenError extends HttpError {
-  constructor(message: string = "Forbidden") {
+  constructor(message: string = 'Forbidden') {
     super(403, message);
-    this.name = "ForbiddenError";
+    this.name = 'ForbiddenError';
   }
 }
 
 export class NotFoundError extends HttpError {
-  constructor(message: string = "Not found") {
+  constructor(message: string = 'Not found') {
     super(404, message);
-    this.name = "NotFoundError";
+    this.name = 'NotFoundError';
   }
 }
 
 export class ConflictError extends HttpError {
-  constructor(message: string = "Conflict") {
+  constructor(message: string = 'Conflict') {
     super(409, message);
-    this.name = "ConflictError";
+    this.name = 'ConflictError';
   }
 }
 
 export class InternalServerError extends HttpError {
-  constructor(message: string = "Internal server error") {
+  constructor(message: string = 'Internal server error') {
     super(500, message);
-    this.name = "InternalServerError";
+    this.name = 'InternalServerError';
   }
 }

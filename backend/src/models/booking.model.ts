@@ -1,10 +1,6 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
-import {
-  BookingStatus,
-  PaymentStatus,
-  BookingSource,
-} from "../common/enums/bookingStatus.enum";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
+import { BookingStatus, PaymentStatus, BookingSource } from '../common/enums/bookingStatus.enum';
 
 export interface IAdditionalGuest {
   firstName: string;
@@ -79,6 +75,8 @@ export interface IBooking extends Document {
   cancellation?: IBookingCancellation;
   checkInDetails?: ICheckInDetails;
   checkOutDetails?: ICheckOutDetails;
+  preArrivalEmailSentAt?: Date;
+  reviewRequestEmailSentAt?: Date;
   isDeleted: boolean;
   deletedAt?: Date;
   createdAt: Date;
@@ -91,7 +89,7 @@ const additionalGuestSchema = new Schema(
     lastName: { type: String, required: true },
     email: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 const datesSchema = new Schema(
@@ -100,7 +98,7 @@ const datesSchema = new Schema(
     checkOut: { type: Date, required: true },
     nights: { type: Number, required: true, min: 1 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const occupancySchema = new Schema(
@@ -109,7 +107,7 @@ const occupancySchema = new Schema(
     children: { type: Number, default: 0, min: 0 },
     rooms: { type: Number, default: 1, min: 1 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const pricingSchema = new Schema(
@@ -122,7 +120,7 @@ const pricingSchema = new Schema(
     discountAmount: { type: Number, default: 0 },
     grandTotal: { type: Number, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const paymentSchema = new Schema(
@@ -136,33 +134,33 @@ const paymentSchema = new Schema(
     amountDue: { type: Number, default: 0 },
     depositAmount: { type: Number, default: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const cancellationSchema = new Schema(
   {
     cancelledAt: Date,
-    cancelledBy: { type: Schema.Types.ObjectId, ref: "User" },
+    cancelledBy: { type: Schema.Types.ObjectId, ref: 'User' },
     reason: String,
     refundAmount: { type: Number, default: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const checkInDetailsSchema = new Schema(
   {
     checkedInAt: Date,
-    checkedInBy: { type: Schema.Types.ObjectId, ref: "User" },
+    checkedInBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const checkOutDetailsSchema = new Schema(
   {
     checkedOutAt: Date,
-    checkedOutBy: { type: Schema.Types.ObjectId, ref: "User" },
+    checkedOutBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const bookingSchema = new Schema<IBooking>(
@@ -174,30 +172,30 @@ const bookingSchema = new Schema<IBooking>(
     },
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       required: true,
       index: true,
     },
     guestId: {
       type: Schema.Types.ObjectId,
-      ref: "Guest",
+      ref: 'Guest',
       required: true,
       index: true,
     },
     additionalGuests: [additionalGuestSchema],
     roomTypeId: {
       type: Schema.Types.ObjectId,
-      ref: "RoomType",
+      ref: 'RoomType',
       required: true,
     },
     ratePlanId: {
       type: Schema.Types.ObjectId,
-      ref: "RatePlan",
+      ref: 'RatePlan',
       required: true,
     },
     assignedRoomId: {
       type: Schema.Types.ObjectId,
-      ref: "Room",
+      ref: 'Room',
     },
     dates: {
       type: datesSchema,
@@ -233,23 +231,28 @@ const bookingSchema = new Schema<IBooking>(
     cancellation: cancellationSchema,
     checkInDetails: checkInDetailsSchema,
     checkOutDetails: checkOutDetailsSchema,
+    preArrivalEmailSentAt: Date,
+    reviewRequestEmailSentAt: Date,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 bookingSchema.index({ confirmationNumber: 1 });
-bookingSchema.index({ propertyId: 1, "dates.checkIn": 1 });
-bookingSchema.index({ propertyId: 1, "dates.checkOut": 1 });
+bookingSchema.index({ propertyId: 1, 'dates.checkIn': 1 });
+bookingSchema.index({ propertyId: 1, 'dates.checkOut': 1 });
 bookingSchema.index({ propertyId: 1, status: 1 });
 bookingSchema.index({ guestId: 1, createdAt: -1 });
 bookingSchema.index({ assignedRoomId: 1, status: 1 });
 
 bookingSchema.index(
-  { confirmationNumber: "text", specialRequests: "text", internalNotes: "text" },
-  { weights: { confirmationNumber: 10, specialRequests: 2, internalNotes: 1 }, name: "booking_text_search" }
+  { confirmationNumber: 'text', specialRequests: 'text', internalNotes: 'text' },
+  {
+    weights: { confirmationNumber: 10, specialRequests: 2, internalNotes: 1 },
+    name: 'booking_text_search',
+  },
 );
 
 bookingSchema.plugin(softDeletePlugin);
 bookingSchema.plugin(toJSONPlugin);
 
-export const Booking = model<IBooking>("Booking", bookingSchema);
+export const Booking = model<IBooking>('Booking', bookingSchema);

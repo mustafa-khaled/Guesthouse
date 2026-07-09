@@ -1,32 +1,32 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import toast from 'react-hot-toast'
-import { useAuth } from '@/hooks/useAuth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LoginPage() {
-  const { login } = useAuth()
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const { login } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setLoading(true)
-    const fd = new FormData(e.currentTarget)
+    e.preventDefault();
+    setLoading(true);
+    const fd = new FormData(e.currentTarget);
     try {
-      await login(String(fd.get('email')), String(fd.get('password')))
-      toast.success('Welcome back!')
-      router.push('/account')
+      await login(String(fd.get('email')), String(fd.get('password')));
+      toast.success('Welcome back!');
+      router.push('/account');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Login failed')
+      toast.error(err instanceof Error ? err.message : 'Login failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -60,15 +60,12 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
-            <a
-              href="/api/auth/google"
-              className="inline-block text-green-700 hover:underline"
-            >
+            <a href="/api/auth/google" className="inline-block text-green-700 hover:underline">
               Continue with Google
             </a>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

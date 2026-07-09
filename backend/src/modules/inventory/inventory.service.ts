@@ -1,32 +1,13 @@
-import {
-  Inventory,
-  IInventory,
-  InventoryHold,
-  IInventoryHold,
-} from "../../models/inventory.model";
-import { Property } from "../../models/property.model";
-import { RoomType, IRoomType } from "../../models/roomType.model";
-import { Room } from "../../models/room.model";
-import { RatePlan } from "../../models/ratePlan.model";
-import { ratePlanService } from "../ratePlan/ratePlan.service";
-import {
-  NotFoundError,
-  BadRequestError,
-  ConflictError,
-} from "../../common/errors/http.errors";
-import {
-  getOrSet,
-  invalidate,
-  buildCacheKey,
-  CacheTTL,
-  CachePrefix,
-} from "../../lib/cache";
-import {
-  parseDate,
-  getDateRange,
-  getNightsBetween,
-} from "../../common/utils/dateUtils";
-import { Types, ClientSession } from "mongoose";
+import { Inventory, IInventory, InventoryHold, IInventoryHold } from '../../models/inventory.model';
+import { Property } from '../../models/property.model';
+import { RoomType, IRoomType } from '../../models/roomType.model';
+import { Room } from '../../models/room.model';
+import { RatePlan } from '../../models/ratePlan.model';
+import { ratePlanService } from '../ratePlan/ratePlan.service';
+import { NotFoundError, BadRequestError, ConflictError } from '../../common/errors/http.errors';
+import { getOrSet, invalidate, buildCacheKey, CacheTTL, CachePrefix } from '../../lib/cache';
+import { parseDate, getDateRange, getNightsBetween } from '../../common/utils/dateUtils';
+import { Types, ClientSession } from 'mongoose';
 
 export interface AvailabilityResult {
   roomType: IRoomType;
@@ -66,26 +47,16 @@ export interface InventoryUpdate {
 const HOLD_DURATION_MINUTES = 10;
 
 class InventoryService {
-  async searchAvailability(
-    params: SearchAvailabilityParams
-  ): Promise<AvailabilityResult[]> {
-    const {
-      propertyId,
-      checkIn,
-      checkOut,
-      adults,
-      children,
-      rooms,
-      roomTypeId,
-    } = params;
+  async searchAvailability(params: SearchAvailabilityParams): Promise<AvailabilityResult[]> {
+    const { propertyId, checkIn, checkOut, adults, children, rooms, roomTypeId } = params;
 
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const property = await Property.findById(propertyId);
     if (!property || !property.isActive) {
-      throw new NotFoundError("Property not found or inactive");
+      throw new NotFoundError('Property not found or inactive');
     }
 
     const checkInDate = parseDate(checkIn);
@@ -93,7 +64,7 @@ class InventoryService {
     const nights = getNightsBetween(checkInDate, checkOutDate);
 
     if (nights < 1) {
-      throw new BadRequestError("Check-out must be after check-in");
+      throw new BadRequestError('Check-out must be after check-in');
     }
 
     const totalGuests = adults + children;
@@ -102,7 +73,7 @@ class InventoryService {
       propertyId: new Types.ObjectId(propertyId),
       isActive: true,
       isDeleted: false,
-      "maxOccupancy.total": { $gte: totalGuests },
+      'maxOccupancy.total': { $gte: totalGuests },
     };
 
     if (roomTypeId) {
@@ -118,31 +89,25 @@ class InventoryService {
         propertyId,
         roomType._id.toString(),
         checkInDate,
-        checkOutDate
+        checkOutDate,
       );
 
-      const minAvailable = Math.min(
-        ...availability.map((inv) => inv.availableRooms)
-      );
+      const minAvailable = Math.min(...availability.map((inv) => inv.availableRooms));
 
       const isAvailable = minAvailable >= rooms;
 
       const hasClosedDates = availability.some(
         (inv, index) =>
           (index === 0 && inv.closedToArrival) ||
-          (index === availability.length - 1 && inv.closedToDeparture)
+          (index === availability.length - 1 && inv.closedToDeparture),
       );
 
       if (!isAvailable || hasClosedDates) {
         continue;
       }
 
-      const minStayViolation = availability.some(
-        (inv) => inv.minStay && nights < inv.minStay
-      );
-      const maxStayViolation = availability.some(
-        (inv) => inv.maxStay && nights > inv.maxStay
-      );
+      const minStayViolation = availability.some((inv) => inv.minStay && nights < inv.minStay);
+      const maxStayViolation = availability.some((inv) => inv.maxStay && nights > inv.maxStay);
 
       if (minStayViolation || maxStayViolation) {
         continue;
@@ -152,16 +117,10 @@ class InventoryService {
         roomTypeId: roomType._id,
         isActive: true,
         isDeleted: false,
-        $or: [
-          { validFrom: { $exists: false } },
-          { validFrom: { $lte: checkInDate } },
-        ],
+        $or: [{ validFrom: { $exists: false } }, { validFrom: { $lte: checkInDate } }],
         $and: [
           {
-            $or: [
-              { validTo: { $exists: false } },
-              { validTo: { $gte: checkOutDate } },
-            ],
+            $or: [{ validTo: { $exists: false } }, { validTo: { $gte: checkOutDate } }],
           },
         ],
       });
@@ -171,7 +130,7 @@ class InventoryService {
           const { total } = await ratePlanService.calculateTotalPrice(
             rp._id.toString(),
             checkInDate,
-            checkOutDate
+            checkOutDate,
           );
 
           return {
@@ -184,7 +143,7 @@ class InventoryService {
             inclusions: rp.inclusions,
             cancellationPolicy: rp.cancellationPolicy,
           };
-        })
+        }),
       );
 
       ratePlanResults.sort((a, b) => a.totalPrice - b.totalPrice);
@@ -204,7 +163,7 @@ class InventoryService {
     propertyId: string,
     roomTypeId: string,
     checkIn: Date,
-    checkOut: Date
+    checkOut: Date,
   ): Promise<IInventory[]> {
     const dates = getDateRange(checkIn, checkOut);
     dates.pop();
@@ -216,7 +175,7 @@ class InventoryService {
     }).sort({ date: 1 });
 
     const inventoryMap = new Map(
-      inventory.map((inv) => [inv.date.toISOString().split("T")[0], inv])
+      inventory.map((inv) => [inv.date.toISOString().split('T')[0], inv]),
     );
 
     const totalRooms = await Room.countDocuments({
@@ -228,7 +187,7 @@ class InventoryService {
 
     const result: IInventory[] = [];
     for (const date of dates) {
-      const dateKey = date.toISOString().split("T")[0];
+      const dateKey = date.toISOString().split('T')[0];
       const existing = inventoryMap.get(dateKey);
 
       if (existing) {
@@ -256,19 +215,19 @@ class InventoryService {
     propertyId: string,
     startDate: string,
     endDate: string,
-    roomTypeId?: string
+    roomTypeId?: string,
   ): Promise<IInventory[]> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const cacheKey = buildCacheKey(
       CachePrefix.INVENTORY,
-      "calendar",
+      'calendar',
       propertyId,
       startDate,
       endDate,
-      roomTypeId || "all"
+      roomTypeId || 'all',
     );
 
     return getOrSet(
@@ -287,11 +246,11 @@ class InventoryService {
         }
 
         const docs = await Inventory.find(query)
-          .populate("roomTypeId", "name code")
+          .populate('roomTypeId', 'name code')
           .sort({ roomTypeId: 1, date: 1 });
         return docs.map((d) => d.toObject());
       },
-      CacheTTL.INVENTORY
+      CacheTTL.INVENTORY,
     );
   }
 
@@ -300,18 +259,18 @@ class InventoryService {
     roomTypeId: string,
     startDate: string,
     endDate: string,
-    updates: InventoryUpdate
+    updates: InventoryUpdate,
   ): Promise<number> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
     if (!Types.ObjectId.isValid(roomTypeId)) {
-      throw new BadRequestError("Invalid room type ID");
+      throw new BadRequestError('Invalid room type ID');
     }
 
     const roomType = await RoomType.findById(roomTypeId);
     if (!roomType || roomType.propertyId.toString() !== propertyId) {
-      throw new NotFoundError("Room type not found for this property");
+      throw new NotFoundError('Room type not found for this property');
     }
 
     const start = parseDate(startDate);
@@ -344,18 +303,18 @@ class InventoryService {
     roomTypeId: string,
     startDate: string,
     endDate: string,
-    totalRooms: number
+    totalRooms: number,
   ): Promise<number> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
     if (!Types.ObjectId.isValid(roomTypeId)) {
-      throw new BadRequestError("Invalid room type ID");
+      throw new BadRequestError('Invalid room type ID');
     }
 
     const roomType = await RoomType.findById(roomTypeId);
     if (!roomType || roomType.propertyId.toString() !== propertyId) {
-      throw new NotFoundError("Room type not found for this property");
+      throw new NotFoundError('Room type not found for this property');
     }
 
     const start = parseDate(startDate);
@@ -403,13 +362,13 @@ class InventoryService {
     checkOut: string,
     rooms: number,
     sessionId: string,
-    userId?: string
+    userId?: string,
   ): Promise<IInventoryHold> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
     if (!Types.ObjectId.isValid(roomTypeId)) {
-      throw new BadRequestError("Invalid room type ID");
+      throw new BadRequestError('Invalid room type ID');
     }
 
     const checkInDate = parseDate(checkIn);
@@ -419,15 +378,13 @@ class InventoryService {
       propertyId,
       roomTypeId,
       checkInDate,
-      checkOutDate
+      checkOutDate,
     );
 
-    const minAvailable = Math.min(
-      ...availability.map((inv) => inv.availableRooms)
-    );
+    const minAvailable = Math.min(...availability.map((inv) => inv.availableRooms));
 
     if (minAvailable < rooms) {
-      throw new ConflictError("Not enough rooms available for the selected dates");
+      throw new ConflictError('Not enough rooms available for the selected dates');
     }
 
     const expiresAt = new Date(Date.now() + HOLD_DURATION_MINUTES * 60 * 1000);
@@ -456,7 +413,7 @@ class InventoryService {
       },
       {
         $inc: { heldRooms: rooms, availableRooms: -rooms },
-      }
+      },
     );
 
     return hold;
@@ -464,12 +421,12 @@ class InventoryService {
 
   async releaseHold(holdId: string): Promise<void> {
     if (!Types.ObjectId.isValid(holdId)) {
-      throw new BadRequestError("Invalid hold ID");
+      throw new BadRequestError('Invalid hold ID');
     }
 
     const hold = await InventoryHold.findById(holdId);
     if (!hold) {
-      throw new NotFoundError("Hold not found");
+      throw new NotFoundError('Hold not found');
     }
 
     const dates = getDateRange(hold.checkIn, hold.checkOut);
@@ -483,7 +440,7 @@ class InventoryService {
       },
       {
         $inc: { heldRooms: -hold.rooms, availableRooms: hold.rooms },
-      }
+      },
     );
 
     await InventoryHold.findByIdAndDelete(holdId);
@@ -491,12 +448,12 @@ class InventoryService {
 
   async convertHoldToBooking(holdId: string): Promise<void> {
     if (!Types.ObjectId.isValid(holdId)) {
-      throw new BadRequestError("Invalid hold ID");
+      throw new BadRequestError('Invalid hold ID');
     }
 
     const hold = await InventoryHold.findById(holdId);
     if (!hold) {
-      throw new NotFoundError("Hold not found or expired");
+      throw new NotFoundError('Hold not found or expired');
     }
 
     const dates = getDateRange(hold.checkIn, hold.checkOut);
@@ -513,7 +470,7 @@ class InventoryService {
           heldRooms: -hold.rooms,
           bookedRooms: hold.rooms,
         },
-      }
+      },
     );
 
     await InventoryHold.findByIdAndDelete(holdId);
@@ -525,7 +482,7 @@ class InventoryService {
     checkIn: Date,
     checkOut: Date,
     rooms: number,
-    session?: ClientSession
+    session?: ClientSession,
   ): Promise<void> {
     const dates = getDateRange(checkIn, checkOut);
     dates.pop();
@@ -539,7 +496,7 @@ class InventoryService {
       {
         $inc: { bookedRooms: rooms, availableRooms: -rooms },
       },
-      { session }
+      { session },
     );
   }
 
@@ -549,7 +506,7 @@ class InventoryService {
     checkIn: Date,
     checkOut: Date,
     rooms: number,
-    session?: ClientSession
+    session?: ClientSession,
   ): Promise<void> {
     const dates = getDateRange(checkIn, checkOut);
     dates.pop();
@@ -563,7 +520,7 @@ class InventoryService {
       {
         $inc: { bookedRooms: -rooms, availableRooms: rooms },
       },
-      { session }
+      { session },
     );
   }
 }

@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from "express";
-import { roomTypeService } from "./roomType.service";
+import { Request, Response, NextFunction } from 'express';
+import { roomTypeService } from './roomType.service';
 import {
   createRoomTypeSchema,
   updateRoomTypeSchema,
   getRoomTypeSchema,
   listRoomTypesSchema,
-} from "./roomType.schema";
-import { HttpError } from "../../common/errors/http.errors";
+} from './roomType.schema';
+import { HttpError } from '../../common/errors/http.errors';
 
 class RoomTypeController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -17,18 +17,18 @@ class RoomTypeController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const roomType = await roomTypeService.create(
         result.data.params.propertyId,
-        result.data.body
+        result.data.body,
       );
 
       return res.status(201).json({
-        message: "Room type created successfully",
+        message: 'Room type created successfully',
         data: roomType,
       });
     } catch (error) {
@@ -44,7 +44,7 @@ class RoomTypeController {
       const result = getRoomTypeSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -70,18 +70,15 @@ class RoomTypeController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const roomType = await roomTypeService.update(
-        result.data.params.id,
-        result.data.body
-      );
+      const roomType = await roomTypeService.update(result.data.params.id, result.data.body);
 
       return res.status(200).json({
-        message: "Room type updated successfully",
+        message: 'Room type updated successfully',
         data: roomType,
       });
     } catch (error) {
@@ -97,7 +94,7 @@ class RoomTypeController {
       const result = getRoomTypeSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -105,7 +102,7 @@ class RoomTypeController {
       await roomTypeService.delete(result.data.params.id);
 
       return res.status(200).json({
-        message: "Room type deleted successfully",
+        message: 'Room type deleted successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {
@@ -123,7 +120,7 @@ class RoomTypeController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -134,7 +131,7 @@ class RoomTypeController {
         result.data.params.propertyId,
         filters,
         page,
-        limit
+        limit,
       );
 
       return res.status(200).json(roomTypes);

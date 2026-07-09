@@ -1,21 +1,21 @@
-import { Router } from "express";
-import { notificationController } from "./notification.controller";
-import { requireAuth, requireFrontDesk, requireManager } from "../../middleware";
+import { Router } from 'express';
+import { notificationController } from './notification.controller';
+import { requireAuth, requireFrontDesk, requireManager } from '../../middleware';
 
 const router = Router();
 
 router.post(
-  "/bookings/:bookingId/resend-confirmation",
+  '/bookings/:bookingId/resend-confirmation',
   requireAuth,
   requireFrontDesk,
-  notificationController.resendConfirmation
+  notificationController.resendConfirmation,
 );
 
 router.post(
-  "/notifications/test",
+  '/notifications/test',
   requireAuth,
   requireManager,
-  notificationController.sendTestEmail
+  notificationController.sendTestEmail,
 );
 
 export default router;

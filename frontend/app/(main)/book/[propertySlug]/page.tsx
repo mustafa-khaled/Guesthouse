@@ -1,32 +1,27 @@
-'use client'
+'use client';
 
-import { useState, useMemo } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
-import { propertyQueries } from '@/queries/properties.queries'
-import { bookingQueries } from '@/queries/bookings.queries'
+import { useState, useMemo, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { propertyQueries } from '@/queries/properties.queries';
+import { bookingQueries, addOnQueries } from '@/queries/bookings.queries';
 import {
   bookingMutations,
   inventoryMutations,
   paymentMutations,
-} from '@/mutations/bookings.mutations'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import Spinner from '@/components/Spinner'
-import type { AvailabilityResult, Booking } from '@/types'
-import { formatCurrency, formatDate, getId } from '@/lib/utils'
+  promotionMutations,
+} from '@/mutations/bookings.mutations';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Spinner from '@/components/Spinner';
+import StripePaymentForm from '@/components/StripePaymentForm';
+import type { AvailabilityResult, Booking } from '@/types';
+import { formatCurrency, formatDate, getId } from '@/lib/utils';
 
-type Step =
-  | 'dates'
-  | 'availability'
-  | 'guest'
-  | 'hold'
-  | 'booking'
-  | 'payment'
-  | 'confirmation'
+type Step = 'dates' | 'availability' | 'guest' | 'hold' | 'booking' | 'payment' | 'confirmation';
 
 const STEPS: Step[] = [
   'dates',
@@ -36,42 +31,42 @@ const STEPS: Step[] = [
   'booking',
   'payment',
   'confirmation',
-]
+];
 
 export default function BookPage() {
-  const params = useParams()
-  const router = useRouter()
-  const propertySlug = String(params.propertySlug)
+  const params = useParams();
+  const router = useRouter();
+  const propertySlug = String(params.propertySlug);
 
-  const [step, setStep] = useState<Step>('dates')
-  const [checkIn, setCheckIn] = useState('')
-  const [checkOut, setCheckOut] = useState('')
-  const [adults, setAdults] = useState(2)
-  const [children, setChildren] = useState(0)
-  const [selectedRoom, setSelectedRoom] = useState<AvailabilityResult | null>(
-    null,
-  )
+  const [step, setStep] = useState<Step>('dates');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+  const [selectedRoom, setSelectedRoom] = useState<AvailabilityResult | null>(null);
   const [guestInfo, setGuestInfo] = useState({
     email: '',
     firstName: '',
     lastName: '',
     phone: '',
-  })
-  const [holdId, setHoldId] = useState<string | null>(null)
-  const [booking, setBooking] = useState<Booking | null>(null)
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  });
+  const [holdId, setHoldId] = useState<string | null>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState<number | null>(null);
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
 
   const sessionId = useMemo(
-    () =>
-      typeof crypto !== 'undefined'
-        ? crypto.randomUUID()
-        : `session-${Date.now()}`,
+    () => (typeof crypto !== 'undefined' ? crypto.randomUUID() : `session-${Date.now()}`),
     [],
-  )
+  );
 
-  const propertyQuery = useQuery(propertyQueries.bySlug(propertySlug))
+  const propertyQuery = useQuery(propertyQueries.bySlug(propertySlug));
 
-  const propertyId = propertyQuery.data ? getId(propertyQuery.data) : ''
+  const propertyId = propertyQuery.data ? getId(propertyQuery.data) : '';
 
   const availabilityQuery = useQuery({
     ...bookingQueries.availability({
@@ -82,24 +77,44 @@ export default function BookPage() {
       children: String(children),
     }),
     enabled: step === 'availability' && !!propertyId,
-  })
+  });
 
-  const holdMutation = useMutation(inventoryMutations.hold())
-  const createBookingMutation = useMutation(bookingMutations.create())
-  const paymentIntentMutation = useMutation(paymentMutations.createIntent())
+  const addOnsQuery = useQuery(addOnQueries.byProperty(propertyId));
 
-  const stepIndex = STEPS.indexOf(step)
+  const holdMutation = useMutation(inventoryMutations.hold());
+  const createBookingMutation = useMutation(bookingMutations.create());
+  const paymentIntentMutation = useMutation(paymentMutations.createIntent());
+  const confirmPaymentMutation = useMutation(paymentMutations.confirm());
+  const validatePromoMutation = useMutation(promotionMutations.validate());
+
+  useEffect(() => {
+    if (step !== 'payment' || !booking || clientSecret) return;
+    const bookingId = getId(booking);
+    paymentIntentMutation.mutate(bookingId, {
+      onSuccess: (result) => {
+        setClientSecret(result.data.clientSecret);
+        setPaymentAmount(result.data.amount);
+        setPaymentIntentId(result.data.paymentIntentId);
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to initialize payment');
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, booking, clientSecret]);
+
+  const stepIndex = STEPS.indexOf(step);
 
   function goToAvailability() {
     if (!checkIn || !checkOut) {
-      toast.error('Please select check-in and check-out dates')
-      return
+      toast.error('Please select check-in and check-out dates');
+      return;
     }
-    setStep('availability')
+    setStep('availability');
   }
 
   async function handleCreateHold() {
-    if (!selectedRoom || !propertyId) return
+    if (!selectedRoom || !propertyId) return;
 
     try {
       const result = await holdMutation.mutateAsync({
@@ -109,20 +124,23 @@ export default function BookPage() {
         checkOut,
         rooms: 1,
         sessionId,
-      })
-      setHoldId(result.data.holdId)
-      setStep('booking')
+      });
+      setHoldId(result.data.holdId);
+      setStep('booking');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to hold room')
+      toast.error(err instanceof Error ? err.message : 'Failed to hold room');
     }
   }
 
   async function handleCreateBooking() {
-    if (!selectedRoom || !propertyId || !holdId) return
+    if (!selectedRoom || !propertyId || !holdId) return;
     if (!selectedRoom.ratePlanId) {
-      toast.error('No rate plan available for this room')
-      return
+      toast.error('No rate plan available for this room');
+      return;
     }
+
+    const addOnNote =
+      selectedAddOns.length > 0 ? `Requested add-ons: ${selectedAddOns.join(', ')}` : undefined;
 
     try {
       const result = await createBookingMutation.mutateAsync({
@@ -136,27 +154,29 @@ export default function BookPage() {
         rooms: 1,
         guest: guestInfo,
         holdId,
-      })
-      setBooking(result.data)
-      setStep('payment')
+        promotionCode: promoCode || undefined,
+        specialRequests: addOnNote,
+      });
+      setBooking(result.data);
+      setStep('payment');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Booking failed')
+      toast.error(err instanceof Error ? err.message : 'Booking failed');
     }
   }
 
-  async function handlePaymentIntent() {
-    if (!booking) return
-    const bookingId = getId(booking)
+  async function handlePaymentSuccess(intentId: string) {
+    if (!booking) return;
+    const bookingId = getId(booking);
 
     try {
-      const result = await paymentIntentMutation.mutateAsync(bookingId)
-      setClientSecret(result.data.clientSecret)
-      setStep('confirmation')
-      toast.success('Booking confirmed — payment setup ready')
+      await confirmPaymentMutation.mutateAsync({
+        bookingId,
+        paymentIntentId: intentId,
+      });
+      setStep('confirmation');
+      toast.success('Payment successful — booking confirmed!');
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Payment setup failed',
-      )
+      toast.error(err instanceof Error ? err.message : 'Payment confirmation failed');
     }
   }
 
@@ -165,7 +185,7 @@ export default function BookPage() {
       <div className="flex justify-center py-24">
         <Spinner />
       </div>
-    )
+    );
   }
 
   if (propertyQuery.isError || !propertyQuery.data) {
@@ -176,10 +196,10 @@ export default function BookPage() {
           Back to home
         </Button>
       </div>
-    )
+    );
   }
 
-  const property = propertyQuery.data
+  const property = propertyQuery.data;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -192,9 +212,7 @@ export default function BookPage() {
         {STEPS.map((s, i) => (
           <div
             key={s}
-            className={`h-1 flex-1 rounded ${
-              i <= stepIndex ? 'bg-green-600' : 'bg-gray-200'
-            }`}
+            className={`h-1 flex-1 rounded ${i <= stepIndex ? 'bg-green-600' : 'bg-gray-200'}`}
           />
         ))}
       </div>
@@ -264,9 +282,7 @@ export default function BookPage() {
               </div>
             )}
             {availabilityQuery.data?.length === 0 && (
-              <p className="text-gray-500">
-                No rooms available. Try different dates.
-              </p>
+              <p className="text-gray-500">No rooms available. Try different dates.</p>
             )}
             <div className="space-y-3">
               {availabilityQuery.data?.map((room) => (
@@ -281,18 +297,14 @@ export default function BookPage() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">
-                      {room.roomTypeName || 'Room'}
-                    </span>
+                    <span className="font-medium">{room.roomTypeName || 'Room'}</span>
                     {room.totalPrice != null && (
                       <span className="font-semibold text-green-700">
                         {formatCurrency(room.totalPrice, room.currency ?? 'USD')}
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {room.availableRooms} available
-                  </p>
+                  <p className="mt-1 text-sm text-gray-500">{room.availableRooms} available</p>
                 </button>
               ))}
             </div>
@@ -300,10 +312,7 @@ export default function BookPage() {
               <Button variant="outline" onClick={() => setStep('dates')}>
                 Back
               </Button>
-              <Button
-                disabled={!selectedRoom}
-                onClick={() => setStep('guest')}
-              >
+              <Button disabled={!selectedRoom} onClick={() => setStep('guest')}>
                 Continue
               </Button>
             </div>
@@ -323,9 +332,7 @@ export default function BookPage() {
                 <Input
                   id="firstName"
                   value={guestInfo.firstName}
-                  onChange={(e) =>
-                    setGuestInfo({ ...guestInfo, firstName: e.target.value })
-                  }
+                  onChange={(e) => setGuestInfo({ ...guestInfo, firstName: e.target.value })}
                   required
                 />
               </div>
@@ -334,9 +341,7 @@ export default function BookPage() {
                 <Input
                   id="lastName"
                   value={guestInfo.lastName}
-                  onChange={(e) =>
-                    setGuestInfo({ ...guestInfo, lastName: e.target.value })
-                  }
+                  onChange={(e) => setGuestInfo({ ...guestInfo, lastName: e.target.value })}
                   required
                 />
               </div>
@@ -347,9 +352,7 @@ export default function BookPage() {
                 id="email"
                 type="email"
                 value={guestInfo.email}
-                onChange={(e) =>
-                  setGuestInfo({ ...guestInfo, email: e.target.value })
-                }
+                onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
                 required
               />
             </div>
@@ -359,27 +362,89 @@ export default function BookPage() {
                 id="phone"
                 type="tel"
                 value={guestInfo.phone}
-                onChange={(e) =>
-                  setGuestInfo({ ...guestInfo, phone: e.target.value })
-                }
+                onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
               />
             </div>
+            <div>
+              <Label htmlFor="promoCode">Promo code (optional)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="promoCode"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  placeholder="SAVE10"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!promoCode || validatePromoMutation.isPending}
+                  onClick={() =>
+                    validatePromoMutation.mutate(promoCode, {
+                      onSuccess: (res) => {
+                        const discount = (res as { data?: { discountAmount?: number } })?.data
+                          ?.discountAmount;
+                        setPromoDiscount(discount ?? 0);
+                        toast.success('Promo code applied');
+                      },
+                      onError: (err) => {
+                        setPromoDiscount(null);
+                        toast.error(err instanceof Error ? err.message : 'Invalid promo code');
+                      },
+                    })
+                  }
+                >
+                  Apply
+                </Button>
+              </div>
+              {promoDiscount != null && promoDiscount > 0 && (
+                <p className="mt-1 text-sm text-green-600">
+                  Discount: {formatCurrency(promoDiscount, selectedRoom?.currency ?? 'USD')}
+                </p>
+              )}
+            </div>
+            {addOnsQuery.data && addOnsQuery.data.length > 0 && (
+              <div>
+                <Label>Add-ons (optional)</Label>
+                <div className="mt-2 space-y-2">
+                  {addOnsQuery.data.map((addOn) => {
+                    const addOnId = addOn.id ?? addOn._id ?? addOn.name;
+                    return (
+                      <label key={addOnId} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedAddOns.includes(addOn.name)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedAddOns([...selectedAddOns, addOn.name]);
+                            } else {
+                              setSelectedAddOns(selectedAddOns.filter((n) => n !== addOn.name));
+                            }
+                          }}
+                        />
+                        {addOn.name}
+                        {addOn.price != null && (
+                          <span className="text-gray-500">
+                            ({formatCurrency(addOn.price, 'USD')})
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('availability')}>
                 Back
               </Button>
               <Button
                 onClick={() => {
-                  if (
-                    !guestInfo.email ||
-                    !guestInfo.firstName ||
-                    !guestInfo.lastName
-                  ) {
-                    toast.error('Please fill in all required fields')
-                    return
+                  if (!guestInfo.email || !guestInfo.firstName || !guestInfo.lastName) {
+                    toast.error('Please fill in all required fields');
+                    return;
                   }
-                  setStep('hold')
-                  handleCreateHold()
+                  setStep('hold');
+                  handleCreateHold();
                 }}
               >
                 Continue
@@ -409,12 +474,10 @@ export default function BookPage() {
                 <strong>Property:</strong> {property.name}
               </p>
               <p>
-                <strong>Room:</strong>{' '}
-                {selectedRoom?.roomTypeName || 'Selected room'}
+                <strong>Room:</strong> {selectedRoom?.roomTypeName || 'Selected room'}
               </p>
               <p>
-                <strong>Dates:</strong> {formatDate(checkIn)} –{' '}
-                {formatDate(checkOut)}
+                <strong>Dates:</strong> {formatDate(checkIn)} – {formatDate(checkOut)}
               </p>
               <p>
                 <strong>Guests:</strong> {adults} adult
@@ -423,21 +486,12 @@ export default function BookPage() {
               </p>
               {selectedRoom?.totalPrice != null && (
                 <p className="mt-2 text-lg font-semibold text-green-700">
-                  Total:{' '}
-                  {formatCurrency(
-                    selectedRoom.totalPrice,
-                    selectedRoom.currency ?? 'USD',
-                  )}
+                  Total: {formatCurrency(selectedRoom.totalPrice, selectedRoom.currency ?? 'USD')}
                 </p>
               )}
             </div>
-            <Button
-              onClick={handleCreateBooking}
-              disabled={createBookingMutation.isPending}
-            >
-              {createBookingMutation.isPending
-                ? 'Creating booking...'
-                : 'Confirm booking'}
+            <Button onClick={handleCreateBooking} disabled={createBookingMutation.isPending}>
+              {createBookingMutation.isPending ? 'Creating booking...' : 'Confirm booking'}
             </Button>
           </CardContent>
         </Card>
@@ -450,23 +504,40 @@ export default function BookPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">
-              Booking{' '}
-              <strong>{booking.confirmationNumber || getId(booking)}</strong>{' '}
-              created. Set up payment to complete your reservation.
+              Booking <strong>{booking.confirmationNumber || getId(booking)}</strong> created.
+              Complete payment to confirm your reservation.
             </p>
-            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-              <p className="text-sm text-gray-500">
-                Stripe payment form placeholder
-              </p>
-            </div>
-            <Button
-              onClick={handlePaymentIntent}
-              disabled={paymentIntentMutation.isPending}
-            >
-              {paymentIntentMutation.isPending
-                ? 'Setting up payment...'
-                : 'Initialize payment'}
-            </Button>
+            {paymentIntentMutation.isPending && !clientSecret && (
+              <div className="flex flex-col items-center py-8">
+                <Spinner />
+                <p className="mt-4 text-sm text-gray-500">Preparing secure payment...</p>
+              </div>
+            )}
+            {clientSecret && paymentAmount != null && (
+              <StripePaymentForm
+                clientSecret={clientSecret}
+                amount={paymentAmount}
+                currency={selectedRoom?.currency ?? property.settings?.currency ?? 'USD'}
+                onSuccess={handlePaymentSuccess}
+                onError={(msg) => toast.error(msg)}
+              />
+            )}
+            {paymentIntentMutation.isError && !clientSecret && (
+              <Button
+                onClick={() => {
+                  const bookingId = getId(booking);
+                  paymentIntentMutation.mutate(bookingId, {
+                    onSuccess: (result) => {
+                      setClientSecret(result.data.clientSecret);
+                      setPaymentAmount(result.data.amount);
+                      setPaymentIntentId(result.data.paymentIntentId);
+                    },
+                  });
+                }}
+              >
+                Retry payment setup
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
@@ -474,27 +545,20 @@ export default function BookPage() {
       {step === 'confirmation' && booking && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-green-700">
-              Booking confirmed!
-            </CardTitle>
+            <CardTitle className="text-green-700">Booking confirmed!</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
-              Confirmation number:{' '}
-              <strong>{booking.confirmationNumber || getId(booking)}</strong>
+              Confirmation number: <strong>{booking.confirmationNumber || getId(booking)}</strong>
             </p>
             <p className="text-gray-600">
               {formatDate(checkIn)} – {formatDate(checkOut)} at {property.name}
             </p>
-            {clientSecret && (
-              <p className="text-xs text-gray-400">
-                Payment intent ready (client secret received)
-              </p>
+            {paymentIntentId && (
+              <p className="text-sm text-green-600">Payment received successfully.</p>
             )}
             <div className="flex gap-3">
-              <Button onClick={() => router.push('/account/bookings')}>
-                View my bookings
-              </Button>
+              <Button onClick={() => router.push('/account/bookings')}>View my bookings</Button>
               <Button variant="outline" onClick={() => router.push('/')}>
                 Back to home
               </Button>
@@ -503,5 +567,5 @@ export default function BookPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }

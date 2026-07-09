@@ -1,6 +1,6 @@
-import { Queue, QueueEvents } from "bullmq";
-import { env } from "../config/env";
-import { logger } from "./logger";
+import { Queue, QueueEvents } from 'bullmq';
+import { env } from '../config/env';
+import { logger } from './logger';
 
 export interface EmailJobData {
   to: string;
@@ -11,7 +11,7 @@ export interface EmailJobData {
 }
 
 export interface NotificationJobData {
-  type: "booking_confirmation" | "booking_cancelled" | "payment_received" | "check_in_reminder";
+  type: 'booking_confirmation' | 'booking_cancelled' | 'payment_received' | 'check_in_reminder';
   recipientId: string;
   recipientEmail: string;
   data: Record<string, unknown>;
@@ -22,7 +22,7 @@ export type JobData = EmailJobData | NotificationJobData;
 const defaultJobOptions = {
   attempts: 3,
   backoff: {
-    type: "exponential" as const,
+    type: 'exponential' as const,
     delay: 1000,
   },
   removeOnComplete: {
@@ -59,19 +59,19 @@ export function getEmailQueue(): Queue<EmailJobData> | null {
   }
 
   if (!emailQueue) {
-    emailQueue = new Queue<EmailJobData>("email", {
+    emailQueue = new Queue<EmailJobData>('email', {
       connection,
       defaultJobOptions,
     });
 
-    emailQueueEvents = new QueueEvents("email", { connection });
+    emailQueueEvents = new QueueEvents('email', { connection });
 
-    emailQueueEvents.on("completed", ({ jobId }) => {
-      logger.debug({ jobId }, "Email job completed");
+    emailQueueEvents.on('completed', ({ jobId }) => {
+      logger.debug({ jobId }, 'Email job completed');
     });
 
-    emailQueueEvents.on("failed", ({ jobId, failedReason }) => {
-      logger.error({ jobId, failedReason }, "Email job failed");
+    emailQueueEvents.on('failed', ({ jobId, failedReason }) => {
+      logger.error({ jobId, failedReason }, 'Email job failed');
     });
   }
 
@@ -85,7 +85,7 @@ export function getNotificationQueue(): Queue<NotificationJobData> | null {
   }
 
   if (!notificationQueue) {
-    notificationQueue = new Queue<NotificationJobData>("notification", {
+    notificationQueue = new Queue<NotificationJobData>('notification', {
       connection,
       defaultJobOptions,
     });
@@ -94,30 +94,33 @@ export function getNotificationQueue(): Queue<NotificationJobData> | null {
   return notificationQueue;
 }
 
-export async function addEmailJob(data: EmailJobData, priority: number = 0): Promise<string | null> {
+export async function addEmailJob(
+  data: EmailJobData,
+  priority: number = 0,
+): Promise<string | null> {
   const queue = getEmailQueue();
   if (!queue) {
-    logger.warn("Email queue not available, email will be sent synchronously");
+    logger.warn('Email queue not available, email will be sent synchronously');
     return null;
   }
 
-  const job = await queue.add("send-email", data, { priority });
-  logger.info({ jobId: job.id, to: data.to, subject: data.subject }, "Email job added to queue");
+  const job = await queue.add('send-email', data, { priority });
+  logger.info({ jobId: job.id, to: data.to, subject: data.subject }, 'Email job added to queue');
   return job.id ?? null;
 }
 
 export async function addNotificationJob(
   data: NotificationJobData,
-  delay?: number
+  delay?: number,
 ): Promise<string | null> {
   const queue = getNotificationQueue();
   if (!queue) {
-    logger.warn("Notification queue not available");
+    logger.warn('Notification queue not available');
     return null;
   }
 
-  const job = await queue.add("send-notification", data, { delay });
-  logger.info({ jobId: job.id, type: data.type }, "Notification job added to queue");
+  const job = await queue.add('send-notification', data, { delay });
+  logger.info({ jobId: job.id, type: data.type }, 'Notification job added to queue');
   return job.id ?? null;
 }
 
@@ -140,5 +143,5 @@ export async function closeQueues(): Promise<void> {
   notificationQueue = null;
   emailQueueEvents = null;
 
-  logger.info("All queues closed");
+  logger.info('All queues closed');
 }

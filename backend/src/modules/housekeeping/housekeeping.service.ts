@@ -1,24 +1,21 @@
-import { HousekeepingTask, IHousekeepingTask } from "../../models/housekeepingTask.model";
-import { Room } from "../../models/room.model";
-import { Property } from "../../models/property.model";
-import { User } from "../../models/user.model";
-import {
-  NotFoundError,
-  BadRequestError,
-} from "../../common/errors/http.errors";
+import { HousekeepingTask, IHousekeepingTask } from '../../models/housekeepingTask.model';
+import { Room } from '../../models/room.model';
+import { Property } from '../../models/property.model';
+import { User } from '../../models/user.model';
+import { NotFoundError, BadRequestError } from '../../common/errors/http.errors';
 import {
   getPaginationParams,
   createPaginatedResult,
   PaginatedResult,
-} from "../../common/utils/pagination";
+} from '../../common/utils/pagination';
 import {
   HousekeepingTaskType,
   HousekeepingTaskStatus,
   HousekeepingPriority,
   RoomStatus,
-} from "../../common/enums/roomStatus.enum";
-import { parseDate, getTodayUTC } from "../../common/utils/dateUtils";
-import { Types } from "mongoose";
+} from '../../common/enums/roomStatus.enum';
+import { parseDate, getTodayUTC } from '../../common/utils/dateUtils';
+import { Types } from 'mongoose';
 
 export interface CreateTaskData {
   propertyId: string;
@@ -46,15 +43,15 @@ export interface ListTasksFilters {
 class HousekeepingService {
   async create(data: CreateTaskData): Promise<IHousekeepingTask> {
     if (!Types.ObjectId.isValid(data.propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
     if (!Types.ObjectId.isValid(data.roomId)) {
-      throw new BadRequestError("Invalid room ID");
+      throw new BadRequestError('Invalid room ID');
     }
 
     const room = await Room.findById(data.roomId);
     if (!room || room.propertyId.toString() !== data.propertyId) {
-      throw new NotFoundError("Room not found for this property");
+      throw new NotFoundError('Room not found for this property');
     }
 
     const task = new HousekeepingTask({
@@ -75,16 +72,16 @@ class HousekeepingService {
 
   async findById(id: string): Promise<IHousekeepingTask> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid task ID");
+      throw new BadRequestError('Invalid task ID');
     }
 
     const task = await HousekeepingTask.findById(id)
-      .populate("roomId", "roomNumber floor")
-      .populate("assignedTo", "name email")
-      .populate("verifiedBy", "name email");
+      .populate('roomId', 'roomNumber floor')
+      .populate('assignedTo', 'name email')
+      .populate('verifiedBy', 'name email');
 
     if (!task) {
-      throw new NotFoundError("Task not found");
+      throw new NotFoundError('Task not found');
     }
 
     return task;
@@ -93,12 +90,12 @@ class HousekeepingService {
   async updateStatus(
     id: string,
     status: HousekeepingTaskStatus,
-    notes?: string
+    notes?: string,
   ): Promise<IHousekeepingTask> {
     const task = await this.findById(id);
 
     if (task.status === HousekeepingTaskStatus.VERIFIED) {
-      throw new BadRequestError("Cannot update status of verified task");
+      throw new BadRequestError('Cannot update status of verified task');
     }
 
     task.status = status;
@@ -119,12 +116,15 @@ class HousekeepingService {
     id: string,
     userId: string,
     notes?: string,
-    issues?: { description: string; severity: string }[]
+    issues?: { description: string; severity: string }[],
   ): Promise<IHousekeepingTask> {
     const task = await this.findById(id);
 
-    if (task.status === HousekeepingTaskStatus.COMPLETED || task.status === HousekeepingTaskStatus.VERIFIED) {
-      throw new BadRequestError("Task is already completed");
+    if (
+      task.status === HousekeepingTaskStatus.COMPLETED ||
+      task.status === HousekeepingTaskStatus.VERIFIED
+    ) {
+      throw new BadRequestError('Task is already completed');
     }
 
     task.status = HousekeepingTaskStatus.COMPLETED;
@@ -164,7 +164,7 @@ class HousekeepingService {
     const task = await this.findById(id);
 
     if (task.status !== HousekeepingTaskStatus.COMPLETED) {
-      throw new BadRequestError("Can only verify completed tasks");
+      throw new BadRequestError('Can only verify completed tasks');
     }
 
     task.status = HousekeepingTaskStatus.VERIFIED;
@@ -191,12 +191,12 @@ class HousekeepingService {
     const task = await this.findById(id);
 
     if (!Types.ObjectId.isValid(assignedTo)) {
-      throw new BadRequestError("Invalid user ID");
+      throw new BadRequestError('Invalid user ID');
     }
 
     const user = await User.findById(assignedTo);
     if (!user) {
-      throw new NotFoundError("User not found");
+      throw new NotFoundError('User not found');
     }
 
     task.assignedTo = new Types.ObjectId(assignedTo);
@@ -205,11 +205,7 @@ class HousekeepingService {
     return task;
   }
 
-  async reportIssue(
-    id: string,
-    description: string,
-    severity: string
-  ): Promise<IHousekeepingTask> {
+  async reportIssue(id: string, description: string, severity: string): Promise<IHousekeepingTask> {
     const task = await this.findById(id);
 
     task.issues.push({
@@ -225,7 +221,7 @@ class HousekeepingService {
   async list(
     filters: ListTasksFilters,
     page: number = 1,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<PaginatedResult<IHousekeepingTask>> {
     const query: any = {};
 
@@ -272,8 +268,8 @@ class HousekeepingService {
 
     const [tasks, total] = await Promise.all([
       HousekeepingTask.find(query)
-        .populate("roomId", "roomNumber floor")
-        .populate("assignedTo", "name email")
+        .populate('roomId', 'roomNumber floor')
+        .populate('assignedTo', 'name email')
         .sort({ priority: -1, scheduledDate: 1 })
         .skip(pagination.skip)
         .limit(pagination.limit),
@@ -292,7 +288,7 @@ class HousekeepingService {
     urgentTasks: number;
   }> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const today = getTodayUTC();
@@ -302,7 +298,7 @@ class HousekeepingService {
     const [statusCounts, todaysTasks, urgentTasks] = await Promise.all([
       HousekeepingTask.aggregate([
         { $match: { propertyId: new Types.ObjectId(propertyId) } },
-        { $group: { _id: "$status", count: { $sum: 1 } } },
+        { $group: { _id: '$status', count: { $sum: 1 } } },
       ]),
       HousekeepingTask.countDocuments({
         propertyId: new Types.ObjectId(propertyId),
@@ -340,7 +336,7 @@ class HousekeepingService {
   async createCheckoutTask(
     propertyId: string,
     roomId: string,
-    bookingId: string
+    bookingId: string,
   ): Promise<IHousekeepingTask> {
     return this.create({
       propertyId,

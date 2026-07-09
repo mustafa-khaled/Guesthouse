@@ -1,43 +1,42 @@
-import { Booking, IBooking } from "../../models/booking.model";
-import { Property } from "../../models/property.model";
-import { RoomType } from "../../models/roomType.model";
-import { RatePlan } from "../../models/ratePlan.model";
-import { Room } from "../../models/room.model";
-import { BookingAddOn } from "../../models/bookingAddOn.model";
-import { guestService } from "../guest/guest.service";
-import { inventoryService } from "../inventory/inventory.service";
-import { ratePlanService } from "../ratePlan/ratePlan.service";
-import { promotionService } from "../promotion/promotion.service";
+import { Booking, IBooking } from '../../models/booking.model';
+import { Property } from '../../models/property.model';
+import { RoomType } from '../../models/roomType.model';
+import { RatePlan } from '../../models/ratePlan.model';
+import { Room } from '../../models/room.model';
+import { BookingAddOn } from '../../models/bookingAddOn.model';
+import { guestService } from '../guest/guest.service';
+import { inventoryService } from '../inventory/inventory.service';
+import { ratePlanService } from '../ratePlan/ratePlan.service';
+import { promotionService } from '../promotion/promotion.service';
 import {
   NotFoundError,
   ConflictError,
   BadRequestError,
   ForbiddenError,
-} from "../../common/errors/http.errors";
+} from '../../common/errors/http.errors';
 import {
   getPaginationParams,
   createPaginatedResult,
   getSortParams,
   PaginatedResult,
-} from "../../common/utils/pagination";
-import {
-  parseDate,
-  getNightsBetween,
-} from "../../common/utils/dateUtils";
+} from '../../common/utils/pagination';
+import { parseDate, getNightsBetween } from '../../common/utils/dateUtils';
 import {
   BookingStatus,
   PaymentStatus,
   BookingSource,
   canTransitionTo,
-} from "../../common/enums/bookingStatus.enum";
-import { RoomStatus } from "../../common/enums/roomStatus.enum";
-import { Types } from "mongoose";
-import { withTransaction } from "../../lib/transaction";
-import { emit, EventType } from "../../lib/events";
+} from '../../common/enums/bookingStatus.enum';
+import { RoomStatus } from '../../common/enums/roomStatus.enum';
+import { Types } from 'mongoose';
+import { assertBookingAccess } from './booking.access';
+import { AuthUser } from '../../common/types/express.d';
+import { withTransaction } from '../../lib/transaction';
+import { emit, EventType } from '../../lib/events';
 
 function generateConfirmationNumber(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let result = "HBK-";
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = 'HBK-';
   for (let i = 0; i < 6; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -79,17 +78,17 @@ class BookingService {
   async create(data: CreateBookingData, userId?: string): Promise<IBooking> {
     const property = await Property.findById(data.propertyId);
     if (!property || !property.isActive) {
-      throw new NotFoundError("Property not found or inactive");
+      throw new NotFoundError('Property not found or inactive');
     }
 
     const roomType = await RoomType.findById(data.roomTypeId);
     if (!roomType || roomType.propertyId.toString() !== data.propertyId) {
-      throw new NotFoundError("Room type not found for this property");
+      throw new NotFoundError('Room type not found for this property');
     }
 
     const ratePlan = await RatePlan.findById(data.ratePlanId);
     if (!ratePlan || ratePlan.roomTypeId.toString() !== data.roomTypeId) {
-      throw new NotFoundError("Rate plan not found for this room type");
+      throw new NotFoundError('Rate plan not found for this room type');
     }
 
     const checkInDate = parseDate(data.checkIn);
@@ -97,7 +96,7 @@ class BookingService {
     const nights = getNightsBetween(checkInDate, checkOutDate);
 
     if (nights < 1) {
-      throw new BadRequestError("Check-out must be after check-in");
+      throw new BadRequestError('Check-out must be after check-in');
     }
 
     if (ratePlan.minNights && nights < ratePlan.minNights) {
@@ -112,15 +111,13 @@ class BookingService {
       data.propertyId,
       data.roomTypeId,
       checkInDate,
-      checkOutDate
+      checkOutDate,
     );
 
-    const minAvailable = Math.min(
-      ...availability.map((inv) => inv.availableRooms)
-    );
+    const minAvailable = Math.min(...availability.map((inv) => inv.availableRooms));
 
     if (minAvailable < data.rooms) {
-      throw new ConflictError("Not enough rooms available for the selected dates");
+      throw new ConflictError('Not enough rooms available for the selected dates');
     }
 
     const guest = await guestService.findOrCreateByEmail({
@@ -138,7 +135,7 @@ class BookingService {
     const { total: roomTotal } = await ratePlanService.calculateTotalPrice(
       data.ratePlanId,
       checkInDate,
-      checkOutDate
+      checkOutDate,
     );
 
     const totalRoomCost = roomTotal * data.rooms;
@@ -146,19 +143,16 @@ class BookingService {
     let discountAmount = 0;
     if (data.promotionCode) {
       try {
-        const discount = await promotionService.calculateDiscount(
-          data.promotionCode,
-          {
-            propertyId: data.propertyId,
-            roomTypeId: data.roomTypeId,
-            ratePlanId: data.ratePlanId,
-            checkIn: checkInDate,
-            checkOut: checkOutDate,
-            nights,
-            roomTotal: totalRoomCost,
-            guestId: guest._id.toString(),
-          }
-        );
+        const discount = await promotionService.calculateDiscount(data.promotionCode, {
+          propertyId: data.propertyId,
+          roomTypeId: data.roomTypeId,
+          ratePlanId: data.ratePlanId,
+          checkIn: checkInDate,
+          checkOut: checkOutDate,
+          nights,
+          roomTotal: totalRoomCost,
+          guestId: guest._id.toString(),
+        });
         discountAmount = discount;
       } catch (error) {
         throw new BadRequestError(`Invalid promotion code: ${(error as Error).message}`);
@@ -228,7 +222,7 @@ class BookingService {
           checkInDate,
           checkOutDate,
           data.rooms,
-          session
+          session,
         );
       }
 
@@ -252,44 +246,52 @@ class BookingService {
     });
 
     return booking.populate([
-      { path: "propertyId", select: "name" },
-      { path: "guestId", select: "firstName lastName email" },
-      { path: "roomTypeId", select: "name code" },
-      { path: "ratePlanId", select: "name code" },
+      { path: 'propertyId', select: 'name' },
+      { path: 'guestId', select: 'firstName lastName email' },
+      { path: 'roomTypeId', select: 'name code' },
+      { path: 'ratePlanId', select: 'name code' },
     ]);
   }
 
-  async findById(id: string): Promise<IBooking> {
+  async findById(id: string, user?: AuthUser): Promise<IBooking> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid booking ID");
+      throw new BadRequestError('Invalid booking ID');
     }
 
     const booking = await Booking.findById(id).populate([
-      { path: "propertyId", select: "name slug settings" },
-      { path: "guestId" },
-      { path: "roomTypeId", select: "name code" },
-      { path: "ratePlanId", select: "name code cancellationPolicy" },
-      { path: "assignedRoomId", select: "roomNumber floor" },
+      { path: 'propertyId', select: 'name slug settings' },
+      { path: 'guestId' },
+      { path: 'roomTypeId', select: 'name code' },
+      { path: 'ratePlanId', select: 'name code cancellationPolicy' },
+      { path: 'assignedRoomId', select: 'roomNumber floor' },
     ]);
 
     if (!booking) {
-      throw new NotFoundError("Booking not found");
+      throw new NotFoundError('Booking not found');
+    }
+
+    if (user) {
+      await assertBookingAccess(booking, user);
     }
 
     return booking;
   }
 
-  async findByConfirmationNumber(confirmationNumber: string): Promise<IBooking> {
+  async findByConfirmationNumber(confirmationNumber: string, user?: AuthUser): Promise<IBooking> {
     const booking = await Booking.findOne({
       confirmationNumber: confirmationNumber.toUpperCase(),
     }).populate([
-      { path: "propertyId", select: "name slug" },
-      { path: "guestId", select: "firstName lastName email" },
-      { path: "roomTypeId", select: "name" },
+      { path: 'propertyId', select: 'name slug' },
+      { path: 'guestId', select: 'firstName lastName email' },
+      { path: 'roomTypeId', select: 'name' },
     ]);
 
     if (!booking) {
-      throw new NotFoundError("Booking not found");
+      throw new NotFoundError('Booking not found');
+    }
+
+    if (user) {
+      await assertBookingAccess(booking, user);
     }
 
     return booking;
@@ -297,7 +299,7 @@ class BookingService {
 
   async update(
     id: string,
-    data: { additionalGuests?: any[]; specialRequests?: string; internalNotes?: string }
+    data: { additionalGuests?: any[]; specialRequests?: string; internalNotes?: string },
   ): Promise<IBooking> {
     const booking = await this.findById(id);
 
@@ -305,7 +307,7 @@ class BookingService {
       booking.status === BookingStatus.CANCELLED ||
       booking.status === BookingStatus.CHECKED_OUT
     ) {
-      throw new BadRequestError("Cannot modify a cancelled or completed booking");
+      throw new BadRequestError('Cannot modify a cancelled or completed booking');
     }
 
     Object.assign(booking, data);
@@ -314,13 +316,11 @@ class BookingService {
     return booking;
   }
 
-  async cancel(id: string, reason?: string, userId?: string): Promise<IBooking> {
-    const booking = await this.findById(id);
+  async cancel(id: string, reason?: string, userId?: string, user?: AuthUser): Promise<IBooking> {
+    const booking = await this.findById(id, user);
 
     if (!canTransitionTo(booking.status, BookingStatus.CANCELLED)) {
-      throw new BadRequestError(
-        `Cannot cancel booking with status "${booking.status}"`
-      );
+      throw new BadRequestError(`Cannot cancel booking with status "${booking.status}"`);
     }
 
     const ratePlan = await RatePlan.findById(booking.ratePlanId);
@@ -332,14 +332,13 @@ class BookingService {
       const hoursUntilCheckIn = (checkIn.getTime() - now.getTime()) / (1000 * 60 * 60);
 
       if (
-        ratePlan.cancellationPolicy.type === "flexible" ||
+        ratePlan.cancellationPolicy.type === 'flexible' ||
         hoursUntilCheckIn > ratePlan.cancellationPolicy.deadlineHours
       ) {
         refundAmount = booking.payment.amountPaid;
-      } else if (ratePlan.cancellationPolicy.type !== "non-refundable") {
+      } else if (ratePlan.cancellationPolicy.type !== 'non-refundable') {
         const penalty =
-          booking.payment.amountPaid *
-          (ratePlan.cancellationPolicy.penaltyPercentage / 100);
+          booking.payment.amountPaid * (ratePlan.cancellationPolicy.penaltyPercentage / 100);
         refundAmount = booking.payment.amountPaid - penalty;
       }
     }
@@ -361,7 +360,7 @@ class BookingService {
         booking.dates.checkIn,
         booking.dates.checkOut,
         booking.occupancy.rooms,
-        session
+        session,
       );
     });
 
@@ -390,22 +389,20 @@ class BookingService {
     const booking = await this.findById(id);
 
     if (!canTransitionTo(booking.status, BookingStatus.CHECKED_IN)) {
-      throw new BadRequestError(
-        `Cannot check in booking with status "${booking.status}"`
-      );
+      throw new BadRequestError(`Cannot check in booking with status "${booking.status}"`);
     }
 
     const room = await Room.findById(roomId);
     if (!room || room.propertyId.toString() !== booking.propertyId.toString()) {
-      throw new NotFoundError("Room not found for this property");
+      throw new NotFoundError('Room not found for this property');
     }
 
     if (room.roomTypeId.toString() !== booking.roomTypeId.toString()) {
-      throw new BadRequestError("Room type does not match booking");
+      throw new BadRequestError('Room type does not match booking');
     }
 
     if (room.isOccupied) {
-      throw new ConflictError("Room is already occupied");
+      throw new ConflictError('Room is already occupied');
     }
 
     if (room.status !== RoomStatus.CLEAN && room.status !== RoomStatus.INSPECTED) {
@@ -452,9 +449,7 @@ class BookingService {
     const booking = await this.findById(id);
 
     if (!canTransitionTo(booking.status, BookingStatus.CHECKED_OUT)) {
-      throw new BadRequestError(
-        `Cannot check out booking with status "${booking.status}"`
-      );
+      throw new BadRequestError(`Cannot check out booking with status "${booking.status}"`);
     }
 
     booking.status = BookingStatus.CHECKED_OUT;
@@ -476,10 +471,7 @@ class BookingService {
       await booking.save({ session });
     });
 
-    await guestService.updateStayStats(
-      booking.guestId.toString(),
-      booking.pricing.grandTotal
-    );
+    await guestService.updateStayStats(booking.guestId.toString(), booking.pricing.grandTotal);
 
     const guest = await guestService.findById(booking.guestId.toString());
 
@@ -505,20 +497,17 @@ class BookingService {
   async assignRoom(id: string, roomId: string): Promise<IBooking> {
     const booking = await this.findById(id);
 
-    if (
-      booking.status !== BookingStatus.CONFIRMED &&
-      booking.status !== BookingStatus.PENDING
-    ) {
-      throw new BadRequestError("Can only assign room to pending or confirmed bookings");
+    if (booking.status !== BookingStatus.CONFIRMED && booking.status !== BookingStatus.PENDING) {
+      throw new BadRequestError('Can only assign room to pending or confirmed bookings');
     }
 
     const room = await Room.findById(roomId);
     if (!room || room.propertyId.toString() !== booking.propertyId.toString()) {
-      throw new NotFoundError("Room not found for this property");
+      throw new NotFoundError('Room not found for this property');
     }
 
     if (room.roomTypeId.toString() !== booking.roomTypeId.toString()) {
-      throw new BadRequestError("Room type does not match booking");
+      throw new BadRequestError('Room type does not match booking');
     }
 
     booking.assignedRoomId = room._id;
@@ -531,9 +520,7 @@ class BookingService {
     const booking = await this.findById(id);
 
     if (!canTransitionTo(booking.status, BookingStatus.CONFIRMED)) {
-      throw new BadRequestError(
-        `Cannot confirm booking with status "${booking.status}"`
-      );
+      throw new BadRequestError(`Cannot confirm booking with status "${booking.status}"`);
     }
 
     booking.status = BookingStatus.CONFIRMED;
@@ -561,8 +548,8 @@ class BookingService {
     filters: ListBookingsFilters,
     page: number = 1,
     limit: number = 20,
-    sortBy: string = "createdAt",
-    sortOrder: "asc" | "desc" = "desc"
+    sortBy: string = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc',
   ): Promise<PaginatedResult<IBooking>> {
     const query: any = {};
 
@@ -579,12 +566,12 @@ class BookingService {
     }
 
     if (filters.checkInFrom || filters.checkInTo) {
-      query["dates.checkIn"] = {};
+      query['dates.checkIn'] = {};
       if (filters.checkInFrom) {
-        query["dates.checkIn"].$gte = parseDate(filters.checkInFrom);
+        query['dates.checkIn'].$gte = parseDate(filters.checkInFrom);
       }
       if (filters.checkInTo) {
-        query["dates.checkIn"].$lte = parseDate(filters.checkInTo);
+        query['dates.checkIn'].$lte = parseDate(filters.checkInTo);
       }
     }
 
@@ -594,16 +581,16 @@ class BookingService {
 
     const pagination = getPaginationParams(page, limit);
     const sort = getSortParams(
-      sortBy === "checkIn" ? "dates.checkIn" : sortBy === "checkOut" ? "dates.checkOut" : sortBy,
-      sortOrder
+      sortBy === 'checkIn' ? 'dates.checkIn' : sortBy === 'checkOut' ? 'dates.checkOut' : sortBy,
+      sortOrder,
     );
 
     const [bookings, total] = await Promise.all([
       Booking.find(query)
-        .populate("propertyId", "name")
-        .populate("guestId", "firstName lastName email")
-        .populate("roomTypeId", "name code")
-        .populate("assignedRoomId", "roomNumber")
+        .populate('propertyId', 'name')
+        .populate('guestId', 'firstName lastName email')
+        .populate('roomTypeId', 'name code')
+        .populate('assignedRoomId', 'roomNumber')
         .sort(sort)
         .skip(pagination.skip)
         .limit(pagination.limit),
@@ -613,20 +600,17 @@ class BookingService {
     return createPaginatedResult(bookings, total, pagination);
   }
 
-  async getGuestBookings(
-    guestId: string,
-    userId?: string
-  ): Promise<IBooking[]> {
+  async getGuestBookings(guestId: string, userId?: string): Promise<IBooking[]> {
     const guest = await guestService.findById(guestId);
 
     if (userId && guest.userId?.toString() !== userId) {
-      throw new ForbiddenError("You can only view your own bookings");
+      throw new ForbiddenError('You can only view your own bookings');
     }
 
     return Booking.find({ guestId: guest._id })
-      .populate("propertyId", "name")
-      .populate("roomTypeId", "name")
-      .sort({ "dates.checkIn": -1 });
+      .populate('propertyId', 'name')
+      .populate('roomTypeId', 'name')
+      .sort({ 'dates.checkIn': -1 });
   }
 
   async getMyBookings(userId: string): Promise<IBooking[]> {
@@ -637,17 +621,17 @@ class BookingService {
     }
 
     return Booking.find({ guestId: guest._id })
-      .populate("propertyId", "name")
-      .populate("roomTypeId", "name")
-      .sort({ "dates.checkIn": -1 });
+      .populate('propertyId', 'name')
+      .populate('roomTypeId', 'name')
+      .sort({ 'dates.checkIn': -1 });
   }
 
-  async getBookingAddOns(bookingId: string) {
-    const booking = await this.findById(bookingId);
+  async getBookingAddOns(bookingId: string, user?: AuthUser) {
+    const booking = await this.findById(bookingId, user);
 
     return BookingAddOn.find({ bookingId: booking._id }).populate(
-      "addOnId",
-      "name code category pricing"
+      'addOnId',
+      'name code category pricing',
     );
   }
 
@@ -660,7 +644,8 @@ class BookingService {
     const subtotal = booking.pricing.roomTotal + addOnsTotal;
     const property = await Property.findById(booking.propertyId);
     const taxRate = property?.settings?.taxRate || 0;
-    const taxes = Math.round((subtotal - booking.pricing.discountAmount) * (taxRate / 100) * 100) / 100;
+    const taxes =
+      Math.round((subtotal - booking.pricing.discountAmount) * (taxRate / 100) * 100) / 100;
     const grandTotal = subtotal - booking.pricing.discountAmount + taxes;
 
     booking.pricing.addOnsTotal = addOnsTotal;

@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import dynamic from 'next/dynamic'
+import dynamic from 'next/dynamic';
 
 interface MapProps {
-  lat: number
-  lng: number
-  label?: string
+  lat: number;
+  lng: number;
+  label?: string;
 }
 
-const MapInner = dynamic(() => import('./MapInner'), { ssr: false })
+const MapInner = dynamic(() => import('./MapInner'), { ssr: false });
 
 export default function Map({ lat, lng, label }: MapProps) {
-  return <MapInner lat={lat} lng={lng} label={label} />
+  return <MapInner lat={lat} lng={lng} label={label} />;
 }

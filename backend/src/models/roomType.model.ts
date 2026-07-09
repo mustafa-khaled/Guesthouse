@@ -1,5 +1,5 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
 
 export interface IRoomTypeOccupancy {
   adults: number;
@@ -41,15 +41,15 @@ const occupancySchema = new Schema(
     children: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true, min: 1 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const sizeSchema = new Schema(
   {
     value: { type: Number, required: true },
-    unit: { type: String, default: "sqm" },
+    unit: { type: String, default: 'sqm' },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const imageSchema = new Schema(
@@ -57,14 +57,14 @@ const imageSchema = new Schema(
     url: { type: String, required: true },
     caption: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 const roomTypeSchema = new Schema<IRoomType>(
   {
     propertyId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: 'Property',
       required: true,
       index: true,
     },
@@ -98,7 +98,7 @@ const roomTypeSchema = new Schema<IRoomType>(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 roomTypeSchema.index({ propertyId: 1, code: 1 }, { unique: true });
@@ -107,4 +107,4 @@ roomTypeSchema.index({ propertyId: 1, isActive: 1, isDeleted: 1 });
 roomTypeSchema.plugin(softDeletePlugin);
 roomTypeSchema.plugin(toJSONPlugin);
 
-export const RoomType = model<IRoomType>("RoomType", roomTypeSchema);
+export const RoomType = model<IRoomType>('RoomType', roomTypeSchema);

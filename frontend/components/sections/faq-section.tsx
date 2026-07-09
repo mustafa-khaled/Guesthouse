@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Section } from "@/components/ui/section";
-import { faqs } from "@/lib/content";
-import { cn } from "@/lib/utils";
+import { useState } from 'react';
+import { Section } from '@/components/ui/section';
+import { faqs } from '@/lib/content';
+import { cn } from '@/lib/utils';
 
 export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -16,7 +16,7 @@ export function FaqSection() {
       title="Everything you need to know"
       description="Clear answers about booking, spa reservations, and wellness packages."
     >
-      <div className="mx-auto max-w-3xl divide-y divide-matcha-border border-y border-matcha-border">
+      <div className="divide-matcha-border border-matcha-border mx-auto max-w-3xl divide-y border-y">
         {faqs.map((faq, index) => {
           const isOpen = openIndex === index;
 
@@ -28,19 +28,19 @@ export function FaqSection() {
                 aria-expanded={isOpen}
                 onClick={() => setOpenIndex(isOpen ? null : index)}
               >
-                <span className="font-medium text-matcha-heading">{faq.question}</span>
+                <span className="text-matcha-heading font-medium">{faq.question}</span>
                 <span
                   aria-hidden
                   className={cn(
-                    "text-xl text-matcha-brand transition-transform",
-                    isOpen && "rotate-45",
+                    'text-matcha-brand text-xl transition-transform',
+                    isOpen && 'rotate-45',
                   )}
                 >
                   +
                 </span>
               </button>
               {isOpen && (
-                <div className="pb-5 pr-8 text-sm leading-relaxed text-matcha-body">
+                <div className="text-matcha-body pb-5 pr-8 text-sm leading-relaxed">
                   {faq.answer}
                 </div>
               )}

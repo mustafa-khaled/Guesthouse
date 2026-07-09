@@ -1,17 +1,17 @@
-import { Schema, model, Types, Document } from "mongoose";
-import { softDeletePlugin, toJSONPlugin } from "../common/plugins";
+import { Schema, model, Types, Document } from 'mongoose';
+import { softDeletePlugin, toJSONPlugin } from '../common/plugins';
 
 export enum CancellationPolicyType {
-  FLEXIBLE = "flexible",
-  MODERATE = "moderate",
-  STRICT = "strict",
-  NON_REFUNDABLE = "non-refundable",
+  FLEXIBLE = 'flexible',
+  MODERATE = 'moderate',
+  STRICT = 'strict',
+  NON_REFUNDABLE = 'non-refundable',
 }
 
 export enum PaymentPolicyType {
-  PAY_AT_HOTEL = "pay-at-hotel",
-  PREPAID = "prepaid",
-  DEPOSIT = "deposit",
+  PAY_AT_HOTEL = 'pay-at-hotel',
+  PREPAID = 'prepaid',
+  DEPOSIT = 'deposit',
 }
 
 export interface ICancellationPolicy {
@@ -57,7 +57,7 @@ const cancellationPolicySchema = new Schema(
     deadlineHours: { type: Number, default: 24 },
     penaltyPercentage: { type: Number, default: 0, min: 0, max: 100 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const advanceBookingSchema = new Schema(
@@ -65,14 +65,14 @@ const advanceBookingSchema = new Schema(
     min: { type: Number, min: 0 },
     max: { type: Number, min: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ratePlanSchema = new Schema<IRatePlan>(
   {
     roomTypeId: {
       type: Schema.Types.ObjectId,
-      ref: "RoomType",
+      ref: 'RoomType',
       required: true,
       index: true,
     },
@@ -118,7 +118,7 @@ const ratePlanSchema = new Schema<IRatePlan>(
     validFrom: Date,
     validTo: Date,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 ratePlanSchema.index({ roomTypeId: 1, code: 1 }, { unique: true });
@@ -127,4 +127,4 @@ ratePlanSchema.index({ roomTypeId: 1, isActive: 1, isDeleted: 1 });
 ratePlanSchema.plugin(softDeletePlugin);
 ratePlanSchema.plugin(toJSONPlugin);
 
-export const RatePlan = model<IRatePlan>("RatePlan", ratePlanSchema);
+export const RatePlan = model<IRatePlan>('RatePlan', ratePlanSchema);

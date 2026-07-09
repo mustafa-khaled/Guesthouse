@@ -1,20 +1,20 @@
-import { Booking } from "../../models/booking.model";
-import { Room } from "../../models/room.model";
-import { Property } from "../../models/property.model";
-import { Guest } from "../../models/guest.model";
-import { Payment } from "../../models/payment.model";
-import { HousekeepingTask } from "../../models/housekeepingTask.model";
-import { BadRequestError } from "../../common/errors/http.errors";
-import { BookingStatus } from "../../common/enums/bookingStatus.enum";
-import { RoomStatus, HousekeepingTaskStatus } from "../../common/enums/roomStatus.enum";
-import { PaymentStatusEnum } from "../../models/payment.model";
-import { getTodayUTC, addDays, getStartOfDay, getEndOfDay } from "../../common/utils/dateUtils";
-import { Types } from "mongoose";
+import { Booking } from '../../models/booking.model';
+import { Room } from '../../models/room.model';
+import { Property } from '../../models/property.model';
+import { Guest } from '../../models/guest.model';
+import { Payment } from '../../models/payment.model';
+import { HousekeepingTask } from '../../models/housekeepingTask.model';
+import { BadRequestError } from '../../common/errors/http.errors';
+import { BookingStatus } from '../../common/enums/bookingStatus.enum';
+import { RoomStatus, HousekeepingTaskStatus } from '../../common/enums/roomStatus.enum';
+import { PaymentStatusEnum } from '../../models/payment.model';
+import { getTodayUTC, addDays, getStartOfDay, getEndOfDay } from '../../common/utils/dateUtils';
+import { Types } from 'mongoose';
 
 class DashboardService {
   async getPropertyDashboard(propertyId: string): Promise<any> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const today = getTodayUTC();
@@ -35,12 +35,12 @@ class DashboardService {
       this.getRoomStats(propertyId),
       Booking.countDocuments({
         propertyId: new Types.ObjectId(propertyId),
-        "dates.checkIn": { $gte: todayStart, $lte: todayEnd },
+        'dates.checkIn': { $gte: todayStart, $lte: todayEnd },
         status: { $in: [BookingStatus.CONFIRMED, BookingStatus.PENDING] },
       }),
       Booking.countDocuments({
         propertyId: new Types.ObjectId(propertyId),
-        "dates.checkOut": { $gte: todayStart, $lte: todayEnd },
+        'dates.checkOut': { $gte: todayStart, $lte: todayEnd },
         status: BookingStatus.CHECKED_IN,
       }),
       Booking.countDocuments({
@@ -50,21 +50,21 @@ class DashboardService {
       this.getTodayRevenue(propertyId, todayStart, todayEnd),
       Booking.countDocuments({
         propertyId: new Types.ObjectId(propertyId),
-        "dates.checkIn": { $gte: todayEnd, $lte: weekFromNow },
+        'dates.checkIn': { $gte: todayEnd, $lte: weekFromNow },
         status: { $in: [BookingStatus.CONFIRMED, BookingStatus.PENDING] },
       }),
       this.getHousekeepingStats(propertyId),
       Booking.find({
         propertyId: new Types.ObjectId(propertyId),
       })
-        .populate("guestId", "firstName lastName")
+        .populate('guestId', 'firstName lastName')
         .sort({ createdAt: -1 })
         .limit(5)
-        .select("confirmationNumber guestId dates status pricing createdAt"),
+        .select('confirmationNumber guestId dates status pricing createdAt'),
     ]);
 
     return {
-      date: today.toISOString().split("T")[0],
+      date: today.toISOString().split('T')[0],
       rooms: roomStats,
       today: {
         arrivals: todayArrivals,
@@ -85,9 +85,7 @@ class DashboardService {
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    const propertyFilter = propertyId
-      ? { propertyId: new Types.ObjectId(propertyId) }
-      : {};
+    const propertyFilter = propertyId ? { propertyId: new Types.ObjectId(propertyId) } : {};
 
     const [
       totalBookings,
@@ -105,11 +103,13 @@ class DashboardService {
       Booking.countDocuments({
         ...propertyFilter,
         createdAt: { $gte: monthStart, $lte: monthEnd },
-        status: { $in: [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN, BookingStatus.CHECKED_OUT] },
+        status: {
+          $in: [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN, BookingStatus.CHECKED_OUT],
+        },
       }),
       Booking.countDocuments({
         ...propertyFilter,
-        "cancellation.cancelledAt": { $gte: monthStart, $lte: monthEnd },
+        'cancellation.cancelledAt': { $gte: monthStart, $lte: monthEnd },
       }),
       this.getMonthRevenue(propertyId, monthStart, monthEnd),
       this.getAverageOccupancy(propertyId, monthStart, today),
@@ -119,17 +119,15 @@ class DashboardService {
 
     return {
       period: {
-        start: monthStart.toISOString().split("T")[0],
-        end: monthEnd.toISOString().split("T")[0],
+        start: monthStart.toISOString().split('T')[0],
+        end: monthEnd.toISOString().split('T')[0],
       },
       bookings: {
         total: totalBookings,
         confirmed: confirmedBookings,
         cancelled: cancelledBookings,
         conversionRate:
-          totalBookings > 0
-            ? Math.round((confirmedBookings / totalBookings) * 10000) / 100
-            : 0,
+          totalBookings > 0 ? Math.round((confirmedBookings / totalBookings) * 10000) / 100 : 0,
       },
       revenue: totalRevenue,
       occupancy: occupancyRate,
@@ -182,11 +180,7 @@ class DashboardService {
     return stats;
   }
 
-  private async getTodayRevenue(
-    propertyId: string,
-    start: Date,
-    end: Date
-  ): Promise<number> {
+  private async getTodayRevenue(propertyId: string, start: Date, end: Date): Promise<number> {
     const result = await Payment.aggregate([
       {
         $match: {
@@ -197,24 +191,24 @@ class DashboardService {
       },
       {
         $lookup: {
-          from: "bookings",
-          localField: "bookingId",
-          foreignField: "_id",
-          as: "booking",
+          from: 'bookings',
+          localField: 'bookingId',
+          foreignField: '_id',
+          as: 'booking',
         },
       },
       {
-        $unwind: "$booking",
+        $unwind: '$booking',
       },
       {
         $match: {
-          "booking.propertyId": new Types.ObjectId(propertyId),
+          'booking.propertyId': new Types.ObjectId(propertyId),
         },
       },
       {
         $group: {
           _id: null,
-          total: { $sum: "$amount" },
+          total: { $sum: '$amount' },
         },
       },
     ]);
@@ -236,7 +230,7 @@ class DashboardService {
       },
       {
         $group: {
-          _id: "$status",
+          _id: '$status',
           count: { $sum: 1 },
         },
       },
@@ -272,7 +266,7 @@ class DashboardService {
   private async getMonthRevenue(
     propertyId: string | undefined,
     start: Date,
-    end: Date
+    end: Date,
   ): Promise<number> {
     const pipeline: any[] = [
       {
@@ -284,21 +278,21 @@ class DashboardService {
       },
       {
         $lookup: {
-          from: "bookings",
-          localField: "bookingId",
-          foreignField: "_id",
-          as: "booking",
+          from: 'bookings',
+          localField: 'bookingId',
+          foreignField: '_id',
+          as: 'booking',
         },
       },
       {
-        $unwind: "$booking",
+        $unwind: '$booking',
       },
     ];
 
     if (propertyId) {
       pipeline.push({
         $match: {
-          "booking.propertyId": new Types.ObjectId(propertyId),
+          'booking.propertyId': new Types.ObjectId(propertyId),
         },
       });
     }
@@ -306,7 +300,7 @@ class DashboardService {
     pipeline.push({
       $group: {
         _id: null,
-        total: { $sum: "$amount" },
+        total: { $sum: '$amount' },
       },
     });
 
@@ -317,7 +311,7 @@ class DashboardService {
   private async getAverageOccupancy(
     propertyId: string | undefined,
     start: Date,
-    end: Date
+    end: Date,
   ): Promise<number> {
     const roomFilter = propertyId
       ? { propertyId: new Types.ObjectId(propertyId), isActive: true, isDeleted: false }
@@ -331,16 +325,18 @@ class DashboardService {
     const totalRoomNights = totalRooms * days;
 
     const bookingFilter: any = {
-      status: { $in: [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN, BookingStatus.CHECKED_OUT] },
-      "dates.checkIn": { $lte: end },
-      "dates.checkOut": { $gte: start },
+      status: {
+        $in: [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN, BookingStatus.CHECKED_OUT],
+      },
+      'dates.checkIn': { $lte: end },
+      'dates.checkOut': { $gte: start },
     };
 
     if (propertyId) {
       bookingFilter.propertyId = new Types.ObjectId(propertyId);
     }
 
-    const bookings = await Booking.find(bookingFilter).select("dates occupancy");
+    const bookings = await Booking.find(bookingFilter).select('dates occupancy');
 
     let occupiedNights = 0;
     for (const booking of bookings) {
@@ -356,7 +352,7 @@ class DashboardService {
   private async getTopRoomTypes(
     propertyId: string | undefined,
     start: Date,
-    end: Date
+    end: Date,
   ): Promise<any[]> {
     const matchFilter: any = {
       createdAt: { $gte: start, $lte: end },
@@ -371,25 +367,25 @@ class DashboardService {
       { $match: matchFilter },
       {
         $group: {
-          _id: "$roomTypeId",
+          _id: '$roomTypeId',
           bookings: { $sum: 1 },
-          revenue: { $sum: "$pricing.roomTotal" },
+          revenue: { $sum: '$pricing.roomTotal' },
         },
       },
       {
         $lookup: {
-          from: "roomtypes",
-          localField: "_id",
-          foreignField: "_id",
-          as: "roomType",
+          from: 'roomtypes',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'roomType',
         },
       },
-      { $unwind: "$roomType" },
+      { $unwind: '$roomType' },
       {
         $project: {
-          name: "$roomType.name",
+          name: '$roomType.name',
           bookings: 1,
-          revenue: { $round: ["$revenue", 2] },
+          revenue: { $round: ['$revenue', 2] },
         },
       },
       { $sort: { revenue: -1 } },
@@ -402,7 +398,7 @@ class DashboardService {
   private async getBookingsBySource(
     propertyId: string | undefined,
     start: Date,
-    end: Date
+    end: Date,
   ): Promise<any[]> {
     const matchFilter: any = {
       createdAt: { $gte: start, $lte: end },
@@ -416,16 +412,16 @@ class DashboardService {
       { $match: matchFilter },
       {
         $group: {
-          _id: "$source",
+          _id: '$source',
           count: { $sum: 1 },
-          revenue: { $sum: "$pricing.grandTotal" },
+          revenue: { $sum: '$pricing.grandTotal' },
         },
       },
       {
         $project: {
-          source: "$_id",
+          source: '$_id',
           count: 1,
-          revenue: { $round: ["$revenue", 2] },
+          revenue: { $round: ['$revenue', 2] },
         },
       },
       { $sort: { count: -1 } },

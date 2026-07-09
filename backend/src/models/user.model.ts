@@ -1,9 +1,9 @@
-import { Schema, model } from "mongoose";
-import { Role } from "../common/enums/role.enum";
+import { Schema, model } from 'mongoose';
+import { Role } from '../common/enums/role.enum';
 
 export enum AuthProvider {
-  LOCAL = "local",
-  GOOGLE = "google",
+  LOCAL = 'local',
+  GOOGLE = 'google',
 }
 
 const userSchema = new Schema(
@@ -57,4 +57,4 @@ const userSchema = new Schema(
   { timestamps: true },
 );
 
-export const User = model("User", userSchema);
+export const User = model('User', userSchema);

@@ -1,19 +1,15 @@
-import { Room, IRoom } from "../../models/room.model";
-import { Property } from "../../models/property.model";
-import { RoomType } from "../../models/roomType.model";
-import { Inventory } from "../../models/inventory.model";
-import {
-  NotFoundError,
-  ConflictError,
-  BadRequestError,
-} from "../../common/errors/http.errors";
+import { Room, IRoom } from '../../models/room.model';
+import { Property } from '../../models/property.model';
+import { RoomType } from '../../models/roomType.model';
+import { Inventory } from '../../models/inventory.model';
+import { NotFoundError, ConflictError, BadRequestError } from '../../common/errors/http.errors';
 import {
   getPaginationParams,
   createPaginatedResult,
   PaginatedResult,
-} from "../../common/utils/pagination";
-import { RoomStatus, canTransitionRoomTo } from "../../common/enums/roomStatus.enum";
-import { Types } from "mongoose";
+} from '../../common/utils/pagination';
+import { RoomStatus, canTransitionRoomTo } from '../../common/enums/roomStatus.enum';
+import { Types } from 'mongoose';
 
 export interface CreateRoomData {
   roomTypeId: string;
@@ -45,21 +41,21 @@ export interface ListRoomsFilters {
 class RoomService {
   async create(propertyId: string, data: CreateRoomData): Promise<IRoom> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const property = await Property.findById(propertyId);
     if (!property) {
-      throw new NotFoundError("Property not found");
+      throw new NotFoundError('Property not found');
     }
 
     if (!Types.ObjectId.isValid(data.roomTypeId)) {
-      throw new BadRequestError("Invalid room type ID");
+      throw new BadRequestError('Invalid room type ID');
     }
 
     const roomType = await RoomType.findById(data.roomTypeId);
     if (!roomType || roomType.propertyId.toString() !== propertyId) {
-      throw new NotFoundError("Room type not found for this property");
+      throw new NotFoundError('Room type not found for this property');
     }
 
     const existingRoom = await Room.findOne({
@@ -67,9 +63,7 @@ class RoomService {
       roomNumber: data.roomNumber,
     });
     if (existingRoom) {
-      throw new ConflictError(
-        `Room number "${data.roomNumber}" already exists for this property`
-      );
+      throw new ConflictError(`Room number "${data.roomNumber}" already exists for this property`);
     }
 
     const room = new Room({
@@ -87,14 +81,14 @@ class RoomService {
 
   async findById(id: string): Promise<IRoom> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid room ID");
+      throw new BadRequestError('Invalid room ID');
     }
 
     const room = await Room.findById(id)
-      .populate("propertyId", "name slug")
-      .populate("roomTypeId", "name code");
+      .populate('propertyId', 'name slug')
+      .populate('roomTypeId', 'name code');
     if (!room) {
-      throw new NotFoundError("Room not found");
+      throw new NotFoundError('Room not found');
     }
 
     return room;
@@ -111,19 +105,19 @@ class RoomService {
       });
       if (existingRoom) {
         throw new ConflictError(
-          `Room number "${data.roomNumber}" already exists for this property`
+          `Room number "${data.roomNumber}" already exists for this property`,
         );
       }
     }
 
     if (data.roomTypeId && data.roomTypeId !== room.roomTypeId.toString()) {
       if (!Types.ObjectId.isValid(data.roomTypeId)) {
-        throw new BadRequestError("Invalid room type ID");
+        throw new BadRequestError('Invalid room type ID');
       }
 
       const roomType = await RoomType.findById(data.roomTypeId);
       if (!roomType || roomType.propertyId.toString() !== room.propertyId.toString()) {
-        throw new NotFoundError("Room type not found for this property");
+        throw new NotFoundError('Room type not found for this property');
       }
 
       const oldRoomTypeId = room.roomTypeId.toString();
@@ -145,16 +139,12 @@ class RoomService {
     return room;
   }
 
-  async updateStatus(
-    id: string,
-    status: RoomStatus,
-    notes?: string
-  ): Promise<IRoom> {
+  async updateStatus(id: string, status: RoomStatus, notes?: string): Promise<IRoom> {
     const room = await this.findById(id);
 
     if (!canTransitionRoomTo(room.status, status)) {
       throw new BadRequestError(
-        `Cannot transition room status from "${room.status}" to "${status}"`
+        `Cannot transition room status from "${room.status}" to "${status}"`,
       );
     }
 
@@ -178,7 +168,7 @@ class RoomService {
     const room = await this.findById(id);
 
     if (room.isOccupied) {
-      throw new ConflictError("Cannot delete an occupied room");
+      throw new ConflictError('Cannot delete an occupied room');
     }
 
     const propertyId = room.propertyId.toString();
@@ -193,10 +183,10 @@ class RoomService {
     propertyId: string,
     filters: ListRoomsFilters,
     page: number = 1,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<PaginatedResult<IRoom>> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const query: any = {
@@ -227,7 +217,7 @@ class RoomService {
 
     const [rooms, total] = await Promise.all([
       Room.find(query)
-        .populate("roomTypeId", "name code")
+        .populate('roomTypeId', 'name code')
         .sort({ floor: 1, roomNumber: 1 })
         .skip(pagination.skip)
         .limit(pagination.limit),
@@ -241,24 +231,24 @@ class RoomService {
     propertyId: string,
     roomTypeId: string,
     floors: { floor: number; roomNumbers: string[] }[],
-    features: string[] = []
+    features: string[] = [],
   ): Promise<IRoom[]> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const property = await Property.findById(propertyId);
     if (!property) {
-      throw new NotFoundError("Property not found");
+      throw new NotFoundError('Property not found');
     }
 
     if (!Types.ObjectId.isValid(roomTypeId)) {
-      throw new BadRequestError("Invalid room type ID");
+      throw new BadRequestError('Invalid room type ID');
     }
 
     const roomType = await RoomType.findById(roomTypeId);
     if (!roomType || roomType.propertyId.toString() !== propertyId) {
-      throw new NotFoundError("Room type not found for this property");
+      throw new NotFoundError('Room type not found for this property');
     }
 
     const allRoomNumbers = floors.flatMap((f) => f.roomNumbers);
@@ -269,9 +259,7 @@ class RoomService {
 
     if (existingRooms.length > 0) {
       const existingNumbers = existingRooms.map((r) => r.roomNumber);
-      throw new ConflictError(
-        `Room numbers already exist: ${existingNumbers.join(", ")}`
-      );
+      throw new ConflictError(`Room numbers already exist: ${existingNumbers.join(', ')}`);
     }
 
     const roomsToCreate = floors.flatMap((floorData) =>
@@ -284,7 +272,7 @@ class RoomService {
         status: RoomStatus.CLEAN,
         isActive: true,
         isOccupied: false,
-      }))
+      })),
     );
 
     const rooms = await Room.insertMany(roomsToCreate);
@@ -294,11 +282,9 @@ class RoomService {
     return rooms;
   }
 
-  async getStatusSummary(
-    propertyId: string
-  ): Promise<Record<RoomStatus, number>> {
+  async getStatusSummary(propertyId: string): Promise<Record<RoomStatus, number>> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const summary = await Room.aggregate([
@@ -311,7 +297,7 @@ class RoomService {
       },
       {
         $group: {
-          _id: "$status",
+          _id: '$status',
           count: { $sum: 1 },
         },
       },
@@ -332,10 +318,7 @@ class RoomService {
     return result;
   }
 
-  private async updateInventoryTotals(
-    propertyId: string,
-    roomTypeId: string
-  ): Promise<void> {
+  private async updateInventoryTotals(propertyId: string, roomTypeId: string): Promise<void> {
     const totalRooms = await Room.countDocuments({
       propertyId: new Types.ObjectId(propertyId),
       roomTypeId: new Types.ObjectId(roomTypeId),
@@ -351,7 +334,7 @@ class RoomService {
       },
       {
         $set: { totalRooms },
-      }
+      },
     );
   }
 }

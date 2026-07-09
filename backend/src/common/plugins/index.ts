@@ -1,1 +1,1 @@
-export * from "./mongoosePlugins";
+export { auditPlugin, softDeletePlugin, toJSONPlugin } from './mongoosePlugins';

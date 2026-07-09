@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { bookingQueries } from '@/queries/bookings.queries'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { bookingQueries } from '@/queries/bookings.queries';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -13,32 +13,32 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { BookingStatusBadge } from '@/components/shared/StatusBadge'
-import Spinner from '@/components/Spinner'
-import { formatDate, getId, getRefLabel } from '@/lib/utils'
-import type { Booking, BookingStatus } from '@/types'
+} from '@/components/ui/table';
+import { BookingStatusBadge } from '@/components/shared/StatusBadge';
+import Spinner from '@/components/Spinner';
+import { formatDate, getId, getRefLabel } from '@/lib/utils';
+import type { Booking, BookingStatus } from '@/types';
 
 export default function StaffBookingsPage() {
-  const [page, setPage] = useState(1)
-  const limit = 20
+  const [page, setPage] = useState(1);
+  const limit = 20;
 
   const { data, isLoading, isError, error, isFetching } = useQuery(
     bookingQueries.list({ page: String(page), limit: String(limit) }),
-  )
+  );
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Failed to load bookings'}
       </div>
-    )
+    );
   }
 
-  const bookings = data?.data ?? []
-  const pagination = data?.pagination
+  const bookings = data?.data ?? [];
+  const pagination = data?.pagination;
 
   return (
     <div className="space-y-6">
@@ -127,5 +127,5 @@ export default function StaffBookingsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

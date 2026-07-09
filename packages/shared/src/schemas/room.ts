@@ -1,5 +1,5 @@
-import { z } from 'zod'
-import { RoomStatusEnum } from './enums.js'
+import { z } from 'zod';
+import { RoomStatusEnum } from './enums.js';
 
 export const roomSchema = z.object({
   id: z.string().optional(),
@@ -12,6 +12,6 @@ export const roomSchema = z.object({
   isOccupied: z.boolean().optional(),
   isActive: z.boolean().optional(),
   notes: z.string().optional(),
-})
+});
 
-export type Room = z.infer<typeof roomSchema>
+export type Room = z.infer<typeof roomSchema>;

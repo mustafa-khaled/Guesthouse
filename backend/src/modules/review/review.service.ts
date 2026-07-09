@@ -1,20 +1,20 @@
-import { Review, IReview, ReviewStatus, IReviewRatings } from "../../models/review.model";
-import { Booking } from "../../models/booking.model";
-import { Property } from "../../models/property.model";
+import { Review, IReview, ReviewStatus, IReviewRatings } from '../../models/review.model';
+import { Booking } from '../../models/booking.model';
+import { Property } from '../../models/property.model';
 import {
   NotFoundError,
   BadRequestError,
   ForbiddenError,
   ConflictError,
-} from "../../common/errors/http.errors";
+} from '../../common/errors/http.errors';
 import {
   getPaginationParams,
   createPaginatedResult,
   getSortParams,
   PaginatedResult,
-} from "../../common/utils/pagination";
-import { BookingStatus } from "../../common/enums/bookingStatus.enum";
-import { Types } from "mongoose";
+} from '../../common/utils/pagination';
+import { BookingStatus } from '../../common/enums/bookingStatus.enum';
+import { Types } from 'mongoose';
 
 export interface CreateReviewData {
   bookingId: string;
@@ -34,26 +34,26 @@ export interface ListReviewsFilters {
 class ReviewService {
   async create(data: CreateReviewData, userId: string): Promise<IReview> {
     if (!Types.ObjectId.isValid(data.bookingId)) {
-      throw new BadRequestError("Invalid booking ID");
+      throw new BadRequestError('Invalid booking ID');
     }
 
-    const booking = await Booking.findById(data.bookingId).populate("guestId");
+    const booking = await Booking.findById(data.bookingId).populate('guestId');
     if (!booking) {
-      throw new NotFoundError("Booking not found");
+      throw new NotFoundError('Booking not found');
     }
 
     const guest = booking.guestId as any;
     if (!guest.userId || guest.userId.toString() !== userId) {
-      throw new ForbiddenError("You can only review your own bookings");
+      throw new ForbiddenError('You can only review your own bookings');
     }
 
     if (booking.status !== BookingStatus.CHECKED_OUT) {
-      throw new BadRequestError("You can only review after checking out");
+      throw new BadRequestError('You can only review after checking out');
     }
 
     const existingReview = await Review.findOne({ bookingId: booking._id });
     if (existingReview) {
-      throw new ConflictError("A review already exists for this booking");
+      throw new ConflictError('A review already exists for this booking');
     }
 
     const review = new Review({
@@ -76,16 +76,16 @@ class ReviewService {
 
   async findById(id: string): Promise<IReview> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid review ID");
+      throw new BadRequestError('Invalid review ID');
     }
 
     const review = await Review.findById(id)
-      .populate("propertyId", "name")
-      .populate("guestId", "firstName lastName")
-      .populate("bookingId", "confirmationNumber dates");
+      .populate('propertyId', 'name')
+      .populate('guestId', 'firstName lastName')
+      .populate('bookingId', 'confirmationNumber dates');
 
     if (!review) {
-      throw new NotFoundError("Review not found");
+      throw new NotFoundError('Review not found');
     }
 
     return review;
@@ -96,11 +96,11 @@ class ReviewService {
 
     const guest = review.guestId as any;
     if (!guest.userId || guest.userId.toString() !== userId) {
-      throw new ForbiddenError("You can only edit your own reviews");
+      throw new ForbiddenError('You can only edit your own reviews');
     }
 
     if (review.status === ReviewStatus.APPROVED) {
-      throw new BadRequestError("Cannot edit an approved review");
+      throw new BadRequestError('Cannot edit an approved review');
     }
 
     if (data.ratings) {
@@ -123,7 +123,7 @@ class ReviewService {
 
     const guest = review.guestId as any;
     if (!guest.userId || guest.userId.toString() !== userId) {
-      throw new ForbiddenError("You can only delete your own reviews");
+      throw new ForbiddenError('You can only delete your own reviews');
     }
 
     await (review as any).softDelete();
@@ -131,13 +131,13 @@ class ReviewService {
 
   async moderate(
     id: string,
-    action: "approve" | "reject",
+    action: 'approve' | 'reject',
     userId: string,
-    reason?: string
+    reason?: string,
   ): Promise<IReview> {
     const review = await this.findById(id);
 
-    if (action === "approve") {
+    if (action === 'approve') {
       review.status = ReviewStatus.APPROVED;
 
       await this.updatePropertyRating(review.propertyId.toString());
@@ -154,7 +154,7 @@ class ReviewService {
     const review = await this.findById(id);
 
     if (review.status !== ReviewStatus.APPROVED) {
-      throw new BadRequestError("Can only respond to approved reviews");
+      throw new BadRequestError('Can only respond to approved reviews');
     }
 
     review.response = {
@@ -181,8 +181,8 @@ class ReviewService {
     filters: ListReviewsFilters,
     page: number = 1,
     limit: number = 20,
-    sortBy: string = "createdAt",
-    sortOrder: "asc" | "desc" = "desc"
+    sortBy: string = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc',
   ): Promise<PaginatedResult<IReview>> {
     const query: any = {};
 
@@ -195,7 +195,7 @@ class ReviewService {
     }
 
     if (filters.minRating) {
-      query["ratings.overall"] = { $gte: filters.minRating };
+      query['ratings.overall'] = { $gte: filters.minRating };
     }
 
     const pagination = getPaginationParams(page, limit);
@@ -203,8 +203,8 @@ class ReviewService {
 
     const [reviews, total] = await Promise.all([
       Review.find(query)
-        .populate("propertyId", "name")
-        .populate("guestId", "firstName lastName")
+        .populate('propertyId', 'name')
+        .populate('guestId', 'firstName lastName')
         .sort(sort)
         .skip(pagination.skip)
         .limit(pagination.limit),
@@ -217,14 +217,14 @@ class ReviewService {
   async getPropertyReviews(
     propertyId: string,
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<PaginatedResult<IReview>> {
     return this.list(
       { propertyId, status: ReviewStatus.APPROVED },
       page,
       limit,
-      "createdAt",
-      "desc"
+      'createdAt',
+      'desc',
     );
   }
 
@@ -235,7 +235,7 @@ class ReviewService {
     categoryAverages: Record<string, number>;
   }> {
     if (!Types.ObjectId.isValid(propertyId)) {
-      throw new BadRequestError("Invalid property ID");
+      throw new BadRequestError('Invalid property ID');
     }
 
     const reviews = await Review.find({
@@ -262,7 +262,7 @@ class ReviewService {
       ratingDistribution[Math.round(review.ratings.overall)]++;
 
       for (const [key, value] of Object.entries(review.ratings)) {
-        if (key !== "overall" && value) {
+        if (key !== 'overall' && value) {
           if (!categoryTotals[key]) {
             categoryTotals[key] = { sum: 0, count: 0 };
           }
@@ -286,18 +286,15 @@ class ReviewService {
   }
 
   async getMyReviews(userId: string): Promise<IReview[]> {
-    const booking = await Booking.find()
-      .populate({
-        path: "guestId",
-        match: { userId: new Types.ObjectId(userId) },
-      });
+    const booking = await Booking.find().populate({
+      path: 'guestId',
+      match: { userId: new Types.ObjectId(userId) },
+    });
 
-    const bookingIds = booking
-      .filter((b) => b.guestId)
-      .map((b) => b._id);
+    const bookingIds = booking.filter((b) => b.guestId).map((b) => b._id);
 
     return Review.find({ bookingId: { $in: bookingIds } })
-      .populate("propertyId", "name")
+      .populate('propertyId', 'name')
       .sort({ createdAt: -1 });
   }
 
@@ -305,8 +302,8 @@ class ReviewService {
     const summary = await this.getPropertyRatingSummary(propertyId);
 
     await Property.findByIdAndUpdate(propertyId, {
-      "metadata.averageRating": summary.averageRating,
-      "metadata.totalReviews": summary.totalReviews,
+      'metadata.averageRating': summary.averageRating,
+      'metadata.totalReviews': summary.totalReviews,
     });
   }
 }

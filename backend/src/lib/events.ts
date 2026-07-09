@@ -1,32 +1,32 @@
-import { EventEmitter2 } from "eventemitter2";
-import { logger } from "./logger";
+import { EventEmitter2 } from 'eventemitter2';
+import { logger } from './logger';
 
 export const eventBus = new EventEmitter2({
   wildcard: true,
-  delimiter: ":",
+  delimiter: ':',
   maxListeners: 50,
   verboseMemoryLeak: true,
 });
 
 export enum EventType {
-  BOOKING_CREATED = "booking:created",
-  BOOKING_CONFIRMED = "booking:confirmed",
-  BOOKING_CANCELLED = "booking:cancelled",
-  BOOKING_CHECKED_IN = "booking:checked_in",
-  BOOKING_CHECKED_OUT = "booking:checked_out",
-  BOOKING_UPDATED = "booking:updated",
+  BOOKING_CREATED = 'booking:created',
+  BOOKING_CONFIRMED = 'booking:confirmed',
+  BOOKING_CANCELLED = 'booking:cancelled',
+  BOOKING_CHECKED_IN = 'booking:checked_in',
+  BOOKING_CHECKED_OUT = 'booking:checked_out',
+  BOOKING_UPDATED = 'booking:updated',
 
-  PAYMENT_RECEIVED = "payment:received",
-  PAYMENT_FAILED = "payment:failed",
-  PAYMENT_REFUNDED = "payment:refunded",
+  PAYMENT_RECEIVED = 'payment:received',
+  PAYMENT_FAILED = 'payment:failed',
+  PAYMENT_REFUNDED = 'payment:refunded',
 
-  GUEST_CREATED = "guest:created",
-  GUEST_UPDATED = "guest:updated",
+  GUEST_CREATED = 'guest:created',
+  GUEST_UPDATED = 'guest:updated',
 
-  ROOM_STATUS_CHANGED = "room:status_changed",
-  
-  HOUSEKEEPING_TASK_CREATED = "housekeeping:task_created",
-  HOUSEKEEPING_TASK_COMPLETED = "housekeeping:task_completed",
+  ROOM_STATUS_CHANGED = 'room:status_changed',
+
+  HOUSEKEEPING_TASK_CREATED = 'housekeeping:task_created',
+  HOUSEKEEPING_TASK_COMPLETED = 'housekeeping:task_completed',
 }
 
 export interface BookingEventPayload {
@@ -66,7 +66,10 @@ export interface PaymentEventPayload {
   amount: number;
   currency: string;
   method: string;
+  paymentMethod?: string;
   confirmationNumber: string;
+  userId?: string;
+  propertyId?: string;
 }
 
 export interface PaymentFailedPayload extends PaymentEventPayload {
@@ -115,43 +118,40 @@ type EventPayloadMap = {
   [EventType.HOUSEKEEPING_TASK_COMPLETED]: HousekeepingTaskPayload;
 };
 
-export function emit<T extends EventType>(
-  event: T,
-  payload: EventPayloadMap[T]
-): void {
-  logger.debug({ event, payload }, "Emitting event");
+export function emit<T extends EventType>(event: T, payload: EventPayloadMap[T]): void {
+  logger.debug({ event, payload }, 'Emitting event');
   eventBus.emit(event, payload);
 }
 
 export function on<T extends EventType>(
   event: T,
-  listener: (payload: EventPayloadMap[T]) => void | Promise<void>
+  listener: (payload: EventPayloadMap[T]) => void | Promise<void>,
 ): void {
   eventBus.on(event, async (payload: EventPayloadMap[T]) => {
     try {
       await listener(payload);
     } catch (err) {
-      logger.error({ err, event }, "Event listener error");
+      logger.error({ err, event }, 'Event listener error');
     }
   });
 }
 
 export function once<T extends EventType>(
   event: T,
-  listener: (payload: EventPayloadMap[T]) => void | Promise<void>
+  listener: (payload: EventPayloadMap[T]) => void | Promise<void>,
 ): void {
   eventBus.once(event, async (payload: EventPayloadMap[T]) => {
     try {
       await listener(payload);
     } catch (err) {
-      logger.error({ err, event }, "Event listener error");
+      logger.error({ err, event }, 'Event listener error');
     }
   });
 }
 
 export function off<T extends EventType>(
   event: T,
-  listener: (payload: EventPayloadMap[T]) => void | Promise<void>
+  listener: (payload: EventPayloadMap[T]) => void | Promise<void>,
 ): void {
   eventBus.off(event, listener);
 }

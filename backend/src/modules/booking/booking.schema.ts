@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { dateStringSchema } from "../../common/utils/dateUtils";
-import { BookingStatus, BookingSource } from "../../common/enums/bookingStatus.enum";
+import { z } from 'zod';
+import { dateStringSchema } from '../../common/utils/dateUtils';
+import { BookingStatus, BookingSource } from '../../common/enums/bookingStatus.enum';
 
 const additionalGuestSchema = z.object({
   firstName: z.string().min(1),
@@ -59,8 +59,8 @@ export const listBookingsSchema = z.object({
     checkInFrom: dateStringSchema.optional(),
     checkInTo: dateStringSchema.optional(),
     confirmationNumber: z.string().optional(),
-    sortBy: z.enum(["createdAt", "checkIn", "checkOut"]).default("createdAt"),
-    sortOrder: z.enum(["asc", "desc"]).default("desc"),
+    sortBy: z.enum(['createdAt', 'checkIn', 'checkOut']).default('createdAt'),
+    sortOrder: z.enum(['asc', 'desc']).default('desc'),
   }),
 });
 

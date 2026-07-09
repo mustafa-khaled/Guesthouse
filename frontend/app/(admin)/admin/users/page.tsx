@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useQuery } from '@tanstack/react-query'
-import { adminQueries } from '@/queries/admin.queries'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useQuery } from '@tanstack/react-query';
+import { adminQueries } from '@/queries/admin.queries';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -11,10 +11,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import Spinner from '@/components/Spinner'
-import { formatDate, getId } from '@/lib/utils'
-import type { Role, User } from '@/types'
+} from '@/components/ui/table';
+import Spinner from '@/components/Spinner';
+import { formatDate, getId } from '@/lib/utils';
+import type { Role, User } from '@/types';
 
 const roleVariant: Record<Role, 'default' | 'success' | 'warning' | 'danger' | 'info'> = {
   user: 'default',
@@ -22,22 +22,22 @@ const roleVariant: Record<Role, 'default' | 'success' | 'warning' | 'danger' | '
   editor: 'info',
   moderator: 'warning',
   admin: 'success',
-}
+};
 
 export default function AdminUsersPage() {
-  const { data, isLoading, isError, error } = useQuery(adminQueries.users())
+  const { data, isLoading, isError, error } = useQuery(adminQueries.users());
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Failed to load users'}
       </div>
-    )
+    );
   }
 
-  const users = (data ?? []) as User[]
+  const users = (data ?? []) as User[];
 
   return (
     <div className="space-y-6">
@@ -68,14 +68,10 @@ export default function AdminUsersPage() {
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={getId(user)}>
-                    <TableCell className="font-medium">
-                      {user.name || '—'}
-                    </TableCell>
+                    <TableCell className="font-medium">{user.name || '—'}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={roleVariant[user.role] || 'default'}>
-                        {user.role}
-                      </Badge>
+                      <Badge variant={roleVariant[user.role] || 'default'}>{user.role}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.isEmailVerified ? 'success' : 'warning'}>
@@ -83,9 +79,7 @@ export default function AdminUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="capitalize">{user.authProvider}</TableCell>
-                    <TableCell>
-                      {user.createdAt ? formatDate(user.createdAt) : '—'}
-                    </TableCell>
+                    <TableCell>{user.createdAt ? formatDate(user.createdAt) : '—'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -94,5 +88,5 @@ export default function AdminUsersPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

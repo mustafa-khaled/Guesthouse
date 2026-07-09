@@ -1,11 +1,7 @@
-import { Footer } from "@/components/sections/footer";
-import { Navbar } from "@/components/sections/navbar";
+import { Footer } from '@/components/sections/footer';
+import { Navbar } from '@/components/sections/navbar';
 
-export default function GuestLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function GuestLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />

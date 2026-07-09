@@ -1,14 +1,14 @@
-import { Request, Response, NextFunction } from "express";
-import { promotionService } from "./promotion.service";
+import { Request, Response, NextFunction } from 'express';
+import { promotionService } from './promotion.service';
 import {
   createPromotionSchema,
   updatePromotionSchema,
   getPromotionSchema,
   listPromotionsSchema,
   validatePromotionSchema,
-} from "./promotion.schema";
-import { HttpError } from "../../common/errors/http.errors";
-import { parseDate, getNightsBetween } from "../../common/utils/dateUtils";
+} from './promotion.schema';
+import { HttpError } from '../../common/errors/http.errors';
+import { parseDate, getNightsBetween } from '../../common/utils/dateUtils';
 
 class PromotionController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -16,15 +16,15 @@ class PromotionController {
       const result = createPromotionSchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
-      const promotion = await promotionService.create(result.data.body);
+      const promotion = await promotionService.create(result.data.body as any);
 
       return res.status(201).json({
-        message: "Promotion created successfully",
+        message: 'Promotion created successfully',
         data: promotion,
       });
     } catch (error) {
@@ -40,7 +40,7 @@ class PromotionController {
       const result = getPromotionSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -66,18 +66,18 @@ class PromotionController {
       });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const promotion = await promotionService.update(
         result.data.params.id,
-        result.data.body
+        result.data.body as any,
       );
 
       return res.status(200).json({
-        message: "Promotion updated successfully",
+        message: 'Promotion updated successfully',
         data: promotion,
       });
     } catch (error) {
@@ -93,7 +93,7 @@ class PromotionController {
       const result = getPromotionSchema.safeParse({ params: req.params });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
@@ -101,7 +101,7 @@ class PromotionController {
       await promotionService.delete(result.data.params.id);
 
       return res.status(200).json({
-        message: "Promotion deleted successfully",
+        message: 'Promotion deleted successfully',
       });
     } catch (error) {
       if (error instanceof HttpError) {
@@ -116,19 +116,14 @@ class PromotionController {
       const result = listPromotionsSchema.safeParse({ query: req.query });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }
 
       const { page, limit, propertyId, isActive } = result.data.query;
 
-      const promotions = await promotionService.list(
-        propertyId,
-        isActive,
-        page,
-        limit
-      );
+      const promotions = await promotionService.list(propertyId, isActive, page, limit);
 
       return res.status(200).json(promotions);
     } catch (error) {
@@ -144,7 +139,7 @@ class PromotionController {
       const result = validatePromotionSchema.safeParse({ body: req.body });
       if (!result.success) {
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: result.error.flatten(),
         });
       }

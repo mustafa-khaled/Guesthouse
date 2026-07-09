@@ -1,113 +1,135 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { use, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
-import { bookingQueries } from '@/queries/bookings.queries'
-import { roomQueries } from '@/queries/staff.queries'
-import { bookingMutations } from '@/mutations/bookings.mutations'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { BookingStatusBadge } from '@/components/shared/StatusBadge'
-import Spinner from '@/components/Spinner'
-import { formatCurrency, formatDate, getId, getRefLabel } from '@/lib/utils'
+import Link from 'next/link';
+import { use, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { bookingQueries } from '@/queries/bookings.queries';
+import { folioQueries, paymentQueries } from '@/features/booking/queries';
+import { roomQueries } from '@/queries/staff.queries';
+import { bookingMutations } from '@/mutations/bookings.mutations';
+import { staffPaymentMutations } from '@/features/staff/payment-mutations';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { BookingStatusBadge } from '@/components/shared/StatusBadge';
+import Spinner from '@/components/Spinner';
+import { formatCurrency, formatDate, getId, getRefLabel } from '@/lib/utils';
 
-export default function StaffBookingDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = use(params)
-  const queryClient = useQueryClient()
-  const [roomId, setRoomId] = useState('')
+export default function StaffBookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const queryClient = useQueryClient();
+  const [roomId, setRoomId] = useState('');
+  const [cashAmount, setCashAmount] = useState('');
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
 
-  const { data: booking, isLoading, isError, error } = useQuery(
-    bookingQueries.detail(id),
-  )
+  const { data: booking, isLoading, isError, error } = useQuery(bookingQueries.detail(id));
+  const { data: folio } = useQuery(folioQueries.byBooking(id));
+  const { data: payments } = useQuery(paymentQueries.byBooking(id));
 
   const propertyId =
     typeof booking?.propertyId === 'string'
       ? booking.propertyId
-      : getId(booking?.propertyId as { id?: string; _id?: string })
+      : getId(booking?.propertyId as { id?: string; _id?: string });
 
-  const { data: rooms } = useQuery(roomQueries.byProperty(propertyId))
+  const { data: rooms } = useQuery(roomQueries.byProperty(propertyId));
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['bookings'] })
-    queryClient.invalidateQueries({ queryKey: ['front-desk'] })
-  }
+    queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    queryClient.invalidateQueries({ queryKey: ['front-desk'] });
+  };
 
   const confirmMutation = useMutation({
     ...bookingMutations.confirm(),
     onSuccess: () => {
-      toast.success('Booking confirmed')
-      invalidate()
+      toast.success('Booking confirmed');
+      invalidate();
     },
-    onError: (err) =>
-      toast.error(err instanceof Error ? err.message : 'Failed to confirm'),
-  })
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to confirm'),
+  });
 
   const checkInMutation = useMutation({
     ...bookingMutations.checkIn(),
     onSuccess: () => {
-      toast.success('Guest checked in')
-      invalidate()
+      toast.success('Guest checked in');
+      invalidate();
     },
-    onError: (err) =>
-      toast.error(err instanceof Error ? err.message : 'Failed to check in'),
-  })
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to check in'),
+  });
 
   const checkOutMutation = useMutation({
     ...bookingMutations.checkOut(),
     onSuccess: () => {
-      toast.success('Guest checked out')
-      invalidate()
+      toast.success('Guest checked out');
+      invalidate();
     },
-    onError: (err) =>
-      toast.error(err instanceof Error ? err.message : 'Failed to check out'),
-  })
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to check out'),
+  });
 
   const assignRoomMutation = useMutation({
     ...bookingMutations.assignRoom(),
     onSuccess: () => {
-      toast.success('Room assigned')
-      invalidate()
+      toast.success('Room assigned');
+      invalidate();
     },
-    onError: (err) =>
-      toast.error(err instanceof Error ? err.message : 'Failed to assign room'),
-  })
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to assign room'),
+  });
+
+  const cashPaymentMutation = useMutation({
+    ...staffPaymentMutations.recordCash(),
+    onSuccess: () => {
+      toast.success('Cash payment recorded');
+      setCashAmount('');
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ['folio', id] });
+      queryClient.invalidateQueries({ queryKey: ['payments', id] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Payment failed'),
+  });
+
+  const refundMutation = useMutation({
+    ...staffPaymentMutations.refund(),
+    onSuccess: () => {
+      toast.success('Refund processed');
+      setRefundAmount('');
+      setRefundReason('');
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ['folio', id] });
+      queryClient.invalidateQueries({ queryKey: ['payments', id] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Refund failed'),
+  });
 
   const isPending =
     confirmMutation.isPending ||
     checkInMutation.isPending ||
     checkOutMutation.isPending ||
-    assignRoomMutation.isPending
+    assignRoomMutation.isPending ||
+    cashPaymentMutation.isPending ||
+    refundMutation.isPending;
 
-  if (isLoading) return <Spinner />
+  if (isLoading) return <Spinner />;
 
   if (isError || !booking) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
         {error instanceof Error ? error.message : 'Booking not found'}
       </div>
-    )
+    );
   }
 
   const assignedRoomId =
     typeof booking.assignedRoomId === 'string'
       ? booking.assignedRoomId
-      : getId(booking.assignedRoomId as { id?: string; _id?: string })
+      : getId(booking.assignedRoomId as { id?: string; _id?: string });
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <Link
-            href="/staff/bookings"
-            className="text-sm text-green-700 hover:underline"
-          >
+          <Link href="/staff/bookings" className="text-sm text-green-700 hover:underline">
             &larr; Back to bookings
           </Link>
           <h1 className="mt-2 text-2xl font-bold text-gray-900">
@@ -120,26 +142,17 @@ export default function StaffBookingDetailPage({
 
         <div className="flex flex-wrap gap-2">
           {booking.status === 'pending' && (
-            <Button
-              disabled={isPending}
-              onClick={() => confirmMutation.mutate(id)}
-            >
+            <Button disabled={isPending} onClick={() => confirmMutation.mutate(id)}>
               Confirm
             </Button>
           )}
           {booking.status === 'confirmed' && (
-            <Button
-              disabled={isPending}
-              onClick={() => checkInMutation.mutate(id)}
-            >
+            <Button disabled={isPending} onClick={() => checkInMutation.mutate(id)}>
               Check In
             </Button>
           )}
           {booking.status === 'checked-in' && (
-            <Button
-              disabled={isPending}
-              onClick={() => checkOutMutation.mutate(id)}
-            >
+            <Button disabled={isPending} onClick={() => checkOutMutation.mutate(id)}>
               Check Out
             </Button>
           )}
@@ -199,27 +212,20 @@ export default function StaffBookingDetailPage({
                   <div className="flex justify-between">
                     <span className="text-gray-500">Subtotal</span>
                     <span>
-                      {formatCurrency(
-                        booking.pricing.subtotal,
-                        booking.pricing.currency,
-                      )}
+                      {formatCurrency(booking.pricing.subtotal, booking.pricing.currency)}
                     </span>
                   </div>
                 )}
                 {booking.pricing.tax != null && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">Tax</span>
-                    <span>
-                      {formatCurrency(booking.pricing.tax, booking.pricing.currency)}
-                    </span>
+                    <span>{formatCurrency(booking.pricing.tax, booking.pricing.currency)}</span>
                   </div>
                 )}
                 {booking.pricing.total != null && (
                   <div className="flex justify-between border-t pt-3 font-semibold">
                     <span>Total</span>
-                    <span>
-                      {formatCurrency(booking.pricing.total, booking.pricing.currency)}
-                    </span>
+                    <span>{formatCurrency(booking.pricing.total, booking.pricing.currency)}</span>
                   </div>
                 )}
               </>
@@ -247,15 +253,15 @@ export default function StaffBookingDetailPage({
                 >
                   <option value="">Select a room</option>
                   {(rooms ?? []).map((room) => {
-                    const rid = getId(room as { id?: string; _id?: string })
+                    const rid = getId(room as { id?: string; _id?: string });
                     const label =
                       getRefLabel(room as Record<string, unknown>) ||
-                      String((room as Record<string, unknown>).number ?? rid)
+                      String((room as Record<string, unknown>).number ?? rid);
                     return (
                       <option key={rid} value={rid}>
                         {label}
                       </option>
-                    )
+                    );
                   })}
                 </select>
               </div>
@@ -291,6 +297,102 @@ export default function StaffBookingDetailPage({
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Folio & Payments</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {folio && (
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between font-medium">
+                <span>Folio balance</span>
+                <span>{formatCurrency(folio.balance ?? 0)}</span>
+              </div>
+              {folio.entries?.map((item, idx) => (
+                <div key={idx} className="flex justify-between text-gray-600">
+                  <span>{item.description}</span>
+                  <span>{formatCurrency(item.amount)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {payments && payments.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-medium text-gray-700">Payment history</p>
+              <ul className="space-y-1 text-sm text-gray-600">
+                {payments.map((p) => (
+                  <li key={p.id ?? p._id} className="flex justify-between">
+                    <span>
+                      {p.method} — {p.status}
+                    </span>
+                    <span>{formatCurrency(p.amount, p.currency)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="cashAmount">Record cash payment</Label>
+              <Input
+                id="cashAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={cashAmount}
+                onChange={(e) => setCashAmount(e.target.value)}
+                placeholder="Amount"
+              />
+              <Button
+                size="sm"
+                disabled={!cashAmount || isPending}
+                onClick={() =>
+                  cashPaymentMutation.mutate({
+                    bookingId: id,
+                    amount: parseFloat(cashAmount),
+                  })
+                }
+              >
+                Record cash
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="refundAmount">Process refund</Label>
+              <Input
+                id="refundAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+                placeholder="Amount"
+              />
+              <Input
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                placeholder="Reason (optional)"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!refundAmount || isPending}
+                onClick={() =>
+                  refundMutation.mutate({
+                    bookingId: id,
+                    amount: parseFloat(refundAmount),
+                    reason: refundReason || undefined,
+                  })
+                }
+              >
+                Process refund
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

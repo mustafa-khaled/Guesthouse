@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from 'next/link';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard' },
@@ -7,13 +7,9 @@ const navItems = [
   { href: '/admin/reports', label: 'Reports' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/audit-logs', label: 'Audit Logs' },
-]
+];
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <aside className="w-56 shrink-0 border-r border-gray-200 bg-white">
@@ -44,5 +40,5 @@ export default function AdminLayout({
       </aside>
       <main className="flex-1 overflow-auto p-6">{children}</main>
     </div>
-  )
+  );
 }

@@ -1,34 +1,34 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import toast from 'react-hot-toast'
-import { clientFetch } from '@/lib/api/client'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { clientFetch } from '@/lib/api/client';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     try {
       await clientFetch('/auth/forgot-password', {
         method: 'POST',
         body: JSON.stringify({ email }),
-      })
-      setSent(true)
-      toast.success('Reset link sent if the email exists')
+      });
+      setSent(true);
+      toast.success('Reset link sent if the email exists');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to send reset email')
+      toast.error(err instanceof Error ? err.message : 'Failed to send reset email');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -41,8 +41,7 @@ export default function ForgotPasswordPage() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600">
-              If an account exists for {email}, a password reset link has been
-              sent.
+              If an account exists for {email}, a password reset link has been sent.
             </p>
             <Link
               href="/login"
@@ -53,7 +52,7 @@ export default function ForgotPasswordPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -87,5 +86,5 @@ export default function ForgotPasswordPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

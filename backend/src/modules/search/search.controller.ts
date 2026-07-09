@@ -1,19 +1,17 @@
-import { Request, Response, NextFunction } from "express";
-import { searchService } from "./search.service";
-import { BadRequestError } from "../../common/errors/http.errors";
+import { Request, Response, NextFunction } from 'express';
+import { searchService } from './search.service';
+import { BadRequestError } from '../../common/errors/http.errors';
 
 class SearchController {
   async unifiedSearch(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { q, types, limit, skip, propertyId } = req.query;
 
-      if (!q || typeof q !== "string" || q.trim().length < 2) {
-        throw new BadRequestError("Search query must be at least 2 characters");
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        throw new BadRequestError('Search query must be at least 2 characters');
       }
 
-      const typeArray = types
-        ? (types as string).split(",").map((t) => t.trim())
-        : undefined;
+      const typeArray = types ? (types as string).split(',').map((t) => t.trim()) : undefined;
 
       const results = await searchService.unifiedSearch(q, {
         types: typeArray,
@@ -23,7 +21,7 @@ class SearchController {
       });
 
       res.json({
-        message: "Search completed",
+        message: 'Search completed',
         query: q,
         data: results,
       });
@@ -36,17 +34,17 @@ class SearchController {
     try {
       const { q, limit } = req.query;
 
-      if (!q || typeof q !== "string" || q.trim().length < 2) {
-        throw new BadRequestError("Search query must be at least 2 characters");
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        throw new BadRequestError('Search query must be at least 2 characters');
       }
 
       const results = await searchService.quickSearch(
         q,
-        limit ? parseInt(limit as string, 10) : undefined
+        limit ? parseInt(limit as string, 10) : undefined,
       );
 
       res.json({
-        message: "Quick search completed",
+        message: 'Quick search completed',
         query: q,
         data: results,
       });
@@ -59,8 +57,8 @@ class SearchController {
     try {
       const { q, limit, skip } = req.query;
 
-      if (!q || typeof q !== "string" || q.trim().length < 2) {
-        throw new BadRequestError("Search query must be at least 2 characters");
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        throw new BadRequestError('Search query must be at least 2 characters');
       }
 
       const results = await searchService.searchGuests(q, {
@@ -69,7 +67,7 @@ class SearchController {
       });
 
       res.json({
-        message: "Guest search completed",
+        message: 'Guest search completed',
         query: q,
         data: results.items,
         pagination: {
@@ -87,8 +85,8 @@ class SearchController {
     try {
       const { q, limit, skip, propertyId } = req.query;
 
-      if (!q || typeof q !== "string" || q.trim().length < 2) {
-        throw new BadRequestError("Search query must be at least 2 characters");
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        throw new BadRequestError('Search query must be at least 2 characters');
       }
 
       const results = await searchService.searchBookings(q, {
@@ -98,7 +96,7 @@ class SearchController {
       });
 
       res.json({
-        message: "Booking search completed",
+        message: 'Booking search completed',
         query: q,
         data: results.items,
         pagination: {
@@ -116,8 +114,8 @@ class SearchController {
     try {
       const { q, limit, skip } = req.query;
 
-      if (!q || typeof q !== "string" || q.trim().length < 2) {
-        throw new BadRequestError("Search query must be at least 2 characters");
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        throw new BadRequestError('Search query must be at least 2 characters');
       }
 
       const results = await searchService.searchProperties(q, {
@@ -126,7 +124,7 @@ class SearchController {
       });
 
       res.json({
-        message: "Property search completed",
+        message: 'Property search completed',
         query: q,
         data: results.items,
         pagination: {
@@ -144,8 +142,8 @@ class SearchController {
     try {
       const { q, limit, skip, propertyId } = req.query;
 
-      if (!q || typeof q !== "string" || q.trim().length < 2) {
-        throw new BadRequestError("Search query must be at least 2 characters");
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        throw new BadRequestError('Search query must be at least 2 characters');
       }
 
       const results = await searchService.searchRoomTypes(q, {
@@ -155,7 +153,7 @@ class SearchController {
       });
 
       res.json({
-        message: "Room type search completed",
+        message: 'Room type search completed',
         query: q,
         data: results.items,
         pagination: {
