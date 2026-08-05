@@ -2,7 +2,7 @@
 # Frontend Dockerfile - Next.js Standalone
 # ============================================
 
-FROM node:22-alpine AS base
+FROM node:25-alpine AS base
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
@@ -64,7 +64,7 @@ RUN pnpm build
 # ============================================
 # Stage 4: Production runtime
 # ============================================
-FROM node:22-alpine AS runner
+FROM node:25-alpine AS runner
 
 RUN apk add --no-cache wget
 
