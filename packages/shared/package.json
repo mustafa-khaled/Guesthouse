@@ -25,7 +25,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "openapi3-ts": "^4.6.0",
