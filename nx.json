@@ -1,0 +1,31 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "extends": "nx/presets/npm.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "sharedGlobals": [
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/pnpm-lock.yaml",
+      "{workspaceRoot}/nx.json"
+    ],
+    "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "lint": {
+      "cache": true
+    }
+  },
+  "defaultBase": "main"
+}

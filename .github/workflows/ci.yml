@@ -49,7 +49,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: shared-dist
-          path: packages/shared/dist
+          path: packages/contracts/dist
           retention-days: 1
 
   backend:
@@ -82,16 +82,16 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: shared-dist
-          path: packages/shared/dist
+          path: packages/contracts/dist
 
-      - run: pnpm --filter ./backend typecheck
-      - run: pnpm --filter ./backend test
+      - run: pnpm --filter guesthouse-backend typecheck
+      - run: pnpm --filter guesthouse-backend test
         env:
           NODE_ENV: test
           MONGODB_URI: mongodb://localhost:27017/guesthouse_test
           JWT_ACCESS_SECRET: test-access-secret-at-least-32-characters
           JWT_REFRESH_SECRET: test-refresh-secret-at-least-32-characters
-      - run: pnpm --filter ./backend build
+      - run: pnpm --filter guesthouse-backend build
 
   frontend:
     name: Frontend
@@ -112,12 +112,12 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: shared-dist
-          path: packages/shared/dist
+          path: packages/contracts/dist
 
-      - run: pnpm --filter ./frontend typecheck
-      - run: pnpm --filter ./frontend lint
-      - run: pnpm --filter ./frontend test
-      - run: pnpm --filter ./frontend build
+      - run: pnpm --filter guesthouse-frontend typecheck
+      - run: pnpm --filter guesthouse-frontend lint
+      - run: pnpm --filter guesthouse-frontend test
+      - run: pnpm --filter guesthouse-frontend build
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_API_URL: http://localhost:5000
@@ -150,7 +150,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./backend/Dockerfile
+          file: ./apps/api/Dockerfile
           push: false
           tags: guesthouse-backend:${{ github.sha }}
           cache-from: type=gha
@@ -159,7 +159,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./frontend/Dockerfile
+          file: ./apps/web/Dockerfile
           push: false
           tags: guesthouse-frontend:${{ github.sha }}
           build-args: |
@@ -195,8 +195,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @guesthouse/shared build
-      - run: pnpm --filter ./frontend exec playwright install --with-deps chromium
-      - run: pnpm --filter ./frontend test:e2e
+      - run: pnpm --filter guesthouse-frontend exec playwright install --with-deps chromium
+      - run: pnpm --filter guesthouse-frontend test:e2e
         env:
           CI: true
           MONGODB_URI: mongodb://localhost:27017/guesthouse_e2e

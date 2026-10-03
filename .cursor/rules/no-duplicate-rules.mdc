@@ -1,0 +1,6 @@
+---
+description: Update existing rules instead of duplicating them
+alwaysApply: true
+---
+
+Follow `.agents/rules/no-duplicate-rules.md`.

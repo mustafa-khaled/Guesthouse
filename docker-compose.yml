@@ -55,7 +55,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: apps/api/Dockerfile
     container_name: guesthouse-backend
     restart: unless-stopped
     ports:
@@ -63,6 +63,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 5000
+      RUN_WORKERS: 'false'
       MONGODB_URI: mongodb://${MONGO_APP_USERNAME:-guesthouse_app}:${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD must be set}@mongodb:27017/guesthouse?authSource=guesthouse
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
@@ -106,12 +107,47 @@ services:
       start_period: 40s
 
   # ============================================
+  # BullMQ worker (same modules as API)
+  # ============================================
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: guesthouse-worker
+    restart: unless-stopped
+    command: ['node', 'dist/worker-main.js']
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      MONGODB_URI: mongodb://${MONGO_APP_USERNAME:-guesthouse_app}:${MONGO_APP_PASSWORD:?MONGO_APP_PASSWORD must be set}@mongodb:27017/guesthouse?authSource=guesthouse
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      APP_URL: ${APP_URL:-http://localhost:5000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_EMAIL_FROM: ${SMTP_EMAIL_FROM:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ============================================
   # Frontend App
   # ============================================
   frontend:
     build:
       context: .
-      dockerfile: frontend/Dockerfile
+      dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000}
         NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL:-http://localhost:5000}

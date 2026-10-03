@@ -40,7 +40,7 @@ updates:
 
   # Docker
   - package-ecosystem: 'docker'
-    directory: '/backend'
+    directory: '/apps/api'
     schedule:
       interval: 'weekly'
     labels:
@@ -49,7 +49,7 @@ updates:
       - 'automated'
 
   - package-ecosystem: 'docker'
-    directory: '/frontend'
+    directory: '/apps/web'
     schedule:
       interval: 'weekly'
     labels:

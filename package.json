@@ -2,30 +2,22 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "dev": "concurrently -n sh,be,fe -c yellow,blue,green \"pnpm --filter @guesthouse/shared dev\" \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
-    "build": "pnpm --filter @guesthouse/shared build && pnpm -r --filter !@guesthouse/shared build",
-    "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint",
+    "dev": "concurrently -n sh,api,web -c yellow,blue,green \"pnpm --filter @guesthouse/shared dev\" \"pnpm --filter guesthouse-backend dev\" \"pnpm --filter guesthouse-frontend dev\"",
+    "dev:worker": "pnpm --filter guesthouse-worker dev",
+    "build": "pnpm --filter @guesthouse/shared build && pnpm --filter guesthouse-backend build && pnpm --filter guesthouse-frontend build",
+    "nx:build": "nx run-many -t build",
+    "typecheck": "pnpm --filter @guesthouse/shared typecheck && pnpm --filter @guesthouse/shared build && pnpm --filter guesthouse-backend typecheck && pnpm --filter guesthouse-frontend typecheck",
+    "nx:typecheck": "nx run-many -t typecheck",
+    "lint": "pnpm --filter guesthouse-frontend lint",
+    "nx:lint": "nx run-many -t lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm --filter backend test",
-    "test:coverage": "pnpm --filter backend test:coverage",
-    "dev:be": "pnpm --filter backend dev",
-    "dev:fe": "pnpm --filter frontend dev",
-    "seed": "pnpm --filter backend seed",
-    "seed:clean": "pnpm --filter backend seed:clean"
-  },
-  "pnpm": {
-    "approvedBuilds": [
-      "sharp"
-    ],
-    "onlyBuiltDependencies": [
-      "sharp"
-    ],
-    "overrides": {
-      "shell-quote": ">=1.8.4",
-      "form-data": ">=4.0.6"
-    }
+    "test": "pnpm --filter guesthouse-backend test",
+    "test:coverage": "pnpm --filter guesthouse-backend test:coverage",
+    "dev:be": "pnpm --filter guesthouse-backend dev",
+    "dev:fe": "pnpm --filter guesthouse-frontend dev",
+    "seed": "pnpm --filter guesthouse-backend seed",
+    "seed:clean": "pnpm --filter guesthouse-backend seed:clean"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
@@ -33,6 +25,7 @@
     "concurrently": "^9.2.3",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2",
+    "nx": "^21.6.4",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11"
   }

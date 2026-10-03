@@ -21,7 +21,7 @@ Correlate requests using `X-Request-Id` header (set by backend middleware).
 ### Index synchronization (run after deploy)
 
 ```bash
-pnpm --filter backend ensure-indexes
+pnpm --filter guesthouse-backend ensure-indexes
 ```
 
 ### Backup

@@ -1,0 +1,6 @@
+---
+description: Prefer typed, consistent code over weak types and shortcuts
+alwaysApply: true
+---
+
+Follow `.agents/rules/typed-code-quality.md`.

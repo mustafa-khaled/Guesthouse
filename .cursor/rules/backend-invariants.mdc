@@ -1,0 +1,15 @@
+---
+description: Thin controllers, DTOs, no mass assignment, errors, env, mongo safety
+globs: apps/api/**/*.ts
+alwaysApply: false
+---
+
+Follow:
+
+- `.agents/rules/backend-thin-controller.md`
+- `.agents/rules/backend-dto-boundaries.md`
+- `.agents/rules/backend-no-mass-assignment.md`
+- `.agents/rules/backend-security-baseline.md`
+- `.agents/rules/backend-error-handling.md`
+- `.agents/rules/backend-config-validation.md`
+- `.agents/rules/backend-mongo-query-safety.md`

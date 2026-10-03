@@ -1,43 +1,43 @@
 # Guesthouse — Agent Guide
 
-Monorepo for a hotel booking and management platform. pnpm workspace with shared Zod schemas.
+pnpm + Nx modular monolith for hotel booking. HTTP and MongoDB are adapters around business rules.
 
-## Which guide to read
+## Layout
 
-| Work area                          | Guide                                                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Backend API (Express, Mongoose)    | [backend/AGENTS.md](backend/AGENTS.md)                                                                             |
-| Frontend (Next.js 15, React Query) | [frontend/AGENTS.md](frontend/AGENTS.md)                                                                           |
-| Shared schema changes              | Read **both** backend and frontend guides — schemas in `packages/shared` affect validation and types on both sides |
+| Path                  | Package               | Role                                              |
+| --------------------- | --------------------- | ------------------------------------------------- |
+| `apps/api/`           | `guesthouse-backend`  | Express API + Socket.IO                           |
+| `apps/web/`           | `guesthouse-frontend` | Next.js 15 (guest, admin, staff)                  |
+| `apps/worker/`        | `guesthouse-worker`   | BullMQ process (same modules, not a microservice) |
+| `packages/contracts/` | `@guesthouse/shared`  | Zod transport contracts + OpenAPI                 |
 
-## Stack overview
+## Which guide
 
-| Package            | Tech                                                                    |
-| ------------------ | ----------------------------------------------------------------------- |
-| `backend/`         | Express 4, Mongoose 8, Zod, BullMQ, Socket.IO, Stripe                   |
-| `frontend/`        | Next.js 15 App Router, TanStack React Query, Tailwind v4, TypeUI Matcha |
-| `packages/shared/` | Zod schemas, OpenAPI, shared types and RBAC helpers                     |
+| Work             | Guide                                                     |
+| ---------------- | --------------------------------------------------------- |
+| API / workers    | [apps/api/AGENTS.md](apps/api/AGENTS.md)                  |
+| Web              | [apps/web/AGENTS.md](apps/web/AGENTS.md)                  |
+| Shared contracts | Both guides — changes in `packages/contracts` affect both |
 
-## Root commands
+## Rules vs skills
 
-- `pnpm dev` — start shared + backend + frontend concurrently
-- `pnpm build` — build all packages
-- `pnpm typecheck` — TypeScript check all packages
-- `pnpm test` — run backend tests
-- `pnpm seed` — seed database
+- Always-on / glob rules: `.agents/rules/*.md` (Cursor pointers in `.cursor/rules/`)
+- Load a skill when the task matches its `description`. Do not preload every skill.
 
-## Skills location
+**Orchestrators:** `express-feature-builder` (API), `nextjs-feature-builder` (web).
 
-Project skills live in `.agents/skills/`:
+When editing an existing API module, match `routes` / `controller` / `service` / `schema`. Do not add a parallel layered tree beside that service unless asked to refactor the module.
 
-- `guesthouse-backend-architecture` — backend module layout and patterns
-- `express-best-practices` — Express security, validation, DB, testing rules
-- `guesthouse-frontend-architecture` — in `frontend/.agents/skills/`
-- `typeui-fundamentals`, `typeui-design-system`, `serene-stays-hotel` — frontend UI
-- `code-refactorer` — behavior-preserving refactors
+## Commands
+
+- `pnpm dev` — contracts + API + web (`RUN_WORKERS=true` in-process)
+- `pnpm dev:worker` — separate worker (`RUN_WORKERS=false` on the API)
+- `pnpm build` / `pnpm typecheck` — pnpm filters (Nx aliases: `pnpm nx:build`, `pnpm nx:typecheck`)
+- `pnpm test` — API tests
+- `pnpm seed` — seed MongoDB
 
 ## Docker
 
-- Development: `docker-compose.yml`
-- Production: `docker-compose.prod.yml`
-- See `docs/DEPLOYMENT.md` for deploy steps
+- Dev: `docker-compose.yml` (API `RUN_WORKERS=false` + `worker` service)
+- Prod overlay: `docker-compose.prod.yml`
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)

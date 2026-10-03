@@ -1,0 +1,7 @@
+---
+description: Next.js RSC, features, security, async UI, a11y
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+Follow `.agents/rules/frontend-server-client.md`, `.agents/rules/frontend-feature-boundaries.md`, `.agents/rules/frontend-security-boundaries.md`, `.agents/rules/frontend-performance.md`, `.agents/rules/frontend-async-ui.md`, and `.agents/rules/frontend-accessibility.md`.

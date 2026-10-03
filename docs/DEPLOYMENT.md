@@ -51,7 +51,7 @@ Place TLS certificates in `infra/nginx/certs/` or terminate TLS at an external l
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-pnpm --filter backend ensure-indexes
+pnpm --filter guesthouse-backend ensure-indexes
 bash scripts/smoke-test.sh https://your-domain.com
 ```
 

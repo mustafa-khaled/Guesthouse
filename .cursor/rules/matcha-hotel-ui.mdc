@@ -1,6 +1,6 @@
 ---
-description: Matcha design system and Serene Stays hotel UI patterns for Next.js components
-globs: frontend/**/*.{tsx,ts,css}
+description: Matcha design system and Serene Stays hotel UI patterns
+globs: apps/web/**/*.{tsx,ts,css}
 alwaysApply: true
 ---
 
@@ -23,9 +23,9 @@ This project uses TypeUI **Matcha** for all UI. Follow these rules on every chan
 
 ## Architecture
 
-- Primitives → `frontend/components/ui/`
-- Sections → `frontend/components/sections/`
-- Content/data → `frontend/lib/content.ts`
+- Primitives → `apps/web/components/ui/`
+- Sections → `apps/web/components/sections/`
+- Content/data → `apps/web/lib/content.ts`
 - `page.tsx` composes sections only
 
 ## Do not

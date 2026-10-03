@@ -69,7 +69,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./backend/Dockerfile
+          file: ./apps/api/Dockerfile
           push: false
           load: true
           tags: |
@@ -81,7 +81,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./frontend/Dockerfile
+          file: ./apps/web/Dockerfile
           push: false
           load: true
           tags: |

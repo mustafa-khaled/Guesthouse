@@ -10,30 +10,31 @@
 
 ## Backend (optional)
 
-| Variable                   | Default                 | Description                                                    |
-| -------------------------- | ----------------------- | -------------------------------------------------------------- |
-| `NODE_ENV`                 | `development`           | Runtime mode                                                   |
-| `PORT`                     | `5000`                  | API port                                                       |
-| `FRONTEND_URL`             | `http://localhost:3001` | Primary frontend URL                                           |
-| `CORS_ORIGINS`             | —                       | Comma-separated allowed origins (falls back to `FRONTEND_URL`) |
-| `APP_URL`                  | `http://localhost:5000` | Public API URL for emails/docs                                 |
-| `REDIS_URL`                | —                       | Redis for rate limiting and BullMQ                             |
-| `LOG_LEVEL`                | `info`                  | Pino log level                                                 |
-| `SMTP_HOST`                | —                       | Email SMTP host                                                |
-| `SMTP_PORT`                | `587`                   | SMTP port                                                      |
-| `SMTP_USER`                | —                       | SMTP username                                                  |
-| `SMTP_PASSWORD`            | —                       | SMTP password                                                  |
-| `SMTP_EMAIL_FROM`          | —                       | From address                                                   |
-| `STRIPE_SECRET_KEY`        | —                       | Stripe secret key                                              |
-| `STRIPE_WEBHOOK_SECRET`    | —                       | Stripe webhook signing secret                                  |
-| `GOOGLE_CLIENT_ID`         | —                       | Google OAuth client ID                                         |
-| `GOOGLE_CLIENT_SECRET`     | —                       | Google OAuth client secret                                     |
-| `GOOGLE_CALLBACK_URL`      | —                       | Google OAuth callback URL                                      |
-| `CLOUDINARY_CLOUD_NAME`    | —                       | Cloudinary cloud name                                          |
-| `CLOUDINARY_API_KEY`       | —                       | Cloudinary API key                                             |
-| `CLOUDINARY_API_SECRET`    | —                       | Cloudinary API secret                                          |
-| `AUDIT_LOG_RETENTION_DAYS` | `90`                    | Audit log TTL in days                                          |
-| `SENTRY_DSN`               | —                       | Optional Sentry error tracking DSN                             |
+| Variable                   | Default                 | Description                                                                             |
+| -------------------------- | ----------------------- | --------------------------------------------------------------------------------------- |
+| `NODE_ENV`                 | `development`           | Runtime mode                                                                            |
+| `PORT`                     | `5000`                  | API port                                                                                |
+| `FRONTEND_URL`             | `http://localhost:3001` | Primary frontend URL                                                                    |
+| `CORS_ORIGINS`             | —                       | Comma-separated allowed origins (falls back to `FRONTEND_URL`)                          |
+| `APP_URL`                  | `http://localhost:5000` | Public API URL for emails/docs                                                          |
+| `REDIS_URL`                | —                       | Redis for rate limiting and BullMQ                                                      |
+| `LOG_LEVEL`                | `info`                  | Pino log level                                                                          |
+| `SMTP_HOST`                | —                       | Email SMTP host                                                                         |
+| `SMTP_PORT`                | `587`                   | SMTP port                                                                               |
+| `SMTP_USER`                | —                       | SMTP username                                                                           |
+| `SMTP_PASSWORD`            | —                       | SMTP password                                                                           |
+| `SMTP_EMAIL_FROM`          | —                       | From address                                                                            |
+| `STRIPE_SECRET_KEY`        | —                       | Stripe secret key                                                                       |
+| `STRIPE_WEBHOOK_SECRET`    | —                       | Stripe webhook signing secret                                                           |
+| `GOOGLE_CLIENT_ID`         | —                       | Google OAuth client ID                                                                  |
+| `GOOGLE_CLIENT_SECRET`     | —                       | Google OAuth client secret                                                              |
+| `GOOGLE_CALLBACK_URL`      | —                       | Google OAuth callback URL                                                               |
+| `CLOUDINARY_CLOUD_NAME`    | —                       | Cloudinary cloud name                                                                   |
+| `CLOUDINARY_API_KEY`       | —                       | Cloudinary API key                                                                      |
+| `CLOUDINARY_API_SECRET`    | —                       | Cloudinary API secret                                                                   |
+| `AUDIT_LOG_RETENTION_DAYS` | `90`                    | Audit log TTL in days                                                                   |
+| `RUN_WORKERS`              | `true`                  | Start BullMQ workers in the API process. Set `false` when `apps/worker` runs separately |
+| `SENTRY_DSN`               | —                       | Optional Sentry error tracking DSN                                                      |
 
 ## Frontend
 
@@ -46,7 +47,7 @@
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`  | Yes        | Cloudinary image loader                                  |
 | `SENTRY_DSN`                         | No         | Optional frontend error tracking                         |
 
-> **Important:** `NEXT_PUBLIC_*` variables are inlined at `next build`. In Docker, pass them as build args in `frontend/Dockerfile`.
+> **Important:** `NEXT_PUBLIC_*` variables are inlined at `next build`. In Docker, pass them as build args in `apps/web/Dockerfile`.
 
 ## Docker Compose
 

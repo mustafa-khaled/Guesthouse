@@ -1,6 +1,6 @@
 # Guesthouse
 
-Hotel booking and management platform built as a pnpm monorepo.
+Hotel booking and management platform built as a pnpm + Nx monorepo.
 
 ## Stack
 
@@ -17,13 +17,16 @@ Hotel booking and management platform built as a pnpm monorepo.
 ## Repository structure
 
 ```
-backend/           Express API
-frontend/          Next.js app (BFF auth proxy)
-packages/shared/   Shared Zod schemas and types
-infra/nginx/       Production reverse proxy
-scripts/           Operational scripts (smoke tests)
-docs/              Deployment and operations guides
+apps/api/              Express API + Socket.IO
+apps/web/              Next.js app (BFF auth proxy)
+apps/worker/           BullMQ worker process (same modules as API)
+packages/contracts/    Shared Zod transport contracts (`@guesthouse/shared`)
+infra/nginx/           Production reverse proxy
+scripts/               Operational scripts (smoke tests)
+docs/                  Deployment and operations guides
 ```
+
+`apps/worker` is process isolation, not a microservice.
 
 ## Quick start (local development)
 
@@ -38,18 +41,20 @@ docs/              Deployment and operations guides
 
 ```bash
 pnpm install
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
 cp .env.example .env
 ```
 
-Update secrets in `backend/.env` (JWT secrets must be at least 32 characters).
+Update secrets in `apps/api/.env` (JWT secrets must be at least 32 characters).
 
 ### Run
 
 ```bash
 pnpm dev
 ```
+
+Local `pnpm dev` runs workers inside the API process (`RUN_WORKERS=true` by default). Use `pnpm dev:worker` with `RUN_WORKERS=false` on the API when you want a separate worker process.
 
 - Frontend: http://localhost:3001
 - Backend API: http://localhost:5000
@@ -74,6 +79,8 @@ docker compose up --build
 
 - Frontend: http://localhost:3000
 - Backend: http://localhost:5000
+
+Compose runs the API with `RUN_WORKERS=false` and a separate `worker` service.
 
 Production overlay with Nginx:
 

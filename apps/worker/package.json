@@ -1,0 +1,15 @@
+{
+  "name": "guesthouse-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BullMQ worker process for Guesthouse. Same modules as the API — not a microservice.",
+  "scripts": {
+    "dev": "pnpm --filter guesthouse-backend worker:dev",
+    "start": "pnpm --filter guesthouse-backend worker",
+    "build": "echo 'worker ships via guesthouse-backend dist'",
+    "typecheck": "echo 'worker ships via guesthouse-backend types'"
+  },
+  "dependencies": {
+    "guesthouse-backend": "workspace:*"
+  }
+}
