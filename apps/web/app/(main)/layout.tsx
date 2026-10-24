@@ -3,10 +3,12 @@ import { Navbar } from '@/components/sections/navbar';
 
 export default function GuestLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1 bg-gray-50">{children}</main>
+      <main id="main" className="bg-surface flex-1">
+        {children}
+      </main>
       <Footer />
-    </>
+    </div>
   );
 }

@@ -1,18 +1,28 @@
-import { Card } from '@/components/ui/card';
-import { Section } from '@/components/ui/section';
+import { Container } from '@/components/ui/container';
 import { trustItems } from '@/lib/content';
+import { cn } from '@/lib/utils';
 
 export function TrustStrip() {
   return (
-    <Section variant="divider" className="py-12 md:py-16">
-      <div className="grid gap-6 md:grid-cols-3">
-        {trustItems.map((item) => (
-          <Card key={item.title} tint className="text-center md:text-left">
-            <h3 className="text-matcha-heading font-serif text-lg font-medium">{item.title}</h3>
-            <p className="text-matcha-body mt-2 text-sm leading-relaxed">{item.description}</p>
-          </Card>
-        ))}
-      </div>
-    </Section>
+    <section className="border-line border-y">
+      <Container className="px-0 sm:px-0 lg:px-0">
+        <dl className="grid md:grid-cols-3">
+          {trustItems.map((item, index) => (
+            <div
+              key={item.title}
+              className={cn(
+                'px-5 py-10 sm:px-8 md:px-8',
+                index > 0 && 'border-line border-t md:border-l md:border-t-0',
+              )}
+            >
+              <dt className="font-serif text-xl leading-snug">{item.title}</dt>
+              <dd className="text-muted mt-2 max-w-sm text-sm leading-relaxed">
+                {item.description}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </Container>
+    </section>
   );
 }

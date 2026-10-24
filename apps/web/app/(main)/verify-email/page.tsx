@@ -1,11 +1,12 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { clientFetch } from '@/lib/api/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { AuthShell } from '@/components/shared/auth-shell';
 import Spinner from '@/components/Spinner';
 
 function VerifyEmailContent() {
@@ -24,46 +25,42 @@ function VerifyEmailContent() {
     clientFetch<{ message?: string }>(`/auth/verify-email?token=${encodeURIComponent(token)}`)
       .then((data) => {
         setStatus('success');
-        setMessage(data.message || 'Email verified successfully!');
+        setMessage(data.message || 'Email verified successfully.');
       })
       .catch((err) => {
         setStatus('error');
-        setMessage(err instanceof Error ? err.message : 'Verification failed');
+        setMessage(err instanceof Error ? err.message : 'Verification failed.');
       });
   }, [token]);
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {status === 'loading' && 'Verifying email...'}
-            {status === 'success' && 'Email verified'}
-            {status === 'error' && 'Verification failed'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {status === 'loading' && (
-            <div className="flex justify-center py-4">
-              <Spinner />
-            </div>
-          )}
-          {status !== 'loading' && (
-            <p className={status === 'success' ? 'text-green-700' : 'text-red-600'}>{message}</p>
-          )}
-          {status === 'success' && (
-            <Link href="/login">
-              <Button className="w-full">Continue to login</Button>
-            </Link>
-          )}
-          {status === 'error' && (
-            <Link href="/" className="text-sm text-green-700 hover:underline">
-              Back to home
-            </Link>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell
+      title={
+        status === 'loading'
+          ? 'Verifying your email'
+          : status === 'success'
+            ? 'Email verified'
+            : 'Verification failed'
+      }
+      description="A small check, then everything is ready."
+      footer={
+        <Link href="/" className="text-brand text-sm underline-offset-4 hover:underline">
+          Back to home
+        </Link>
+      }
+    >
+      {status === 'loading' && <Spinner />}
+
+      {status !== 'loading' && (
+        <Alert variant={status === 'success' ? 'success' : 'error'}>{message}</Alert>
+      )}
+
+      {status === 'success' && (
+        <Button href="/login" className="mt-5 w-full">
+          Continue to login
+        </Button>
+      )}
+    </AuthShell>
   );
 }
 

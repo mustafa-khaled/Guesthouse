@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { Check, ChevronLeft } from 'lucide-react';
 import { propertyQueries } from '@/queries/properties.queries';
 import { bookingQueries, addOnQueries, ratePlanQueries } from '@/queries/bookings.queries';
 import { billingQueries } from '@/features/billing/queries';
@@ -13,14 +14,18 @@ import {
   paymentMutations,
   promotionMutations,
 } from '@/mutations/bookings.mutations';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select } from '@/components/ui/select';
 import Spinner from '@/components/Spinner';
 import StripePaymentForm from '@/components/StripePaymentForm';
 import type { AvailabilityResult, Booking } from '@/types';
 import { formatCurrency, formatDate, getId } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 type Step = 'dates' | 'availability' | 'guest' | 'hold' | 'booking' | 'payment' | 'confirmation';
 
@@ -33,6 +38,91 @@ const STEPS: Step[] = [
   'payment',
   'confirmation',
 ];
+
+const STEP_LABELS: Record<Step, string> = {
+  dates: 'Dates',
+  availability: 'Room',
+  guest: 'Guest',
+  hold: 'Hold',
+  booking: 'Review',
+  payment: 'Payment',
+  confirmation: 'Confirmed',
+};
+
+function StepRail({ stepIndex }: { stepIndex: number }) {
+  return (
+    <ol className="flex flex-wrap items-center gap-x-3 gap-y-2" aria-label="Booking progress">
+      {STEPS.filter((s) => s !== 'hold').map((step) => {
+        const index = STEPS.indexOf(step);
+        const done = index < stepIndex;
+        const active = index === stepIndex;
+        const visibleIndex = STEPS.filter((s) => s !== 'hold').indexOf(step);
+
+        return (
+          <li key={step} className="flex items-center gap-3">
+            {visibleIndex > 0 && (
+              <span
+                aria-hidden
+                className={cn('h-px w-5 sm:w-8', done || active ? 'bg-brand/40' : 'bg-line')}
+              />
+            )}
+            <span
+              className={cn(
+                'flex items-center gap-2 text-xs',
+                active ? 'text-ink' : done ? 'text-brand' : 'text-muted/70',
+              )}
+              aria-current={active ? 'step' : undefined}
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  'flex h-5 w-5 items-center justify-center rounded-full border text-[10px]',
+                  done
+                    ? 'border-brand bg-brand text-surface-raised'
+                    : active
+                      ? 'border-brand text-brand'
+                      : 'border-line',
+                )}
+              >
+                {done ? <Check className="h-3 w-3" strokeWidth={2} /> : visibleIndex + 1}
+              </span>
+              <span className="hidden sm:inline">{STEP_LABELS[step]}</span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function Panel({
+  title,
+  description,
+  children,
+  aside,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  aside?: React.ReactNode;
+}) {
+  return (
+    <section className="border-line bg-raised rounded-[4px] border shadow-[var(--shadow-soft)]">
+      <header className="border-line border-b px-5 py-5 md:px-7">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-serif text-xl leading-snug md:text-2xl">{title}</h2>
+            {description && (
+              <p className="text-muted mt-1.5 text-sm leading-relaxed">{description}</p>
+            )}
+          </div>
+          {aside}
+        </div>
+      </header>
+      <div className="px-5 py-6 md:px-7 md:py-7">{children}</div>
+    </section>
+  );
+}
 
 function BookPage() {
   const params = useParams();
@@ -207,40 +297,47 @@ function BookPage() {
 
   if (propertyQuery.isError || !propertyQuery.data) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="text-red-600">Property not found.</p>
-        <Button className="mt-4" onClick={() => router.push('/')}>
-          Back to home
-        </Button>
-      </div>
+      <Container className="py-16">
+        <EmptyState
+          title="We could not find this property"
+          description="The link may be out of date. Browse our stays and choose another."
+          action={<Button href="/search">Browse stays</Button>}
+        />
+      </Container>
     );
   }
 
   const property = propertyQuery.data;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="mb-2 text-2xl font-bold">Book {property.name}</h1>
-      <p className="mb-8 text-gray-600">
-        Step {stepIndex + 1} of {STEPS.length}
-      </p>
+    <Container className="max-w-[1000px] py-10 md:py-14">
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="focus-ring text-muted hover:text-brand mb-6 inline-flex items-center gap-2 text-sm transition-colors"
+      >
+        <ChevronLeft aria-hidden className="h-4 w-4" strokeWidth={1.5} />
+        Back
+      </button>
 
-      <div className="mb-8 flex gap-1">
-        {STEPS.map((s, i) => (
-          <div
-            key={s}
-            className={`h-1 flex-1 rounded ${i <= stepIndex ? 'bg-green-600' : 'bg-gray-200'}`}
-          />
-        ))}
+      <div className="border-line flex flex-col gap-6 border-b pb-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-brand/40 tabular font-serif text-2xl leading-none">—</p>
+          <h1 className="text-title mt-2 text-balance">Book {property.name}</h1>
+          <p className="text-muted mt-2 text-sm">
+            Step {stepIndex + 1} of {STEPS.length} · {STEP_LABELS[step]}
+          </p>
+        </div>
+        <StepRail stepIndex={stepIndex} />
       </div>
 
-      {step === 'dates' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Select dates & guests</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+      <div className="mt-8">
+        {step === 'dates' && (
+          <Panel
+            title="Select dates & guests"
+            description="We will show what is available for these nights."
+          >
+            <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <Label htmlFor="checkIn">Check-in</Label>
                 <Input
@@ -282,68 +379,80 @@ function BookPage() {
                 />
               </div>
             </div>
-            <Button onClick={goToAvailability}>Check availability</Button>
-          </CardContent>
-        </Card>
-      )}
+            <Button onClick={goToAvailability} className="mt-6">
+              Check availability
+            </Button>
+          </Panel>
+        )}
 
-      {step === 'availability' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Available rooms</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {step === 'availability' && (
+          <Panel
+            title="Available rooms"
+            description={`For ${checkIn ? formatDate(checkIn) : 'your dates'} – ${checkOut ? formatDate(checkOut) : ''}`}
+          >
             {availabilityQuery.isLoading && (
-              <div className="flex justify-center py-8">
+              <div className="flex justify-center py-10">
                 <Spinner />
               </div>
             )}
+
             {availabilityQuery.data?.length === 0 && (
-              <p className="text-gray-500">No rooms available. Try different dates.</p>
+              <EmptyState
+                title="No rooms for these dates"
+                description="Try different dates, or speak with the concierge about a cancellation."
+              />
             )}
-            <div className="space-y-3">
-              {availabilityQuery.data?.map((room) => (
-                <button
-                  key={room.roomTypeId}
-                  type="button"
-                  onClick={() => setSelectedRoom(room)}
-                  className={`w-full rounded-lg border p-4 text-left transition-colors ${
-                    selectedRoom?.roomTypeId === room.roomTypeId
-                      ? 'border-green-600 bg-green-50'
-                      : 'border-gray-200 hover:border-green-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{room.roomTypeName || 'Room'}</span>
+
+            <div className="space-y-3" role="radiogroup" aria-label="Available rooms">
+              {availabilityQuery.data?.map((room) => {
+                const isSelected = selectedRoom?.roomTypeId === room.roomTypeId;
+
+                return (
+                  <button
+                    key={room.roomTypeId}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setSelectedRoom(room)}
+                    className={cn(
+                      'focus-ring flex w-full items-start justify-between gap-4 rounded-[4px] border p-4 text-left transition-colors duration-200',
+                      isSelected
+                        ? 'border-brand bg-brand-soft/50'
+                        : 'border-line hover:border-line-strong',
+                    )}
+                  >
+                    <span className="min-w-0">
+                      <span className="text-ink block font-medium">
+                        {room.roomTypeName || 'Room'}
+                      </span>
+                      <span className="text-muted mt-1 block text-sm">
+                        {room.availableRooms} available
+                      </span>
+                    </span>
                     {room.totalPrice != null && (
-                      <span className="font-semibold text-green-700">
+                      <span className="tabular text-brand shrink-0 font-serif text-xl leading-none">
                         {formatCurrency(room.totalPrice, room.currency ?? 'USD')}
                       </span>
                     )}
-                  </div>
-                  <p className="mt-1 text-sm text-gray-500">{room.availableRooms} available</p>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
+
             <div className="mt-6 flex gap-3">
-              <Button variant="outline" onClick={() => setStep('dates')}>
+              <Button variant="secondary" onClick={() => setStep('dates')}>
                 Back
               </Button>
               <Button disabled={!selectedRoom} onClick={() => setStep('guest')}>
                 Continue
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </Panel>
+        )}
 
-      {step === 'guest' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Guest information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+        {step === 'guest' && (
+          <Panel title="Guest information" description="The details we need to hold your room.">
+            <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <Label htmlFor="firstName">First name</Label>
                 <Input
@@ -363,7 +472,7 @@ function BookPage() {
                 />
               </div>
             </div>
-            <div>
+            <div className="mt-5">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -373,7 +482,7 @@ function BookPage() {
                 required
               />
             </div>
-            <div>
+            <div className="mt-5">
               <Label htmlFor="phone">Phone (optional)</Label>
               <Input
                 id="phone"
@@ -382,7 +491,7 @@ function BookPage() {
                 onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
               />
             </div>
-            <div>
+            <div className="mt-5">
               <Label htmlFor="promoCode">Promo code (optional)</Label>
               <div className="flex gap-2">
                 <Input
@@ -393,7 +502,7 @@ function BookPage() {
                 />
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   disabled={!promoCode || validatePromoMutation.isPending}
                   onClick={() =>
                     validatePromoMutation.mutate(promoCode, {
@@ -414,23 +523,28 @@ function BookPage() {
                 </Button>
               </div>
               {promoDiscount != null && promoDiscount > 0 && (
-                <p className="mt-1 text-sm text-green-600">
+                <p className="text-success mt-2 text-sm">
                   Discount: {formatCurrency(promoDiscount, selectedRoom?.currency ?? 'USD')}
                 </p>
               )}
             </div>
+
             {addOnsQuery.data && addOnsQuery.data.length > 0 && (
-              <div>
-                <Label>Add-ons (optional)</Label>
-                <div className="mt-2 space-y-2">
+              <fieldset className="border-line mt-6 border-t pt-5">
+                <legend className="text-ink mb-3 text-sm font-medium">Add-ons (optional)</legend>
+                <div className="space-y-2.5">
                   {addOnsQuery.data.map((addOn) => {
                     const addOnId = getId(addOn);
                     const price =
                       addOn.price ?? (addOn as { pricing?: { amount?: number } }).pricing?.amount;
                     return (
-                      <label key={addOnId} className="flex items-center gap-2 text-sm">
+                      <label
+                        key={addOnId}
+                        className="focus-ring flex min-h-10 cursor-pointer items-center gap-3 text-sm"
+                      >
                         <input
                           type="checkbox"
+                          className="accent-brand h-4 w-4"
                           checked={selectedAddOns.includes(addOnId)}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -440,18 +554,21 @@ function BookPage() {
                             }
                           }}
                         />
-                        {addOn.name}
+                        <span className="text-ink flex-1">{addOn.name}</span>
                         {price != null && (
-                          <span className="text-gray-500">({formatCurrency(price, 'USD')})</span>
+                          <span className="text-muted tabular text-xs">
+                            {formatCurrency(price, 'USD')}
+                          </span>
                         )}
                       </label>
                     );
                   })}
                 </div>
-              </div>
+              </fieldset>
             )}
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('availability')}>
+
+            <div className="mt-7 flex gap-3">
+              <Button variant="secondary" onClick={() => setStep('availability')}>
                 Back
               </Button>
               <Button
@@ -467,75 +584,87 @@ function BookPage() {
                 Continue
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </Panel>
+        )}
 
-      {step === 'hold' && (
-        <Card>
-          <CardContent className="flex flex-col items-center py-12">
-            <Spinner />
-            <p className="mt-4 text-gray-600">Reserving your room...</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {step === 'booking' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Confirm booking</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-lg bg-gray-50 p-4 text-sm">
-              <p>
-                <strong>Property:</strong> {property.name}
+        {step === 'hold' && (
+          <Panel title="Holding your room">
+            <div className="flex flex-col items-center py-12">
+              <Spinner />
+              <p className="text-muted mt-4 text-sm">
+                Reserving your room for the next few minutes…
               </p>
-              <p>
-                <strong>Room:</strong> {selectedRoom?.roomTypeName || 'Selected room'}
-              </p>
-              <p>
-                <strong>Dates:</strong> {formatDate(checkIn)} – {formatDate(checkOut)}
-              </p>
-              <p>
-                <strong>Guests:</strong> {adults} adult
-                {adults !== 1 ? 's' : ''}
-                {children > 0 && `, ${children} child${children !== 1 ? 'ren' : ''}`}
-              </p>
-              {selectedRoom?.totalPrice != null && (
-                <p className="mt-2 text-lg font-semibold text-green-700">
-                  Total: {formatCurrency(selectedRoom.totalPrice, selectedRoom.currency ?? 'USD')}
-                </p>
-              )}
             </div>
-            <Button onClick={handleCreateBooking} disabled={createBookingMutation.isPending}>
-              {createBookingMutation.isPending ? 'Creating booking...' : 'Confirm booking'}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+          </Panel>
+        )}
 
-      {step === 'payment' && booking && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              Booking <strong>{booking.confirmationNumber || getId(booking)}</strong> created.
-              Complete payment to confirm your reservation.
-            </p>
+        {step === 'booking' && (
+          <Panel title="Confirm your booking" description="One last look before we create it.">
+            <dl className="border-line divide-line divide-y border-y text-sm">
+              {[
+                { label: 'Property', value: property.name },
+                { label: 'Room', value: selectedRoom?.roomTypeName || 'Selected room' },
+                {
+                  label: 'Dates',
+                  value: `${formatDate(checkIn)} – ${formatDate(checkOut)}`,
+                },
+                {
+                  label: 'Guests',
+                  value: `${adults} adult${adults !== 1 ? 's' : ''}${
+                    children > 0 ? `, ${children} child${children !== 1 ? 'ren' : ''}` : ''
+                  }`,
+                },
+              ].map((row) => (
+                <div key={row.label} className="flex items-baseline justify-between gap-4 py-3">
+                  <dt className="text-muted">{row.label}</dt>
+                  <dd className="text-ink text-right">{row.value}</dd>
+                </div>
+              ))}
+              {selectedRoom?.totalPrice != null && (
+                <div className="flex items-baseline justify-between gap-4 py-3">
+                  <dt className="text-ink font-medium">Total</dt>
+                  <dd className="tabular font-serif text-2xl leading-none">
+                    {formatCurrency(selectedRoom.totalPrice, selectedRoom.currency ?? 'USD')}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            <Button
+              onClick={handleCreateBooking}
+              disabled={createBookingMutation.isPending}
+              className="mt-6"
+            >
+              {createBookingMutation.isPending ? 'Creating booking…' : 'Confirm booking'}
+            </Button>
+          </Panel>
+        )}
+
+        {step === 'payment' && booking && (
+          <Panel
+            title="Payment"
+            description="Secure checkout. Your card details never touch our servers."
+          >
+            <Alert variant="info" className="mb-5">
+              Booking{' '}
+              <strong className="font-medium">
+                {booking.confirmationNumber || getId(booking)}
+              </strong>{' '}
+              is created. Complete payment to confirm your reservation.
+            </Alert>
+
             {paymentIntentMutation.isPending && !clientSecret && (
-              <div className="flex flex-col items-center py-8">
+              <div className="flex flex-col items-center py-10">
                 <Spinner />
-                <p className="mt-4 text-sm text-gray-500">Preparing secure payment...</p>
+                <p className="text-muted mt-4 text-sm">Preparing secure payment…</p>
               </div>
             )}
+
             {(walletQuery.data?.paymentMethods.length ?? 0) > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="savedCard">Pay with a saved card</Label>
-                <select
+                <Select
                   id="savedCard"
-                  className="flex h-12 w-full rounded border border-gray-300 bg-white px-3"
                   value={selectedSavedCard}
                   onChange={(e) => {
                     setSelectedSavedCard(e.target.value);
@@ -548,7 +677,7 @@ function BookPage() {
                       {card.brand} •••• {card.last4}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {selectedSavedCard && (
                   <Button
                     disabled={chargeSavedMutation.isPending}
@@ -572,32 +701,39 @@ function BookPage() {
                       }
                     }}
                   >
-                    {chargeSavedMutation.isPending ? 'Charging...' : 'Pay with saved card'}
+                    {chargeSavedMutation.isPending ? 'Charging…' : 'Pay with saved card'}
                   </Button>
                 )}
               </div>
             )}
+
             {!selectedSavedCard && (
-              <label className="flex items-center gap-2 text-sm">
+              <label className="focus-ring mt-5 flex min-h-10 cursor-pointer items-center gap-3 text-sm">
                 <input
                   type="checkbox"
+                  className="accent-brand h-4 w-4"
                   checked={saveCard}
                   onChange={(e) => setSaveCard(e.target.checked)}
                 />
                 Save this card for later
               </label>
             )}
+
             {clientSecret && paymentAmount != null && (
-              <StripePaymentForm
-                clientSecret={clientSecret}
-                amount={paymentAmount}
-                currency={selectedRoom?.currency ?? property.settings?.currency ?? 'USD'}
-                onSuccess={handlePaymentSuccess}
-                onError={(msg) => toast.error(msg)}
-              />
+              <div className="border-line mt-6 border-t pt-6">
+                <StripePaymentForm
+                  clientSecret={clientSecret}
+                  amount={paymentAmount}
+                  currency={selectedRoom?.currency ?? property.settings?.currency ?? 'USD'}
+                  onSuccess={handlePaymentSuccess}
+                  onError={(msg) => toast.error(msg)}
+                />
+              </div>
             )}
+
             {paymentIntentMutation.isError && !clientSecret && !selectedSavedCard && (
               <Button
+                className="mt-4"
                 onClick={() => {
                   paymentIntentMutation.mutate(
                     { bookingId: getId(booking), isDeposit, saveCard },
@@ -614,35 +750,32 @@ function BookPage() {
                 Retry payment setup
               </Button>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </Panel>
+        )}
 
-      {step === 'confirmation' && booking && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-green-700">Booking confirmed!</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p>
-              Confirmation number: <strong>{booking.confirmationNumber || getId(booking)}</strong>
-            </p>
-            <p className="text-gray-600">
-              {formatDate(checkIn)} – {formatDate(checkOut)} at {property.name}
-            </p>
-            {paymentIntentId && (
-              <p className="text-sm text-green-600">Payment received successfully.</p>
-            )}
-            <div className="flex gap-3">
+        {step === 'confirmation' && booking && (
+          <Panel title="You are booked." description="A confirmation is on its way to your inbox.">
+            <div className="border-line bg-brand-soft/40 rounded-[4px] border p-5">
+              <p className="text-muted text-xs uppercase tracking-[0.14em]">Confirmation number</p>
+              <p className="tabular mt-1 font-serif text-2xl">
+                {booking.confirmationNumber || getId(booking)}
+              </p>
+              <p className="text-muted mt-3 text-sm">
+                {formatDate(checkIn)} – {formatDate(checkOut)} at {property.name}
+              </p>
+              {paymentIntentId && <p className="text-success mt-2 text-sm">Payment received.</p>}
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
               <Button onClick={() => router.push('/account/bookings')}>View my bookings</Button>
-              <Button variant="outline" onClick={() => router.push('/')}>
+              <Button variant="secondary" onClick={() => router.push('/')}>
                 Back to home
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </Panel>
+        )}
+      </div>
+    </Container>
   );
 }
 

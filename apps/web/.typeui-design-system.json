@@ -1,6 +1,10 @@
 {
   "slug": "matcha",
-  "name": "Matcha",
+  "name": "Matcha — Refine",
   "variant": "registry",
-  "description": "Calm wellness-inspired design system with warm oat surfaces, matcha greens, and editorial serif typography."
+  "description": "Warm light hotel system: oat and paper surfaces, matcha green, Newsreader display over Instrument Sans UI, hairline sections, chapter folios, one orchestrated hero motion.",
+  "brandSheet": "apps/web/BRAND.md",
+  "tokens": "apps/web/app/globals.css",
+  "fonts": ["Newsreader", "Instrument Sans"],
+  "modes": ["light"]
 }

@@ -2,24 +2,23 @@ import path from 'path';
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
-const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME;
-
 const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../..'),
   images: {
+    loader: 'custom',
+    loaderFile: './lib/image-loader.ts',
+    qualities: [72, 75],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
-    ...(cloudinaryCloudName
-      ? {
-          loader: 'custom',
-          loaderFile: './lib/cloudinary-loader.ts',
-        }
-      : {}),
   },
   headers: async () => [
     {

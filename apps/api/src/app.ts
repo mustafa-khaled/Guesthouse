@@ -141,7 +141,6 @@ app.use('/admin', generalLimiter, adminRoutes);
 
 app.use('/api/v1', apiLimiter);
 
-app.use('/api/v1', propertyRouter);
 app.use('/api/v1', roomTypeRouter);
 app.use('/api/v1', roomRouter);
 app.use('/api/v1', ratePlanRouter);
@@ -157,6 +156,9 @@ app.use('/api/v1', frontDeskRouter);
 app.use('/api/v1', reportsRouter);
 app.use('/api/v1', dashboardRouter);
 app.use('/api/v1', reviewRouter);
+// Property routes expose `/:id`, which would otherwise swallow every
+// single-segment collection route above (`/bookings`, `/guests`, …).
+app.use('/api/v1', propertyRouter);
 app.use('/api/v1/upload', uploadLimiter, uploadRouter);
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/export', exportRouter);

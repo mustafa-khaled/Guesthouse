@@ -2,9 +2,11 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
+import { PageHeader } from '@/components/ui/page-header';
+import Spinner from '@/components/Spinner';
 
 const ERROR_MESSAGES: Record<string, string> = {
   oauth_init_failed: 'Could not start Google sign-in. Please try again.',
@@ -22,30 +24,36 @@ function AuthErrorContent() {
   const message = ERROR_MESSAGES[rawMessage] ?? decodeURIComponent(rawMessage).replace(/_/g, ' ');
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-red-700">Sign-in error</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-gray-600">{message}</p>
-          <div className="flex gap-3">
-            <Link href="/login">
-              <Button>Try again</Button>
-            </Link>
-            <Link href="/">
-              <Button variant="outline">Back to home</Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <Container className="max-w-xl py-12 md:py-16">
+      <PageHeader
+        folio="—"
+        title="Sign-in error"
+        description="Something interrupted the handshake between your account and ours."
+      />
+
+      <Alert variant="error" className="mt-8" title="We could not sign you in">
+        {message}
+      </Alert>
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Button href="/login">Try again</Button>
+        <Button href="/" variant="secondary">
+          Back to home
+        </Button>
+      </div>
+    </Container>
   );
 }
 
 export default function AuthErrorPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center py-24 text-gray-500">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-24">
+          <Spinner />
+        </div>
+      }
+    >
       <AuthErrorContent />
     </Suspense>
   );

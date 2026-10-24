@@ -1,18 +1,311 @@
 @import 'tailwindcss';
 
-@theme {
-  --color-matcha-surface: #f6f2e8;
-  --color-matcha-section: #dbf2d0;
-  --color-matcha-brand: #314535;
-  --color-matcha-brand-medium: #aec2a4;
-  --color-matcha-heading: #2b3a2e;
-  --color-matcha-body: #4a5547;
-  --color-matcha-border: #c8d4bc;
-  --color-matcha-white: #ffffff;
-  --color-matcha-shadow: rgba(43, 58, 46, 0.08);
+/* ------------------------------------------------------------------
+   Typefaces — self-hosted, latin subset
+   Newsreader (display) + Instrument Sans (UI)
+------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/fonts/instrument-sans-latin.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
 }
 
-body {
-  font-family: 'Lato', sans-serif;
-  @apply bg-gray-50 text-gray-800 antialiased;
+@font-face {
+  font-family: 'Newsreader';
+  src: url('/fonts/newsreader-latin.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  src: url('/fonts/newsreader-latin-italic.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ------------------------------------------------------------------
+   Brand tokens
+------------------------------------------------------------------- */
+:root {
+  --surface: #f6f2e8;
+  --surface-raised: #fcfaf4;
+  --brand: #314535;
+  --brand-deep: #243428;
+  --brand-soft: #dbf2d0;
+  --ink: #222e25;
+  --ink-muted: #55654d;
+  --line: #c8d4bc;
+  --line-strong: #a9b99f;
+
+  --success: #2f5a3d;
+  --success-tint: #e3efdd;
+  --warning: #6e5318;
+  --warning-tint: #f3e9d2;
+  --danger: #7e3a33;
+  --danger-tint: #f6e3df;
+  --info: #35566b;
+  --info-tint: #e3ecf1;
+
+  --focus: #314535;
+  --radius: 4px;
+  --shadow-soft: 0 1px 2px rgb(34 46 37 / 0.05), 0 10px 30px -18px rgb(34 46 37 / 0.28);
+  --shadow-lift: 0 2px 4px rgb(34 46 37 / 0.06), 0 24px 50px -28px rgb(34 46 37 / 0.36);
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Legacy aliases — keeps older screens working during the migration */
+  --matcha-surface: var(--surface);
+  --matcha-section: var(--brand-soft);
+  --matcha-brand: var(--brand);
+  --matcha-brand-medium: #aec2a4;
+  --matcha-heading: var(--ink);
+  --matcha-body: var(--ink-muted);
+  --matcha-border: var(--line);
+  --matcha-white: var(--surface-raised);
+  --matcha-shadow: rgb(34 46 37 / 0.08);
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-raised: var(--surface-raised);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-soft: var(--brand-soft);
+  --color-ink: var(--ink);
+  --color-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-info: var(--info);
+  --color-info-tint: var(--info-tint);
+
+  /* Legacy colour utilities */
+  --color-matcha-surface: var(--surface);
+  --color-matcha-section: var(--brand-soft);
+  --color-matcha-brand: var(--brand);
+  --color-matcha-brand-medium: #aec2a4;
+  --color-matcha-heading: var(--ink);
+  --color-matcha-body: var(--ink-muted);
+  --color-matcha-border: var(--line);
+  --color-matcha-white: var(--surface-raised);
+
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
+
+  --text-display: clamp(2.75rem, 6.2vw, 5.5rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.025em;
+  --text-display--font-weight: 400;
+
+  --text-title: clamp(2rem, 3.8vw, 3.5rem);
+  --text-title--line-height: 1.06;
+  --text-title--letter-spacing: -0.02em;
+  --text-title--font-weight: 400;
+
+  --text-heading: clamp(1.5rem, 2.2vw, 2rem);
+  --text-heading--line-height: 1.15;
+  --text-heading--letter-spacing: -0.01em;
+
+  --radius-card: 4px;
+  --shadow-card: var(--shadow-soft);
+  --ease-soft: var(--ease-soft);
+}
+
+/* ------------------------------------------------------------------
+   Base
+------------------------------------------------------------------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--ink);
+    font-family:
+      'Instrument Sans',
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-feature-settings:
+      'ss01' 1,
+      'cv01' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--ink);
+    font-family: 'Newsreader', ui-serif, Georgia, 'Times New Roman', serif;
+    font-weight: 500;
+  }
+
+  /* Native controls inherit the warm palette */
+  ::selection {
+    background: var(--brand-soft);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  dialog::backdrop {
+    background: rgb(34 46 37 / 0.45);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------
+   Utilities
+------------------------------------------------------------------- */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility text-pretty {
+  text-wrap: pretty;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skip link — visible on keyboard focus only */
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: var(--surface-raised);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: transform 160ms var(--ease-soft);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* ------------------------------------------------------------------
+   Motion — one orchestrated hero, quiet action feedback
+------------------------------------------------------------------- */
+@keyframes hero-settle {
+  from {
+    transform: scale(1.045);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-media img {
+  animation: hero-settle 900ms var(--ease-soft) both;
+}
+
+.hero-rise {
+  animation: rise 720ms var(--ease-soft) both;
+}
+
+.hero-rise-delay-1 {
+  animation-delay: 90ms;
+}
+
+.hero-rise-delay-2 {
+  animation-delay: 170ms;
+}
+
+.hero-rise-delay-3 {
+  animation-delay: 260ms;
+}
+
+.hero-rise-delay-4 {
+  animation-delay: 350ms;
+}
+
+.animate-sheet-in {
+  animation: sheet-in 220ms var(--ease-soft) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-media img,
+  .hero-rise,
+  .animate-sheet-in {
+    animation: none;
+  }
 }

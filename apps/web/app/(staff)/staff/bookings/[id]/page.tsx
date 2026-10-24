@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { use, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { CalendarDays } from 'lucide-react';
 import { bookingQueries } from '@/queries/bookings.queries';
 import { folioQueries, paymentQueries } from '@/features/booking/queries';
 import { roomQueries } from '@/queries/staff.queries';
@@ -11,12 +11,46 @@ import { bookingMutations, bookingDateMutations } from '@/mutations/bookings.mut
 import { useAuth } from '@/hooks/useAuth';
 import { staffPaymentMutations } from '@/features/staff/payment-mutations';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import { Container } from '@/components/ui/container';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/ui/page-header';
+import { Select } from '@/components/ui/select';
 import { BookingStatusBadge } from '@/components/shared/StatusBadge';
 import Spinner from '@/components/Spinner';
 import { formatCurrency, formatDate, getId, getRefLabel } from '@/lib/utils';
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-3">
+      <dt className="text-muted text-sm">{label}</dt>
+      <dd className="text-ink text-right text-sm">{value}</dd>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  description,
+  children,
+  id,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  id?: string;
+}) {
+  return (
+    <section className="border-line border-t pt-6" aria-labelledby={id}>
+      <h2 id={id} className="font-serif text-xl leading-snug">
+        {title}
+      </h2>
+      {description && <p className="text-muted mt-1.5 text-sm leading-relaxed">{description}</p>}
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
 
 export default function StaffBookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -154,9 +188,16 @@ export default function StaffBookingDetailPage({ params }: { params: Promise<{ i
 
   if (isError || !booking) {
     return (
-      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
-        {error instanceof Error ? error.message : 'Booking not found'}
-      </div>
+      <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+        <EmptyState
+          icon={<CalendarDays />}
+          title="Booking not found"
+          description={
+            error instanceof Error ? error.message : 'This reservation may have been removed.'
+          }
+          action={<Button href="/staff/bookings">Back to bookings</Button>}
+        />
+      </Container>
     );
   }
 
@@ -166,147 +207,120 @@ export default function StaffBookingDetailPage({ params }: { params: Promise<{ i
       : getId(booking.assignedRoomId as { id?: string; _id?: string });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <Link href="/staff/bookings" className="text-sm text-green-700 hover:underline">
-            &larr; Back to bookings
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">
-            {booking.confirmationNumber || `Booking ${getId(booking).slice(-8)}`}
-          </h1>
-          <div className="mt-2">
-            <BookingStatusBadge status={booking.status} />
-          </div>
-        </div>
+    <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+      <PageHeader
+        folio="—"
+        title={booking.confirmationNumber || `Booking ${getId(booking).slice(-8)}`}
+        description={`${getRefLabel(booking.guestId as never)} · ${formatDate(booking.checkIn)} – ${formatDate(booking.checkOut)}`}
+        backHref="/staff/bookings"
+        backLabel="Bookings"
+        actions={
+          <>
+            {booking.status === 'pending' && (
+              <Button disabled={isPending} onClick={() => confirmMutation.mutate(id)}>
+                Confirm
+              </Button>
+            )}
+            {booking.status === 'confirmed' && (
+              <Button
+                disabled={isPending || !roomId}
+                onClick={() => checkInMutation.mutate({ id, roomId })}
+              >
+                Check in
+              </Button>
+            )}
+            {(booking.status === 'pending' || booking.status === 'confirmed') && (
+              <Button
+                variant="secondary"
+                disabled={isPending}
+                onClick={() => {
+                  if (window.confirm('Cancel this booking?')) {
+                    cancelMutation.mutate({ id });
+                  }
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            {booking.status === 'checked-in' && (
+              <Button disabled={isPending} onClick={() => checkOutMutation.mutate(id)}>
+                Check out
+              </Button>
+            )}
+          </>
+        }
+      />
 
-        <div className="flex flex-wrap gap-2">
-          {booking.status === 'pending' && (
-            <Button disabled={isPending} onClick={() => confirmMutation.mutate(id)}>
-              Confirm
-            </Button>
-          )}
-          {booking.status === 'confirmed' && (
-            <Button
-              disabled={isPending || !roomId}
-              onClick={() => checkInMutation.mutate({ id, roomId })}
-            >
-              Check In
-            </Button>
-          )}
-          {(booking.status === 'pending' || booking.status === 'confirmed') && (
-            <Button
-              variant="outline"
-              disabled={isPending}
-              onClick={() => {
-                if (window.confirm('Cancel this booking?')) {
-                  cancelMutation.mutate({ id });
-                }
-              }}
-            >
-              Cancel
-            </Button>
-          )}
-          {booking.status === 'checked-in' && (
-            <Button disabled={isPending} onClick={() => checkOutMutation.mutate(id)}>
-              Check Out
-            </Button>
-          )}
-        </div>
+      <div className="mt-4">
+        <BookingStatusBadge status={booking.status} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Stay Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Guest</span>
-              <span>{getRefLabel(booking.guestId as never)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Property</span>
-              <span>{getRefLabel(booking.propertyId as never)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Room Type</span>
-              <span>{getRefLabel(booking.roomTypeId as never)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Check-in</span>
-              <span>{formatDate(booking.checkIn)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Check-out</span>
-              <span>{formatDate(booking.checkOut)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Guests</span>
-              <span>
-                {booking.adults} adult{booking.adults !== 1 ? 's' : ''}
-                {booking.children ? `, ${booking.children} child` : ''}
-              </span>
-            </div>
+      <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-12">
+        <Section title="Stay details" id="stay-details">
+          <dl className="border-line divide-line divide-y border-y">
+            <DetailRow label="Guest" value={getRefLabel(booking.guestId as never)} />
+            <DetailRow label="Property" value={getRefLabel(booking.propertyId as never)} />
+            <DetailRow label="Room type" value={getRefLabel(booking.roomTypeId as never)} />
+            <DetailRow label="Check-in" value={formatDate(booking.checkIn)} />
+            <DetailRow label="Check-out" value={formatDate(booking.checkOut)} />
+            <DetailRow
+              label="Guests"
+              value={`${booking.adults} adult${booking.adults !== 1 ? 's' : ''}${
+                booking.children ? `, ${booking.children} child` : ''
+              }`}
+            />
             {assignedRoomId && (
-              <div className="flex justify-between">
-                <span className="text-gray-500">Assigned Room</span>
-                <span>{getRefLabel(booking.assignedRoomId as never) || assignedRoomId}</span>
-              </div>
+              <DetailRow
+                label="Assigned room"
+                value={getRefLabel(booking.assignedRoomId as never) || assignedRoomId}
+              />
             )}
-          </CardContent>
-        </Card>
+          </dl>
+        </Section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Pricing</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            {booking.pricing ? (
-              <>
-                {booking.pricing.subtotal != null && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Subtotal</span>
-                    <span>
-                      {formatCurrency(booking.pricing.subtotal, booking.pricing.currency)}
+        <Section title="Pricing" id="pricing">
+          {booking.pricing ? (
+            <dl className="border-line divide-line divide-y border-y">
+              {booking.pricing.subtotal != null && (
+                <DetailRow
+                  label="Subtotal"
+                  value={formatCurrency(booking.pricing.subtotal, booking.pricing.currency)}
+                />
+              )}
+              {booking.pricing.tax != null && (
+                <DetailRow
+                  label="Tax"
+                  value={formatCurrency(booking.pricing.tax, booking.pricing.currency)}
+                />
+              )}
+              {booking.pricing.total != null && (
+                <DetailRow
+                  label="Total"
+                  value={
+                    <span className="tabular font-serif text-lg leading-none">
+                      {formatCurrency(booking.pricing.total, booking.pricing.currency)}
                     </span>
-                  </div>
-                )}
-                {booking.pricing.tax != null && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Tax</span>
-                    <span>{formatCurrency(booking.pricing.tax, booking.pricing.currency)}</span>
-                  </div>
-                )}
-                {booking.pricing.total != null && (
-                  <div className="flex justify-between border-t pt-3 font-semibold">
-                    <span>Total</span>
-                    <span>{formatCurrency(booking.pricing.total, booking.pricing.currency)}</span>
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="text-gray-500">No pricing information</p>
-            )}
-          </CardContent>
-        </Card>
+                  }
+                />
+              )}
+            </dl>
+          ) : (
+            <p className="text-muted text-sm">No pricing information on this booking.</p>
+          )}
+        </Section>
       </div>
 
       {(booking.status === 'confirmed' || booking.status === 'checked-in') && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Assign Room</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap items-end gap-4">
+        <div className="mt-10">
+          <Section
+            title="Assign room"
+            description="Choose the physical room this guest will use."
+            id="assign-room"
+          >
+            <div className="flex max-w-xl flex-wrap items-end gap-3">
               <div className="min-w-[200px] flex-1">
                 <Label htmlFor="roomId">Room</Label>
-                <select
-                  id="roomId"
-                  className="mt-1 flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value)}
-                >
+                <Select id="roomId" value={roomId} onChange={(e) => setRoomId(e.target.value)}>
                   <option value="">Select a room</option>
                   {(rooms ?? []).map((room) => {
                     const rid = getId(room as { id?: string; _id?: string });
@@ -319,196 +333,241 @@ export default function StaffBookingDetailPage({ params }: { params: Promise<{ i
                       </option>
                     );
                   })}
-                </select>
+                </Select>
               </div>
               <Button
                 disabled={!roomId || isPending}
                 onClick={() => assignRoomMutation.mutate({ id, roomId })}
               >
-                Assign Room
+                Assign room
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </Section>
+        </div>
       )}
 
       {(booking.specialRequests || booking.internalNotes) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            {booking.specialRequests && (
-              <div>
-                <p className="font-medium text-gray-700">Special Requests</p>
-                <p className="mt-1 text-gray-600">{booking.specialRequests}</p>
-              </div>
-            )}
-            {booking.internalNotes && (
-              <div>
-                <p className="font-medium text-gray-700">Internal Notes</p>
-                <p className="mt-1 text-gray-600">{booking.internalNotes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="mt-10">
+          <Section title="Notes" id="booking-notes">
+            <div className="space-y-5 text-sm">
+              {booking.specialRequests && (
+                <div>
+                  <p className="text-ink font-medium">Special requests</p>
+                  <p className="text-muted mt-1 leading-relaxed">{booking.specialRequests}</p>
+                </div>
+              )}
+              {booking.internalNotes && (
+                <div>
+                  <p className="text-ink font-medium">Internal notes</p>
+                  <p className="text-muted mt-1 leading-relaxed">{booking.internalNotes}</p>
+                </div>
+              )}
+            </div>
+          </Section>
+        </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Folio & Payments</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {folio && (
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between font-medium">
-                <span>Folio balance</span>
-                <span>{formatCurrency(folio.balance ?? 0)}</span>
+      <div className="mt-10">
+        <Section title="Folio & payments" id="folio">
+          {folio ? (
+            <dl className="border-line divide-line divide-y border-y text-sm">
+              <div className="flex items-baseline justify-between gap-4 py-3">
+                <dt className="text-ink font-medium">Folio balance</dt>
+                <dd className="tabular font-serif text-lg leading-none">
+                  {formatCurrency(folio.balance ?? 0)}
+                </dd>
               </div>
               {(folio.lineItems ?? folio.entries ?? []).map((item, idx) => (
-                <div key={idx} className="flex justify-between text-gray-600">
-                  <span>{item.description}</span>
-                  <span>{formatCurrency(item.amount)}</span>
+                <div key={idx} className="flex items-baseline justify-between gap-4 py-3">
+                  <dt className="text-muted">{item.description}</dt>
+                  <dd className="text-ink tabular">{formatCurrency(item.amount)}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
+          ) : (
+            <p className="text-muted text-sm">No folio has been opened for this booking yet.</p>
           )}
 
           {payments && payments.length > 0 && (
-            <div>
-              <p className="mb-2 text-sm font-medium text-gray-700">Payment history</p>
-              <ul className="space-y-1 text-sm text-gray-600">
+            <div className="mt-8">
+              <h3 className="text-brand text-xs font-medium uppercase tracking-[0.16em]">
+                Payment history
+              </h3>
+              <ul className="border-line divide-line mt-3 divide-y border-y text-sm">
                 {payments.map((p) => (
-                  <li key={p.id ?? p._id} className="flex justify-between">
-                    <span>
+                  <li
+                    key={p.id ?? p._id}
+                    className="flex items-baseline justify-between gap-4 py-3"
+                  >
+                    <span className="text-muted capitalize">
                       {p.method} — {p.status}
                     </span>
-                    <span>{formatCurrency(p.amount, p.currency)}</span>
+                    <span className="text-ink tabular">{formatCurrency(p.amount, p.currency)}</span>
                   </li>
                 ))}
               </ul>
             </div>
           )}
 
-          <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Change dates</Label>
-              <Input
-                type="date"
-                value={newCheckIn}
-                onChange={(e) => setNewCheckIn(e.target.value)}
-              />
-              <Input
-                type="date"
-                value={newCheckOut}
-                onChange={(e) => setNewCheckOut(e.target.value)}
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={isPending || (!newCheckIn && !newCheckOut)}
-                onClick={() =>
-                  modifyMutation.mutate({
-                    id,
-                    checkIn: newCheckIn || undefined,
-                    checkOut: newCheckOut || undefined,
-                  })
-                }
-              >
-                Update dates
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="folioCharge">Add folio charge</Label>
-              <Input
-                id="folioCharge"
-                value={chargeDescription}
-                onChange={(e) => setChargeDescription(e.target.value)}
-                placeholder="Description"
-              />
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={chargeAmount}
-                onChange={(e) => setChargeAmount(e.target.value)}
-                placeholder="Amount"
-              />
-              <Button
-                size="sm"
-                disabled={!chargeDescription || !chargeAmount || isPending}
-                onClick={() =>
-                  chargeMutation.mutate({
-                    bookingId: id,
-                    description: chargeDescription,
-                    amount: parseFloat(chargeAmount),
-                    category: 'fee',
-                  })
-                }
-              >
-                Add charge
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cashAmount">Record cash payment</Label>
-              <Input
-                id="cashAmount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={cashAmount}
-                onChange={(e) => setCashAmount(e.target.value)}
-                placeholder="Amount"
-              />
-              <Button
-                size="sm"
-                disabled={!cashAmount || isPending}
-                onClick={() =>
-                  cashPaymentMutation.mutate({
-                    bookingId: id,
-                    amount: parseFloat(cashAmount),
-                  })
-                }
-              >
-                Record cash
-              </Button>
-            </div>
-            {canRefund && (
-              <div className="space-y-2">
-                <Label htmlFor="refundAmount">Process refund</Label>
-                <Input
-                  id="refundAmount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={refundAmount}
-                  onChange={(e) => setRefundAmount(e.target.value)}
-                  placeholder="Amount"
-                />
-                <Input
-                  value={refundReason}
-                  onChange={(e) => setRefundReason(e.target.value)}
-                  placeholder="Reason (optional)"
-                />
+          <div className="border-line mt-8 grid gap-8 border-t pt-6 sm:grid-cols-2">
+            <div>
+              <h3 className="text-ink text-sm font-medium">Change dates</h3>
+              <p className="text-muted mt-1 text-xs">Leave a field blank to keep it as is.</p>
+              <div className="mt-3 space-y-3">
+                <div>
+                  <Label htmlFor="staffCheckIn">New check-in</Label>
+                  <Input
+                    id="staffCheckIn"
+                    type="date"
+                    value={newCheckIn}
+                    onChange={(e) => setNewCheckIn(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="staffCheckOut">New check-out</Label>
+                  <Input
+                    id="staffCheckOut"
+                    type="date"
+                    value={newCheckOut}
+                    onChange={(e) => setNewCheckOut(e.target.value)}
+                  />
+                </div>
                 <Button
                   size="sm"
-                  variant="outline"
-                  disabled={!refundAmount || isPending}
+                  variant="secondary"
+                  disabled={isPending || (!newCheckIn && !newCheckOut)}
                   onClick={() =>
-                    refundMutation.mutate({
-                      bookingId: id,
-                      amount: parseFloat(refundAmount),
-                      reason: refundReason || undefined,
+                    modifyMutation.mutate({
+                      id,
+                      checkIn: newCheckIn || undefined,
+                      checkOut: newCheckOut || undefined,
                     })
                   }
                 >
-                  Process refund
+                  Update dates
                 </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-ink text-sm font-medium">Add folio charge</h3>
+              <p className="text-muted mt-1 text-xs">Minibar, spa, or any incidental.</p>
+              <div className="mt-3 space-y-3">
+                <div>
+                  <Label htmlFor="folioCharge">Description</Label>
+                  <Input
+                    id="folioCharge"
+                    value={chargeDescription}
+                    onChange={(e) => setChargeDescription(e.target.value)}
+                    placeholder="Minibar"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="folioChargeAmount">Amount</Label>
+                  <Input
+                    id="folioChargeAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={chargeAmount}
+                    onChange={(e) => setChargeAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  disabled={!chargeDescription || !chargeAmount || isPending}
+                  onClick={() =>
+                    chargeMutation.mutate({
+                      bookingId: id,
+                      description: chargeDescription,
+                      amount: parseFloat(chargeAmount),
+                      category: 'fee',
+                    })
+                  }
+                >
+                  Add charge
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-ink text-sm font-medium">Record cash payment</h3>
+              <p className="text-muted mt-1 text-xs">For payments taken at the desk.</p>
+              <div className="mt-3 space-y-3">
+                <div>
+                  <Label htmlFor="cashAmount">Amount</Label>
+                  <Input
+                    id="cashAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={cashAmount}
+                    onChange={(e) => setCashAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  disabled={!cashAmount || isPending}
+                  onClick={() =>
+                    cashPaymentMutation.mutate({
+                      bookingId: id,
+                      amount: parseFloat(cashAmount),
+                    })
+                  }
+                >
+                  Record cash
+                </Button>
+              </div>
+            </div>
+
+            {canRefund && (
+              <div>
+                <h3 className="text-danger text-sm font-medium">Process refund</h3>
+                <p className="text-muted mt-1 text-xs">Refunds are recorded against this folio.</p>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <Label htmlFor="refundAmount">Amount</Label>
+                    <Input
+                      id="refundAmount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={refundAmount}
+                      onChange={(e) => setRefundAmount(e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="refundReason">Reason (optional)</Label>
+                    <Input
+                      id="refundReason"
+                      value={refundReason}
+                      onChange={(e) => setRefundReason(e.target.value)}
+                      placeholder="Late cancellation"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    disabled={!refundAmount || isPending}
+                    onClick={() =>
+                      refundMutation.mutate({
+                        bookingId: id,
+                        amount: parseFloat(refundAmount),
+                        reason: refundReason || undefined,
+                      })
+                    }
+                  >
+                    Process refund
+                  </Button>
+                </div>
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </Section>
+      </div>
+    </Container>
   );
 }

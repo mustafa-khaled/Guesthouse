@@ -1,14 +1,18 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowRight, MapPin, Phone, Mail, Clock, Users } from 'lucide-react';
 import { backendFetchApi } from '@/lib/api/server';
-import { SearchBar } from '@/components/guest/SearchBar';
+import { SearchBar } from '@/features/properties/components/SearchBar';
 import StarRating from '@/components/StarRating';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Container } from '@/components/ui/container';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Photo } from '@/components/ui/photo';
 import type { Property, Review, RoomType } from '@/types';
 import { formatCurrency, getId } from '@/lib/utils';
+import { photography } from '@/lib/content';
 
 interface PropertyPageProps {
   params: Promise<{ slug: string }>;
@@ -31,6 +35,10 @@ export async function generateMetadata({ params }: PropertyPageProps): Promise<M
   } catch {
     return { title: 'Property' };
   }
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-brand text-xs font-medium uppercase tracking-[0.16em]">{children}</h2>;
 }
 
 export default async function PropertyPage({ params }: PropertyPageProps) {
@@ -67,135 +75,239 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
     reviews = reviewsRes.data;
     reviewSummary = summaryRes.data;
   } catch {
-    // Non-critical data — page still renders
+    // Non-critical data — page still renders without it
   }
 
   const images = property.images ?? [];
   const primaryImage =
     images.find((i: { url: string; isPrimary?: boolean }) => i.isPrimary)?.url || images[0]?.url;
-  const galleryImages = images.filter((i: { url: string }) => i.url !== primaryImage);
+  const galleryImages = images
+    .filter((i: { url: string }) => i.url !== primaryImage)
+    .slice(0, 4)
+    .map((i: { url: string }) => i.url);
+
+  const heroImage = primaryImage || photography.hero;
+  const mosaic = [...galleryImages, photography.suites[0], photography.suites[1]].slice(0, 4);
+
+  const location = [property.address?.city, property.address?.state, property.address?.country]
+    .filter(Boolean)
+    .join(', ');
+
+  const reviewCount = reviewSummary?.totalReviews ?? 0;
+
+  // The cancellation note is stored in property settings by the seed/back office,
+  // but is not yet part of the shared Property type contract.
+  const cancellationPolicy = (property.settings as { cancellationPolicy?: string } | undefined)
+    ?.cancellationPolicy;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-8 grid gap-4 md:grid-cols-2">
-        <div className="aspect-16/10 overflow-hidden rounded-lg bg-gray-200">
-          {primaryImage ? (
-            <img src={primaryImage} alt={property.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-gray-400">
-              No image available
-            </div>
-          )}
+    <Container className="py-10 md:py-14">
+      <nav aria-label="Breadcrumb" className="text-muted mb-6 text-xs">
+        <Link href="/" className="hover:text-brand underline-offset-4 hover:underline">
+          Home
+        </Link>
+        <span aria-hidden className="mx-2">
+          /
+        </span>
+        <Link href="/search" className="hover:text-brand underline-offset-4 hover:underline">
+          Stays
+        </Link>
+        <span aria-hidden className="mx-2">
+          /
+        </span>
+        <span className="text-ink">{property.name}</span>
+      </nav>
+
+      {/* Gallery mosaic */}
+      <div className="grid gap-2 md:h-[520px] md:grid-cols-[2fr_1fr] md:gap-3">
+        <div className="bg-brand-soft relative aspect-[4/3] overflow-hidden rounded-[4px] md:aspect-auto md:h-full">
+          <Photo
+            src={heroImage}
+            alt={property.name}
+            fill
+            priority
+            sizes="(min-width: 768px) 62vw, 100vw"
+            className="object-cover"
+          />
         </div>
-        {galleryImages.length > 0 && (
-          <div className="grid grid-cols-2 gap-2">
-            {galleryImages
-              .slice(0, 4)
-              .map((img: { url: string; caption?: string }, idx: number) => (
-                <div key={idx} className="aspect-4/3 overflow-hidden rounded-lg bg-gray-200">
-                  <img
-                    src={img.url}
-                    alt={img.caption || property.name}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              ))}
-          </div>
-        )}
+        <div className="hidden gap-2 md:grid md:grid-rows-3 md:gap-3">
+          {mosaic.map((image, index) => (
+            <div
+              key={`${image}-${index}`}
+              className="bg-brand-soft relative overflow-hidden rounded-[4px]"
+            >
+              <Photo
+                src={image}
+                alt={`${property.name} — view ${index + 2}`}
+                fill
+                sizes="(min-width: 768px) 32vw, 0vw"
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="mb-8 grid gap-8 lg:grid-cols-3">
-        <div className="space-y-8 lg:col-span-2">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900">{property.name}</h1>
-              {property.starRating && <StarRating rating={property.starRating} />}
-              {reviewSummary && reviewSummary.totalReviews > 0 && (
-                <span className="text-sm text-gray-600">
-                  {reviewSummary.averageRating.toFixed(1)} ({reviewSummary.totalReviews} reviews)
-                </span>
-              )}
+      <div className="mt-10 grid gap-12 lg:grid-cols-12 lg:gap-14">
+        {/* Main column */}
+        <div className="lg:col-span-8">
+          <header className="border-line border-t pt-6">
+            <p className="text-brand/40 tabular font-serif text-2xl leading-none">—</p>
+            <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h1 className="text-title text-balance">{property.name}</h1>
+                {location && (
+                  <p className="text-muted mt-3 flex items-center gap-1.5 text-sm">
+                    <MapPin aria-hidden className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    {location}
+                  </p>
+                )}
+              </div>
+
+              <div className="shrink-0 text-right">
+                {property.starRating ? (
+                  <div className="flex items-center justify-end gap-2">
+                    <StarRating rating={property.starRating} />
+                    <span className="text-muted text-xs">{property.starRating}-star</span>
+                  </div>
+                ) : null}
+                {reviewCount > 0 && reviewSummary && (
+                  <p className="text-muted mt-1.5 text-xs">
+                    {reviewSummary.averageRating.toFixed(1)} · {reviewCount}{' '}
+                    {reviewCount === 1 ? 'review' : 'reviews'}
+                  </p>
+                )}
+              </div>
             </div>
-            <p className="mt-2 text-gray-600">
-              {[property.address?.city, property.address?.state, property.address?.country]
-                .filter(Boolean)
-                .join(', ')}
-            </p>
+
             {property.description && (
-              <p className="mt-4 leading-relaxed text-gray-700">{property.description}</p>
+              <p className="text-muted mt-6 max-w-2xl text-pretty text-base leading-relaxed">
+                {property.description}
+              </p>
             )}
-          </div>
+          </header>
 
           {property.amenities && property.amenities.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-xl font-semibold">Amenities</h2>
-              <div className="flex flex-wrap gap-2">
+            <section
+              className="border-line mt-10 border-t pt-6"
+              aria-labelledby="amenities-heading"
+            >
+              <SectionLabel>Amenities</SectionLabel>
+              <h2 id="amenities-heading" className="sr-only">
+                Amenities
+              </h2>
+              <div className="mt-4 flex flex-wrap gap-2">
                 {property.amenities.map((amenity: string) => (
-                  <Badge key={amenity} variant="info">
+                  <Badge key={amenity} variant="brand">
                     {amenity}
                   </Badge>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          <div>
-            <h2 className="mb-4 text-xl font-semibold">Room types</h2>
+          <section className="border-line mt-10 border-t pt-6" aria-labelledby="rooms-heading">
+            <SectionLabel>Rooms</SectionLabel>
+            <h2 id="rooms-heading" className="mt-1 font-serif text-2xl">
+              Choose your room
+            </h2>
+
             {roomTypes.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <ul className="divide-line mt-6 divide-y">
                 {roomTypes.map((roomType) => {
                   const image =
                     roomType.images?.find((i: { isPrimary?: boolean; url: string }) => i.isPrimary)
                       ?.url || roomType.images?.[0]?.url;
+
                   return (
-                    <Card key={getId(roomType)}>
-                      {image && (
-                        <div className="aspect-video overflow-hidden">
-                          <img
-                            src={image}
+                    <li key={getId(roomType)} className="py-6 first:pt-0">
+                      <article className="grid gap-5 sm:grid-cols-[180px_1fr]">
+                        <div className="bg-brand-soft relative aspect-[4/3] overflow-hidden rounded-[4px] sm:aspect-[4/3]">
+                          <Photo
+                            src={
+                              image ||
+                              photography.suites[
+                                roomTypes.indexOf(roomType) % photography.suites.length
+                              ]
+                            }
                             alt={roomType.name}
-                            className="h-full w-full object-cover"
+                            fill
+                            sizes="(min-width: 640px) 180px, 100vw"
+                            className="object-cover"
                           />
                         </div>
-                      )}
-                      <CardHeader>
-                        <CardTitle className="text-lg">{roomType.name}</CardTitle>
-                        {roomType.description && (
-                          <p className="line-clamp-2 text-sm text-gray-600">
-                            {roomType.description}
-                          </p>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm text-gray-500">
-                            Up to {roomType.occupancy?.maxOccupancy ?? '—'} guests
+
+                        <div className="flex flex-col justify-between gap-3">
+                          <div>
+                            <h3 className="font-serif text-xl leading-tight">{roomType.name}</h3>
+                            {roomType.description && (
+                              <p className="text-muted mt-2 line-clamp-2 text-sm leading-relaxed">
+                                {roomType.description}
+                              </p>
+                            )}
+                            <p className="text-muted mt-2 flex items-center gap-1.5 text-xs">
+                              <Users aria-hidden className="h-3.5 w-3.5" strokeWidth={1.5} />
+                              Up to {roomType.occupancy?.maxOccupancy ?? '—'} guests
+                            </p>
                           </div>
-                          {roomType.basePrice != null && (
-                            <span className="font-semibold text-green-700">
-                              from {formatCurrency(roomType.basePrice)}
-                            </span>
-                          )}
+
+                          <div className="flex flex-wrap items-end justify-between gap-3">
+                            {roomType.basePrice != null && (
+                              <p className="tabular font-serif text-xl leading-none">
+                                {formatCurrency(roomType.basePrice)}
+                                <span className="text-muted font-sans text-xs"> / night</span>
+                              </p>
+                            )}
+                            <Link
+                              href={`/book/${property.slug}?roomTypeId=${getId(roomType)}`}
+                              className="focus-ring text-brand inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
+                            >
+                              Reserve
+                              <ArrowRight aria-hidden className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            </Link>
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </article>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             ) : (
-              <p className="text-gray-500">No room types listed yet.</p>
+              <EmptyState
+                className="mt-6"
+                title="Rooms are being prepared"
+                description="Our team is finalising the room list for this property. Contact the concierge and we will help you plan the stay."
+                action={
+                  <Button variant="secondary" href={`/book/${property.slug}`}>
+                    Request a stay
+                  </Button>
+                }
+              />
             )}
-          </div>
+          </section>
 
-          {reviews.length > 0 && (
-            <div>
-              <h2 className="mb-4 text-xl font-semibold">Guest reviews</h2>
-              <div className="space-y-4">
+          <section className="border-line mt-10 border-t pt-6" aria-labelledby="reviews-heading">
+            <SectionLabel>Guest stories</SectionLabel>
+            <div className="mt-1 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="reviews-heading" className="font-serif text-2xl">
+                What guests say
+              </h2>
+              {reviewCount > 0 && reviewSummary && (
+                <p className="text-muted text-sm">
+                  <span className="text-ink tabular">{reviewSummary.averageRating.toFixed(1)}</span>{' '}
+                  from {reviewCount} {reviewCount === 1 ? 'guest' : 'guests'}
+                </p>
+              )}
+            </div>
+
+            {reviews.length > 0 ? (
+              <ul className="mt-6 space-y-6">
                 {reviews.slice(0, 6).map((review) => {
                   const extended = review as Review & {
                     text?: string;
                     ratings?: { overall?: number };
                     guestId?: { firstName?: string; lastName?: string };
+                    title?: string;
                   };
                   const rating = extended.rating ?? extended.ratings?.overall ?? 0;
                   const text = extended.comment ?? extended.text ?? '';
@@ -206,55 +318,101 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                     : 'Guest';
 
                   return (
-                    <div key={getId(review)} className="rounded-lg bg-white p-6 shadow-md">
-                      <div className="mb-4 flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 font-semibold text-green-700">
+                    <li
+                      key={getId(review)}
+                      className="border-line border-t pt-5 first:border-t-0 first:pt-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="bg-brand-soft text-brand flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-serif text-sm">
                           {guestName.charAt(0)}
-                        </div>
+                        </span>
                         <div>
-                          <h6 className="font-semibold">{guestName}</h6>
+                          <p className="text-ink text-sm">{guestName}</p>
                           <StarRating rating={rating} />
                         </div>
                       </div>
-                      {extended.title && <p className="mb-1 font-medium">{extended.title}</p>}
-                      {text && <p className="text-gray-600">{text}</p>}
-                    </div>
+                      {extended.title && (
+                        <p className="text-ink mt-3 font-medium">{extended.title}</p>
+                      )}
+                      {text && (
+                        <p className="text-muted mt-2 text-pretty text-sm leading-relaxed">
+                          {text}
+                        </p>
+                      )}
+                    </li>
                   );
                 })}
-              </div>
-            </div>
-          )}
+              </ul>
+            ) : (
+              <p className="text-muted mt-4 text-sm">
+                No reviews yet — be the first to tell us how it felt.
+              </p>
+            )}
+          </section>
         </div>
 
-        <div className="space-y-4">
-          <SearchBar action={`/book/${property.slug}`} />
-          <Card>
-            <CardContent className="p-6">
-              <p className="mb-4 text-sm text-gray-600">
-                Ready to book? Select your dates and guests to check availability.
-              </p>
-              <Link href={`/book/${property.slug}`}>
-                <Button className="w-full">Book now</Button>
-              </Link>
-            </CardContent>
-          </Card>
-          {property.settings && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Property info</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gray-600">
-                {property.settings.checkInTime && <p>Check-in: {property.settings.checkInTime}</p>}
-                {property.settings.checkOutTime && (
-                  <p>Check-out: {property.settings.checkOutTime}</p>
+        {/* Sticky booking rail */}
+        <aside className="lg:col-span-4">
+          <div className="space-y-4 lg:sticky lg:top-28">
+            <div className="border-line bg-raised rounded-[4px] border p-1 shadow-[var(--shadow-soft)]">
+              <SearchBar action={`/book/${property.slug}`} compact />
+            </div>
+
+            <div className="border-line rounded-[4px] border p-5">
+              <h2 className="font-serif text-lg leading-snug">Good to know</h2>
+              <dl className="text-muted mt-4 space-y-3 text-sm">
+                {property.settings?.checkInTime && (
+                  <div className="flex items-start gap-2.5">
+                    <Clock aria-hidden className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} />
+                    <div>
+                      <dt className="text-ink text-xs">Check-in</dt>
+                      <dd>{property.settings.checkInTime}</dd>
+                    </div>
+                  </div>
                 )}
-                {property.contact?.phone && <p>Phone: {property.contact.phone}</p>}
-                {property.contact?.email && <p>Email: {property.contact.email}</p>}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                {property.settings?.checkOutTime && (
+                  <div className="flex items-start gap-2.5">
+                    <Clock aria-hidden className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} />
+                    <div>
+                      <dt className="text-ink text-xs">Check-out</dt>
+                      <dd>{property.settings.checkOutTime}</dd>
+                    </div>
+                  </div>
+                )}
+                {cancellationPolicy && (
+                  <div className="border-line border-t pt-3">
+                    <dt className="text-ink text-xs">Cancellation</dt>
+                    <dd>{cancellationPolicy}</dd>
+                  </div>
+                )}
+              </dl>
+
+              {(property.contact?.phone || property.contact?.email) && (
+                <div className="border-line mt-4 space-y-2 border-t pt-4 text-sm">
+                  {property.contact?.phone && (
+                    <a
+                      href={`tel:${property.contact.phone.replace(/[^+\d]/g, '')}`}
+                      className="text-muted hover:text-brand flex items-center gap-2"
+                    >
+                      <Phone aria-hidden className="h-3.5 w-3.5" strokeWidth={1.5} />
+                      {property.contact.phone}
+                    </a>
+                  )}
+                  {property.contact?.email && (
+                    <a
+                      href={`mailto:${property.contact.email}`}
+                      className="text-muted hover:text-brand flex items-center gap-2 break-all"
+                    >
+                      <Mail aria-hidden className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+                      {property.contact.email}
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
       </div>
-    </div>
+    </Container>
   );
 }

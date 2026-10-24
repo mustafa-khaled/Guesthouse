@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { adminPropertyMutations } from '@/features/admin/mutations';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Container } from '@/components/ui/container';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/ui/page-header';
 import { Textarea } from '@/components/ui/textarea';
 import { getId } from '@/lib/utils';
 import type { Property } from '@/types';
@@ -38,47 +40,73 @@ export default function NewPropertyPage() {
   });
 
   return (
-    <Card className="max-w-xl">
-      <CardHeader>
-        <CardTitle>Create property</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            createMutation.mutate({
-              name,
-              slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-              description,
-              address: { city, country },
-              settings: {
-                timezone: 'UTC',
-                currency,
-                checkInTime,
-                checkOutTime,
-                taxRate: Number(taxRate),
-              },
-            });
-          }}
-        >
-          <div>
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-          <div>
-            <Label htmlFor="slug">Slug</Label>
-            <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+    <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+      <PageHeader
+        folio="—"
+        title="Create a property"
+        description="Start with the essentials. Rooms, images, and rates come next."
+        backHref="/admin/properties"
+        backLabel="Properties"
+      />
+
+      {createMutation.isError && (
+        <Alert variant="error" className="mt-6">
+          {createMutation.error instanceof Error
+            ? createMutation.error.message
+            : 'We could not create this property.'}
+        </Alert>
+      )}
+
+      <form
+        className="mt-10 max-w-2xl space-y-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          createMutation.mutate({
+            name,
+            slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            description,
+            address: { city, country },
+            settings: {
+              timezone: 'UTC',
+              currency,
+              checkInTime,
+              checkOutTime,
+              taxRate: Number(taxRate),
+            },
+          });
+        }}
+      >
+        <div>
+          <Label htmlFor="name">Name</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+        </div>
+
+        <div>
+          <Label htmlFor="slug">Slug</Label>
+          <Input
+            id="slug"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="auto-generated-from-name"
+          />
+          <p className="text-muted mt-1.5 text-xs">Used in the public URL.</p>
+        </div>
+
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            rows={4}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
+        <fieldset className="border-line border-t pt-6">
+          <legend className="text-brand mb-4 text-xs font-medium uppercase tracking-[0.16em]">
+            Location
+          </legend>
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <Label htmlFor="city">City</Label>
               <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
@@ -88,7 +116,13 @@ export default function NewPropertyPage() {
               <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+        </fieldset>
+
+        <fieldset className="border-line border-t pt-6">
+          <legend className="text-brand mb-4 text-xs font-medium uppercase tracking-[0.16em]">
+            Stay settings
+          </legend>
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <Label htmlFor="currency">Currency</Label>
               <Input
@@ -124,11 +158,21 @@ export default function NewPropertyPage() {
               />
             </div>
           </div>
+        </fieldset>
+
+        <div className="flex flex-wrap gap-3">
           <Button type="submit" disabled={createMutation.isPending || !name}>
-            {createMutation.isPending ? 'Creating...' : 'Create'}
+            {createMutation.isPending ? 'Creating…' : 'Create property'}
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => router.push('/admin/properties')}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </Container>
   );
 }

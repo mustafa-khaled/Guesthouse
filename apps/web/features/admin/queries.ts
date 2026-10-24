@@ -13,13 +13,17 @@ export const adminQueries = {
   properties: () =>
     queryOptions({
       queryKey: ['admin', 'properties'] as const,
-      queryFn: () => clientFetch<PaginatedResponse<Property>>('/v1/?limit=100'),
+      queryFn: () => clientFetch<PaginatedResponse<Property>>('/v1?limit=100'),
     }),
 
-  promotions: () =>
+  promotions: (propertyId: string) =>
     queryOptions({
-      queryKey: ['admin', 'promotions'] as const,
-      queryFn: () => clientFetch<{ data: Promotion[] }>('/v1/promotions'),
+      queryKey: ['admin', 'promotions', propertyId] as const,
+      queryFn: () =>
+        clientFetch<{ data: Promotion[] }>(
+          `/v1/promotions?propertyId=${encodeURIComponent(propertyId)}`,
+        ),
+      enabled: !!propertyId,
       select: (res) => res.data,
     }),
 

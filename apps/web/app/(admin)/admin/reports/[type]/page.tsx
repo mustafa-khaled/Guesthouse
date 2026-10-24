@@ -1,13 +1,16 @@
 'use client';
 
-import Link from 'next/link';
 import { use, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminQueries } from '@/queries/admin.queries';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Container } from '@/components/ui/container';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/ui/page-header';
+import { Select } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -20,13 +23,21 @@ import Spinner from '@/components/Spinner';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 const reportTitles: Record<string, string> = {
-  occupancy: 'Occupancy Report',
-  revenue: 'Revenue Report',
-  'room-type-performance': 'Room Type Performance',
-  'source-analysis': 'Source Analysis',
-  'cancellation-analysis': 'Cancellation Analysis',
-  'daily-summary': 'Daily Summary',
+  occupancy: 'Occupancy report',
+  revenue: 'Revenue report',
+  'room-type-performance': 'Room type performance',
+  'source-analysis': 'Source analysis',
+  'cancellation-analysis': 'Cancellation analysis',
+  'daily-summary': 'Daily summary',
 };
+
+function formatLabel(value: string) {
+  return value
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/[-_]/g, ' ')
+    .trim()
+    .replace(/^\w/, (char) => char.toUpperCase());
+}
 
 function formatCellValue(value: unknown): string {
   if (value == null) return '—';
@@ -41,12 +52,22 @@ function formatCellValue(value: unknown): string {
 
 function ReportDataView({ data }: { data: unknown }) {
   if (data == null) {
-    return <p className="text-sm text-gray-500">No report data available.</p>;
+    return (
+      <EmptyState
+        title="No report data"
+        description="Adjust the filters above and apply them to see results."
+      />
+    );
   }
 
   if (Array.isArray(data)) {
     if (data.length === 0) {
-      return <p className="text-sm text-gray-500">No records in this report.</p>;
+      return (
+        <EmptyState
+          title="No records in this period"
+          description="Try widening the date range or choosing another property."
+        />
+      );
     }
 
     const columns = Object.keys(data[0] as Record<string, unknown>);
@@ -56,9 +77,7 @@ function ReportDataView({ data }: { data: unknown }) {
         <TableHeader>
           <TableRow>
             {columns.map((col) => (
-              <TableHead key={col} className="capitalize">
-                {col.replace(/([A-Z])/g, ' $1').trim()}
-              </TableHead>
+              <TableHead key={col}>{formatLabel(col)}</TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -66,7 +85,7 @@ function ReportDataView({ data }: { data: unknown }) {
           {data.map((row, i) => (
             <TableRow key={i}>
               {columns.map((col) => (
-                <TableCell key={col}>
+                <TableCell key={col} className="tabular">
                   {formatCellValue((row as Record<string, unknown>)[col])}
                 </TableCell>
               ))}
@@ -79,28 +98,27 @@ function ReportDataView({ data }: { data: unknown }) {
 
   if (typeof data === 'object') {
     const entries = Object.entries(data as Record<string, unknown>);
+    const isMetric = (value: unknown) => typeof value === 'number' || typeof value === 'string';
 
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <dl className="border-line grid gap-px border-t sm:grid-cols-2 lg:grid-cols-3">
         {entries.map(([key, value]) => (
-          <Card key={key}>
-            <CardContent className="pt-6">
-              <p className="text-sm capitalize text-gray-500">
-                {key.replace(/([A-Z])/g, ' $1').trim()}
-              </p>
-              <p className="mt-1 text-lg font-semibold text-gray-900">
-                {typeof value === 'number' && key.toLowerCase().includes('revenue')
-                  ? formatCurrency(value)
+          <div key={key} className="border-line border-b py-5 sm:px-5 sm:odd:border-r">
+            <dt className="text-muted text-xs">{formatLabel(key)}</dt>
+            <dd className="text-ink tabular mt-1.5 font-serif text-2xl leading-none">
+              {typeof value === 'number' && key.toLowerCase().includes('revenue')
+                ? formatCurrency(value)
+                : isMetric(value)
+                  ? formatCellValue(value)
                   : formatCellValue(value)}
-              </p>
-            </CardContent>
-          </Card>
+            </dd>
+          </div>
         ))}
-      </div>
+      </dl>
     );
   }
 
-  return <p className="text-sm text-gray-900">{formatCellValue(data)}</p>;
+  return <p className="text-sm">{formatCellValue(data)}</p>;
 }
 
 export default function AdminReportTypePage({ params }: { params: Promise<{ type: string }> }) {
@@ -138,82 +156,88 @@ export default function AdminReportTypePage({ params }: { params: Promise<{ type
       ? (response as { data: unknown }).data
       : response;
 
-  const title = reportTitles[type] ?? type.replace(/-/g, ' ');
+  const title = reportTitles[type] ?? formatLabel(type);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link href="/admin/reports" className="text-sm text-green-700 hover:underline">
-          &larr; Back to reports
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold capitalize text-gray-900">{title}</h1>
-      </div>
+    <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+      <PageHeader
+        folio="—"
+        title={title}
+        description="Choose a property and a date range. Reports are calculated live from booking and payment data."
+        backHref="/admin/reports"
+        backLabel="All reports"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-end gap-4">
+      <section className="border-line mt-8 border-t pt-6" aria-labelledby="report-filters">
+        <h2 id="report-filters" className="sr-only">
+          Report filters
+        </h2>
+
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_auto] lg:items-end">
+          <div>
+            <Label htmlFor="propertyId">Property</Label>
+            <Select
+              id="propertyId"
+              value={propertyId}
+              onChange={(e) => setPropertyId(e.target.value)}
+            >
+              <option value="">Select property</option>
+              {properties.map((property) => (
+                <option key={property.id ?? property._id} value={property.id ?? property._id}>
+                  {property.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="startDate">{type === 'daily-summary' ? 'Date' : 'Start date'}</Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+
+          {type !== 'daily-summary' && (
             <div>
-              <Label htmlFor="propertyId">Property</Label>
-              <select
-                id="propertyId"
-                className="mt-1 flex h-10 rounded-md border border-gray-300 px-3 text-sm"
-                value={propertyId}
-                onChange={(e) => setPropertyId(e.target.value)}
-              >
-                <option value="">Select property</option>
-                {properties.map((property) => (
-                  <option key={property.id ?? property._id} value={property.id ?? property._id}>
-                    {property.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                className="mt-1"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate">End date</Label>
               <Input
                 id="endDate"
                 type="date"
-                className="mt-1"
+                min={startDate || undefined}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
-            <Button disabled={isFetching} onClick={() => refetch()}>
-              Apply
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          )}
 
-      {isLoading ? (
-        <Spinner />
-      ) : isError ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
-          {error instanceof Error ? error.message : 'Failed to load report'}
+          <Button disabled={isFetching} onClick={() => refetch()} className="w-full lg:w-auto">
+            {isFetching ? 'Loading…' : 'Apply'}
+          </Button>
         </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Results</CardTitle>
-          </CardHeader>
-          <CardContent>
+      </section>
+
+      <section className="mt-10" aria-labelledby="report-results">
+        <div className="border-line flex items-baseline justify-between border-b pb-3">
+          <h2 id="report-results" className="font-serif text-xl leading-snug">
+            Results
+          </h2>
+        </div>
+
+        <div className="mt-6">
+          {isLoading ? (
+            <Spinner />
+          ) : isError ? (
+            <Alert variant="error" title="We could not build this report">
+              {error instanceof Error ? error.message : 'Please adjust the filters and try again.'}
+            </Alert>
+          ) : (
             <ReportDataView data={reportData} />
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          )}
+        </div>
+      </section>
+    </Container>
   );
 }

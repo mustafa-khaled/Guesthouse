@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { clientFetch } from '@/lib/api/client';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthShell } from '@/components/shared/auth-shell';
 
 export default function ResetPasswordPage() {
   const params = useParams();
@@ -17,12 +18,14 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
 
     if (password !== passwordConfirm) {
-      toast.error('Passwords do not match');
+      setError('Those passwords do not match yet.');
       return;
     }
 
@@ -34,57 +37,59 @@ export default function ResetPasswordPage() {
         body: JSON.stringify({ token, password }),
       });
       toast.success('Password reset successfully');
-      setTimeout(() => router.push('/login'), 1500);
+      router.push('/login');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Reset failed');
+      setError(err instanceof Error ? err.message : 'We could not reset your password.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>Reset your password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="password">New password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="passwordConfirm">Confirm new password</Label>
-              <Input
-                id="passwordConfirm"
-                type="password"
-                placeholder="••••••••"
-                required
-                minLength={6}
-                value={passwordConfirm}
-                onChange={(e) => setPasswordConfirm(e.target.value)}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Resetting...' : 'Reset password'}
-            </Button>
-          </form>
-          <p className="mt-4 text-center text-sm">
-            <Link href="/login" className="text-green-700 hover:underline">
-              Back to login
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell
+      title="Reset your password"
+      description="Choose something you will remember, and keep the rest of the day quiet."
+      footer={
+        <Link href="/login" className="text-brand text-sm underline-offset-4 hover:underline">
+          Back to login
+        </Link>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && <Alert variant="error">{error}</Alert>}
+
+        <div>
+          <Label htmlFor="password">New password</Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            placeholder="••••••••"
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="passwordConfirm">Confirm new password</Label>
+          <Input
+            id="passwordConfirm"
+            type="password"
+            autoComplete="new-password"
+            placeholder="••••••••"
+            required
+            minLength={6}
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+          />
+        </div>
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? 'Resetting…' : 'Reset password'}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

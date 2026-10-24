@@ -82,8 +82,13 @@ class DashboardService {
 
   async getManagerDashboard(propertyId?: string): Promise<any> {
     const today = getTodayUTC();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    // Build the month in UTC to match getTodayUTC() and the other day helpers.
+    // Local construction serialised to ISO would report the previous month
+    // east of UTC, and a local month-end would drop the final day of the month.
+    const monthStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+    const monthEnd = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0, 23, 59, 59, 999),
+    );
 
     const propertyFilter = propertyId ? { propertyId: new Types.ObjectId(propertyId) } : {};
 

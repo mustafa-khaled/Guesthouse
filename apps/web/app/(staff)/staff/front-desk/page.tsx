@@ -4,14 +4,18 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { CalendarCheck, CalendarX, Users } from 'lucide-react';
 import { frontDeskQueries, roomQueries } from '@/queries/staff.queries';
 import { roomTypeQueries, ratePlanQueries } from '@/features/booking/queries';
-import { useSelectedProperty } from '@/features/staff/use-selected-property';
+import { useSelectedProperty } from '@/features/properties/use-selected-property';
 import { clientFetch } from '@/lib/api/client';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/ui/page-header';
+import { Select } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -22,6 +26,7 @@ import {
 } from '@/components/ui/table';
 import { BookingStatusBadge } from '@/components/shared/StatusBadge';
 import Spinner from '@/components/Spinner';
+import { StatGrid } from '@/components/ui/stat-grid';
 import { formatDate, getId, getRefLabel } from '@/lib/utils';
 import type { Booking, BookingStatus } from '@/types';
 
@@ -29,22 +34,34 @@ type BookingRow = Booking & Record<string, unknown>;
 
 function BookingTable({
   title,
+  icon,
   rows,
   emptyMessage,
 }: {
   title: string;
+  icon: React.ReactNode;
   rows: BookingRow[];
   emptyMessage: string;
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {rows.length === 0 ? (
-          <p className="text-sm text-gray-500">{emptyMessage}</p>
-        ) : (
+    <section className="border-line border-t pt-6" aria-labelledby={`panel-${title}`}>
+      <div className="flex items-center justify-between gap-3">
+        <h2
+          id={`panel-${title}`}
+          className="flex items-center gap-2 font-serif text-xl leading-snug"
+        >
+          <span className="text-brand/60" aria-hidden>
+            {icon}
+          </span>
+          {title}
+        </h2>
+        <span className="text-muted tabular text-xs">{rows.length}</span>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="text-muted mt-3 text-sm">{emptyMessage}</p>
+      ) : (
+        <div className="mt-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -60,13 +77,13 @@ function BookingTable({
                   <TableCell>
                     <Link
                       href={`/staff/bookings/${getId(row)}`}
-                      className="font-medium text-green-700 hover:underline"
+                      className="focus-ring text-brand text-sm underline-offset-4 hover:underline"
                     >
                       {row.confirmationNumber || getId(row).slice(-8)}
                     </Link>
                   </TableCell>
-                  <TableCell>{getRefLabel(row.guestId as never)}</TableCell>
-                  <TableCell>{formatDate(row.checkIn)}</TableCell>
+                  <TableCell className="text-muted">{getRefLabel(row.guestId as never)}</TableCell>
+                  <TableCell className="tabular">{formatDate(row.checkIn)}</TableCell>
                   <TableCell>
                     <BookingStatusBadge status={row.status as BookingStatus} />
                   </TableCell>
@@ -74,9 +91,9 @@ function BookingTable({
               ))}
             </TableBody>
           </Table>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -121,87 +138,99 @@ export default function FrontDeskPage() {
 
   if (isLoading) return <Spinner />;
 
-  if (error) {
-    return (
-      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
-        {error instanceof Error ? error.message : 'Failed to load front desk data'}
-      </div>
-    );
-  }
-
   const stats = dashboard.data ?? {};
-  const statEntries = Object.entries(stats).filter(
-    ([, value]) => typeof value === 'number' || typeof value === 'string',
-  );
+  const today = typeof stats.date === 'string' ? stats.date : null;
+
+  const todayCounts = (stats.today ?? {}) as Record<string, unknown>;
+  const housekeeping = (stats.housekeeping ?? {}) as Record<string, unknown>;
+  const count = (value: unknown) => (typeof value === 'number' ? value : 0);
+
+  const statItems = [
+    { label: 'Arrivals today', value: count(todayCounts.arrivals) },
+    { label: 'Departures today', value: count(todayCounts.departures) },
+    { label: 'In house', value: count(todayCounts.inHouse) },
+    {
+      label: 'Rooms to clean',
+      value: count(housekeeping.pending) + count(housekeeping.inProgress),
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Front Desk</h1>
-          <p className="text-sm text-gray-500">Today&apos;s operations overview</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            className="h-10 rounded-md border border-gray-300 px-3 text-sm"
-            value={propertyId}
-            onChange={(e) => setPropertyId(e.target.value)}
-          >
-            {properties.map((property) => (
-              <option key={getId(property)} value={getId(property)}>
-                {property.name}
-              </option>
-            ))}
-          </select>
-          <Link href="/staff/front-desk/room-rack">
-            <Button variant="outline">Room Rack</Button>
-          </Link>
-        </div>
-      </div>
+    <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+      <PageHeader
+        folio="—"
+        title="Front desk"
+        description="Today at the house — who arrives, who leaves, and who is already settled in."
+        actions={
+          <>
+            {properties.length > 1 && (
+              <Select
+                aria-label="Selected property"
+                className="min-h-12 max-w-56"
+                value={propertyId}
+                onChange={(e) => setPropertyId(e.target.value)}
+              >
+                {properties.map((property) => (
+                  <option key={getId(property)} value={getId(property)}>
+                    {property.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+            <Button href="/staff/front-desk/room-rack" variant="secondary">
+              Room rack
+            </Button>
+          </>
+        }
+      />
 
-      {statEntries.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {statEntries.slice(0, 8).map(([key, value]) => (
-            <Card key={key}>
-              <CardContent className="pt-6">
-                <p className="text-sm capitalize text-gray-500">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}
-                </p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{String(value)}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {error && (
+        <Alert variant="error" className="mt-8" title="We could not load the front desk">
+          {error instanceof Error ? error.message : 'Please refresh the page and try again.'}
+        </Alert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {today && <p className="text-muted tabular mt-8 text-xs">Today · {formatDate(today)}</p>}
+
+      <StatGrid items={statItems} className="mt-3" />
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-2">
         <BookingTable
           title="Arrivals"
+          icon={<CalendarCheck className="h-4 w-4" strokeWidth={1.5} />}
           rows={(arrivals.data ?? []) as BookingRow[]}
           emptyMessage="No arrivals scheduled for today."
         />
         <BookingTable
           title="Departures"
+          icon={<CalendarX className="h-4 w-4" strokeWidth={1.5} />}
           rows={(departures.data ?? []) as BookingRow[]}
           emptyMessage="No departures scheduled for today."
         />
       </div>
 
-      <BookingTable
-        title="In-House Guests"
-        rows={(inHouse.data ?? []) as BookingRow[]}
-        emptyMessage="No guests currently in-house."
-      />
+      <div className="mt-10">
+        <BookingTable
+          title="In-house guests"
+          icon={<Users className="h-4 w-4" strokeWidth={1.5} />}
+          rows={(inHouse.data ?? []) as BookingRow[]}
+          emptyMessage="No guests currently in-house."
+        />
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Walk-in</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2">
+      <section className="border-line mt-12 border-t pt-6" aria-labelledby="walk-in-heading">
+        <h2 id="walk-in-heading" className="font-serif text-xl leading-snug">
+          Walk-in
+        </h2>
+        <p className="text-muted mt-1.5 text-sm leading-relaxed">
+          Create a booking for a guest standing at the desk.
+        </p>
+
+        <div className="mt-6 grid max-w-2xl gap-5 sm:grid-cols-2">
           <div>
-            <Label>Room type</Label>
-            <select
-              className="mt-1 flex h-10 w-full rounded-md border px-3 text-sm"
+            <Label htmlFor="walkInRoomType">Room type</Label>
+            <Select
+              id="walkInRoomType"
               value={walkIn.roomTypeId}
               onChange={(e) => setWalkIn((w) => ({ ...w, roomTypeId: e.target.value }))}
             >
@@ -211,12 +240,12 @@ export default function FrontDeskPage() {
                   {rt.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
-            <Label>Rate plan</Label>
-            <select
-              className="mt-1 flex h-10 w-full rounded-md border px-3 text-sm"
+            <Label htmlFor="walkInRatePlan">Rate plan</Label>
+            <Select
+              id="walkInRatePlan"
               value={walkIn.ratePlanId}
               onChange={(e) => setWalkIn((w) => ({ ...w, ratePlanId: e.target.value }))}
             >
@@ -226,12 +255,12 @@ export default function FrontDeskPage() {
                   {rp.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
-            <Label>Room</Label>
-            <select
-              className="mt-1 flex h-10 w-full rounded-md border px-3 text-sm"
+            <Label htmlFor="walkInRoom">Room</Label>
+            <Select
+              id="walkInRoom"
               value={walkIn.roomId}
               onChange={(e) => setWalkIn((w) => ({ ...w, roomId: e.target.value }))}
             >
@@ -247,7 +276,7 @@ export default function FrontDeskPage() {
                   </option>
                 );
               })}
-            </select>
+            </Select>
           </div>
           <div>
             <Label htmlFor="nights">Nights</Label>
@@ -259,44 +288,66 @@ export default function FrontDeskPage() {
               onChange={(e) => setWalkIn((w) => ({ ...w, nights: e.target.value }))}
             />
           </div>
-          <Input
-            placeholder="First name"
-            value={walkIn.firstName}
-            onChange={(e) => setWalkIn((w) => ({ ...w, firstName: e.target.value }))}
-          />
-          <Input
-            placeholder="Last name"
-            value={walkIn.lastName}
-            onChange={(e) => setWalkIn((w) => ({ ...w, lastName: e.target.value }))}
-          />
-          <Input
-            placeholder="Email"
-            type="email"
-            value={walkIn.email}
-            onChange={(e) => setWalkIn((w) => ({ ...w, email: e.target.value }))}
-          />
-          <Button
-            disabled={walkInMutation.isPending || !propertyId}
-            onClick={() =>
-              walkInMutation.mutate({
-                propertyId,
-                roomTypeId: walkIn.roomTypeId,
-                ratePlanId: walkIn.ratePlanId,
-                roomId: walkIn.roomId,
-                nights: Number(walkIn.nights),
-                adults: 1,
-                guest: {
-                  firstName: walkIn.firstName,
-                  lastName: walkIn.lastName,
-                  email: walkIn.email,
-                },
-              })
-            }
-          >
-            Create walk-in
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+          <div>
+            <Label htmlFor="walkInFirst">First name</Label>
+            <Input
+              id="walkInFirst"
+              autoComplete="given-name"
+              value={walkIn.firstName}
+              onChange={(e) => setWalkIn((w) => ({ ...w, firstName: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label htmlFor="walkInLast">Last name</Label>
+            <Input
+              id="walkInLast"
+              autoComplete="family-name"
+              value={walkIn.lastName}
+              onChange={(e) => setWalkIn((w) => ({ ...w, lastName: e.target.value }))}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="walkInEmail">Email</Label>
+            <Input
+              id="walkInEmail"
+              type="email"
+              autoComplete="email"
+              value={walkIn.email}
+              onChange={(e) => setWalkIn((w) => ({ ...w, email: e.target.value }))}
+            />
+          </div>
+        </div>
+
+        {walkInMutation.isError && (
+          <Alert variant="error" className="mt-5 max-w-2xl">
+            {walkInMutation.error instanceof Error
+              ? walkInMutation.error.message
+              : 'Could not create the walk-in.'}
+          </Alert>
+        )}
+
+        <Button
+          className="mt-6"
+          disabled={walkInMutation.isPending || !propertyId}
+          onClick={() =>
+            walkInMutation.mutate({
+              propertyId,
+              roomTypeId: walkIn.roomTypeId,
+              ratePlanId: walkIn.ratePlanId,
+              roomId: walkIn.roomId,
+              nights: Number(walkIn.nights),
+              adults: 1,
+              guest: {
+                firstName: walkIn.firstName,
+                lastName: walkIn.lastName,
+                email: walkIn.email,
+              },
+            })
+          }
+        >
+          {walkInMutation.isPending ? 'Creating…' : 'Create walk-in'}
+        </Button>
+      </section>
+    </Container>
   );
 }

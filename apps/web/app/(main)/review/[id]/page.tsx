@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { reviewMutations } from '@/mutations/bookings.mutations';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Container } from '@/components/ui/container';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/ui/page-header';
+import { Textarea } from '@/components/ui/textarea';
 import StarRating from '@/components/StarRating';
 
 export default function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,7 +23,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const createMutation = useMutation({
     ...reviewMutations.create(),
     onSuccess: () => {
-      toast.success('Thank you for your review!');
+      toast.success('Thank you for your review');
       router.push('/account/reviews');
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to submit review'),
@@ -39,44 +40,56 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-12">
-      <Card>
-        <CardHeader>
-          <CardTitle>Share your experience</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Overall rating</Label>
-              <div className="mt-2">
-                <StarRating rating={rating} onChange={setRating} interactive />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="title">Title (optional)</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Summarize your stay"
-              />
-            </div>
-            <div>
-              <Label htmlFor="text">Your review</Label>
-              <Textarea
-                id="text"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Tell us about your stay..."
-                rows={5}
-              />
-            </div>
-            <Button type="submit" disabled={createMutation.isPending} className="w-full">
-              {createMutation.isPending ? 'Submitting...' : 'Submit review'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <Container className="max-w-xl py-12 md:py-16">
+      <PageHeader
+        folio="—"
+        title="Share your experience"
+        description="A few honest lines help the next guest know what to expect — and help us keep improving."
+      />
+
+      <form onSubmit={handleSubmit} className="mt-10 space-y-6">
+        <fieldset>
+          <legend className="text-ink mb-2 block text-sm font-medium">Overall rating</legend>
+          <StarRating rating={rating} onChange={setRating} interactive />
+          <p className="text-muted mt-2 text-xs" aria-live="polite">
+            {rating} of 5
+          </p>
+        </fieldset>
+
+        <div>
+          <Label htmlFor="title">Title (optional)</Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Summarise your stay"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="text">Your review</Label>
+          <Textarea
+            id="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Tell us about your stay…"
+            rows={6}
+          />
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Button type="submit" disabled={createMutation.isPending}>
+            {createMutation.isPending ? 'Submitting…' : 'Submit review'}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => router.push('/account/bookings')}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </Container>
   );
 }

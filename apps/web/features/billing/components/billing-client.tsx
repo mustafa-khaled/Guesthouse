@@ -5,11 +5,13 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { CreditCard } from 'lucide-react';
 import { billingQueries } from '@/features/billing/queries';
 import { billingMutations } from '@/features/billing/mutations';
 import { CreditCardForm } from '@/features/billing/components/credit-card-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import Spinner from '@/components/Spinner';
 import { STRIPE_PUBLISHABLE_KEY } from '@/lib/constants';
 import { getId } from '@/lib/utils';
@@ -74,29 +76,34 @@ export function BillingClient() {
         </CardHeader>
         <CardContent className="space-y-4">
           {cards.length === 0 ? (
-            <p className="text-[var(--matcha-body)]">No cards saved yet.</p>
+            <EmptyState
+              icon={<CreditCard />}
+              title="No cards saved"
+              description="Add a card once and checkout becomes a single quiet step."
+            />
           ) : (
-            <ul className="space-y-3">
+            <ul className="border-line divide-line divide-y border-y">
               {cards.map((card: SavedPaymentMethod) => {
                 const id = getId(card);
                 return (
-                  <li
-                    key={id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded border border-[var(--matcha-border)] bg-white px-4 py-3"
-                  >
-                    <div>
-                      <p className="font-medium capitalize text-[var(--matcha-heading)]">
-                        {card.brand} ending in {card.last4}
-                      </p>
-                      <p className="text-sm text-[var(--matcha-body)]">
-                        Expires {String(card.expMonth).padStart(2, '0')}/{card.expYear}
-                        {card.isDefault ? ' · Default' : ''}
-                      </p>
+                  <li key={id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="border-line text-brand flex h-9 w-14 items-center justify-center rounded-[3px] border text-[10px] uppercase tracking-[0.1em]">
+                        {card.brand}
+                      </span>
+                      <div>
+                        <p className="text-ink tabular text-sm">•••• {card.last4}</p>
+                        <p className="text-muted tabular mt-0.5 text-xs">
+                          Expires {String(card.expMonth).padStart(2, '0')}/{card.expYear}
+                          {card.isDefault ? ' · Default' : ''}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       {!card.isDefault && (
                         <Button
-                          variant="outline"
+                          variant="ghost"
+                          size="sm"
                           disabled={defaultMutation.isPending}
                           onClick={() => defaultMutation.mutate(id)}
                         >
@@ -104,7 +111,9 @@ export function BillingClient() {
                         </Button>
                       )}
                       <Button
-                        variant="outline"
+                        variant="ghost"
+                        size="sm"
+                        className="text-danger hover:bg-danger-tint"
                         disabled={removeMutation.isPending}
                         onClick={() => {
                           if (window.confirm('Remove this card?')) {
@@ -122,9 +131,7 @@ export function BillingClient() {
           )}
 
           {wallet && !wallet.canAddPaymentMethod ? (
-            <p className="text-sm text-[var(--matcha-body)]">
-              Remove a card before adding another one.
-            </p>
+            <p className="text-muted text-sm">Remove a card before adding another one.</p>
           ) : (
             <Button disabled={isAdding} onClick={() => setIsAdding(true)}>
               Add card

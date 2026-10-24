@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { use, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -8,14 +7,43 @@ import { propertyQueries } from '@/queries/properties.queries';
 import { roomTypeQueries, ratePlanQueries } from '@/features/booking/queries';
 import { roomQueries } from '@/queries/staff.queries';
 import { clientFetch } from '@/lib/api/client';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Container } from '@/components/ui/container';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PageHeader } from '@/components/ui/page-header';
+import { Select } from '@/components/ui/select';
 import Spinner from '@/components/Spinner';
 import { getId } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 type Tab = 'room-types' | 'rate-plans' | 'rooms' | 'inventory';
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'room-types', label: 'Room types' },
+  { id: 'rate-plans', label: 'Rate plans' },
+  { id: 'rooms', label: 'Rooms' },
+  { id: 'inventory', label: 'Inventory' },
+];
+
+function Fieldset({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-line border-t pt-6">
+      <h2 className="font-serif text-xl leading-snug">{title}</h2>
+      {description && <p className="text-muted mt-1.5 text-sm leading-relaxed">{description}</p>}
+      <div className="mt-5 space-y-5">{children}</div>
+    </section>
+  );
+}
 
 export default function AdminInventoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: propertyId } = use(params);
@@ -109,40 +137,47 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
 
   if (isLoading) return <Spinner />;
 
+  const roomTypeOptions = roomTypes ?? [];
+
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href={`/admin/properties/${propertyId}`}
-          className="text-sm text-green-700 hover:underline"
-        >
-          &larr; Back to property
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">{property?.name} — Inventory</h1>
-      </div>
+    <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+      <PageHeader
+        folio="—"
+        title={`${property?.name ?? 'Property'} — inventory`}
+        description="Room types, rate plans, physical rooms, and the daily inventory that makes them bookable."
+        backHref={`/admin/properties/${propertyId}`}
+        backLabel="Property"
+      />
 
-      <div className="flex gap-2 border-b">
-        {(['room-types', 'rate-plans', 'rooms', 'inventory'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium capitalize ${
-              tab === t ? 'border-b-2 border-green-600 text-green-700' : 'text-gray-500'
-            }`}
-          >
-            {t.replace('-', ' ')}
-          </button>
-        ))}
-      </div>
+      <nav aria-label="Inventory sections" className="border-line mt-6 border-b">
+        <ul className="-mx-1 flex items-center gap-6 overflow-x-auto px-1">
+          {TABS.map((item) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                onClick={() => setTab(item.id)}
+                aria-current={tab === item.id ? 'page' : undefined}
+                className={cn(
+                  'focus-ring -mb-px inline-flex min-h-12 items-center border-b-2 text-sm transition-colors duration-200',
+                  tab === item.id
+                    ? 'border-brand text-ink font-medium'
+                    : 'text-muted hover:text-ink border-transparent',
+                )}
+              >
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-      {tab === 'room-types' && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create room type</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+      <div className="mt-8">
+        {tab === 'room-types' && (
+          <div className="grid gap-12 lg:grid-cols-2">
+            <Fieldset
+              title="Create room type"
+              description="A category of room, such as Garden Suite or Horizon Studio."
+            >
               <div>
                 <Label htmlFor="rtName">Name</Label>
                 <Input
@@ -156,7 +191,8 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                 <Input
                   id="rtCode"
                   value={roomTypeCode}
-                  onChange={(e) => setRoomTypeCode(e.target.value)}
+                  onChange={(e) => setRoomTypeCode(e.target.value.toUpperCase())}
+                  placeholder="GRD"
                 />
               </div>
               <div>
@@ -164,12 +200,13 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                 <Input
                   id="rtPrice"
                   type="number"
+                  min={0}
                   value={roomTypePrice}
                   onChange={(e) => setRoomTypePrice(e.target.value)}
                 />
               </div>
               <Button
-                disabled={!roomTypeName || !roomTypeCode}
+                disabled={!roomTypeName || !roomTypeCode || createRoomTypeMutation.isPending}
                 onClick={() =>
                   createRoomTypeMutation.mutate({
                     name: roomTypeName,
@@ -179,49 +216,51 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                   })
                 }
               >
-                Create room type
+                {createRoomTypeMutation.isPending ? 'Creating…' : 'Create room type'}
               </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Room types</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                {(roomTypes ?? []).map((rt) => (
-                  <li key={getId(rt)} className="flex justify-between rounded border p-3">
-                    <span>{rt.name}</span>
-                    <span className="text-gray-500">{rt.code}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </Fieldset>
 
-      {tab === 'rate-plans' && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create rate plan</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            <div className="border-line border-t pt-6">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="font-serif text-xl leading-snug">Room types</h2>
+                <span className="text-muted tabular text-xs">{roomTypeOptions.length}</span>
+              </div>
+              {roomTypeOptions.length === 0 ? (
+                <p className="text-muted mt-4 text-sm">No room types yet.</p>
+              ) : (
+                <ul className="border-line divide-line mt-4 divide-y border-y">
+                  {roomTypeOptions.map((rt) => (
+                    <li key={getId(rt)} className="flex items-center justify-between gap-4 py-3">
+                      <span className="text-ink text-sm">{rt.name}</span>
+                      <span className="text-muted font-mono text-xs">{rt.code}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+
+        {tab === 'rate-plans' && (
+          <div className="grid gap-12 lg:grid-cols-2">
+            <Fieldset
+              title="Create rate plan"
+              description="How a room is priced and when payment is taken."
+            >
               <div>
-                <Label>Room type</Label>
-                <select
-                  className="mt-1 flex h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                <Label htmlFor="rpRoomType">Room type</Label>
+                <Select
+                  id="rpRoomType"
                   value={selectedRoomTypeId}
                   onChange={(e) => setSelectedRoomTypeId(e.target.value)}
                 >
                   <option value="">Select room type</option>
-                  {(roomTypes ?? []).map((rt) => (
+                  {roomTypeOptions.map((rt) => (
                     <option key={getId(rt)} value={getId(rt)}>
                       {rt.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="rpName">Name</Label>
@@ -229,6 +268,7 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                   id="rpName"
                   value={ratePlanName}
                   onChange={(e) => setRatePlanName(e.target.value)}
+                  placeholder="Flexible rate"
                 />
               </div>
               <div>
@@ -236,22 +276,22 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                 <Input
                   id="rpPrice"
                   type="number"
+                  min={0}
                   value={basePrice}
                   onChange={(e) => setBasePrice(e.target.value)}
                 />
               </div>
               <div>
                 <Label htmlFor="paymentPolicy">Payment policy</Label>
-                <select
+                <Select
                   id="paymentPolicy"
-                  className="mt-1 flex h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
                   value={paymentPolicy}
                   onChange={(e) => setPaymentPolicy(e.target.value)}
                 >
                   <option value="prepaid">Prepaid</option>
                   <option value="deposit">Deposit</option>
                   <option value="pay-at-hotel">Pay at hotel</option>
-                </select>
+                </Select>
               </div>
               {paymentPolicy === 'deposit' && (
                 <div>
@@ -265,7 +305,12 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                 </div>
               )}
               <Button
-                disabled={!selectedRoomTypeId || !ratePlanName || !basePrice}
+                disabled={
+                  !selectedRoomTypeId ||
+                  !ratePlanName ||
+                  !basePrice ||
+                  createRatePlanMutation.isPending
+                }
                 onClick={() =>
                   createRatePlanMutation.mutate({
                     name: ratePlanName,
@@ -283,30 +328,37 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                   })
                 }
               >
-                Create rate plan
+                {createRatePlanMutation.isPending ? 'Creating…' : 'Create rate plan'}
               </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Rate plans</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedRoomTypeId ? (
-                <ul className="space-y-2 text-sm">
+            </Fieldset>
+
+            <div className="border-line border-t pt-6">
+              <h2 className="font-serif text-xl leading-snug">Rate plans</h2>
+              {!selectedRoomTypeId ? (
+                <p className="text-muted mt-4 text-sm">
+                  Select a room type to view its rate plans.
+                </p>
+              ) : (ratePlans ?? []).length === 0 ? (
+                <p className="text-muted mt-4 text-sm">No rate plans for this room type yet.</p>
+              ) : (
+                <ul className="border-line divide-line mt-4 divide-y border-y">
                   {(ratePlans ?? []).map((rp) => (
                     <li
                       key={getId(rp)}
-                      className="flex items-center justify-between rounded border p-3"
+                      className="flex flex-wrap items-center justify-between gap-3 py-3"
                     >
-                      <span>
-                        {rp.name} · {rp.paymentPolicy ?? 'prepaid'}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span>${rp.basePrice}</span>
+                      <div>
+                        <p className="text-ink text-sm">{rp.name}</p>
+                        <p className="text-muted mt-0.5 text-xs capitalize">
+                          {rp.paymentPolicy ?? 'prepaid'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="tabular text-sm">${rp.basePrice}</span>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
+                          disabled={updateRatePlanMutation.isPending}
                           onClick={() =>
                             updateRatePlanMutation.mutate({
                               id: getId(rp),
@@ -326,35 +378,28 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-sm text-gray-500">Select a room type to view rate plans</p>
               )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
+          </div>
+        )}
 
-      {tab === 'rooms' && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create room</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+        {tab === 'rooms' && (
+          <div className="grid gap-12 lg:grid-cols-2">
+            <Fieldset title="Create room" description="A physical, numbered room.">
               <div>
-                <Label>Room type</Label>
-                <select
-                  className="mt-1 flex h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
+                <Label htmlFor="roomType">Room type</Label>
+                <Select
+                  id="roomType"
                   value={selectedRoomTypeId}
                   onChange={(e) => setSelectedRoomTypeId(e.target.value)}
                 >
                   <option value="">Select room type</option>
-                  {(roomTypes ?? []).map((rt) => (
+                  {roomTypeOptions.map((rt) => (
                     <option key={getId(rt)} value={getId(rt)}>
                       {rt.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="roomNumber">Room number</Label>
@@ -362,6 +407,7 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                   id="roomNumber"
                   value={roomNumber}
                   onChange={(e) => setRoomNumber(e.target.value)}
+                  placeholder="101"
                 />
               </div>
               <div>
@@ -374,7 +420,7 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                 />
               </div>
               <Button
-                disabled={!selectedRoomTypeId || !roomNumber}
+                disabled={!selectedRoomTypeId || !roomNumber || createRoomMutation.isPending}
                 onClick={() =>
                   createRoomMutation.mutate({
                     roomTypeId: selectedRoomTypeId,
@@ -383,98 +429,116 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
                   })
                 }
               >
-                Create room
+                {createRoomMutation.isPending ? 'Creating…' : 'Create room'}
               </Button>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Rooms</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                {(rooms ?? []).map((room) => {
-                  const record = room as Record<string, unknown>;
-                  return (
-                    <li
-                      key={getId(room as { id?: string; _id?: string })}
-                      className="rounded border p-3"
-                    >
-                      Room {String(record.roomNumber ?? record.number ?? '')}
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </Fieldset>
 
-      {tab === 'inventory' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Initialize inventory</CardTitle>
-          </CardHeader>
-          <CardContent className="max-w-md space-y-3">
-            <div>
-              <Label>Room type</Label>
-              <select
-                className="mt-1 flex h-10 w-full rounded-md border border-gray-300 px-3 text-sm"
-                value={selectedRoomTypeId}
-                onChange={(e) => setSelectedRoomTypeId(e.target.value)}
-              >
-                <option value="">Select room type</option>
-                {(roomTypes ?? []).map((rt) => (
-                  <option key={getId(rt)} value={getId(rt)}>
-                    {rt.name}
-                  </option>
-                ))}
-              </select>
+            <div className="border-line border-t pt-6">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="font-serif text-xl leading-snug">Rooms</h2>
+                <span className="text-muted tabular text-xs">{(rooms ?? []).length}</span>
+              </div>
+              {(rooms ?? []).length === 0 ? (
+                <p className="text-muted mt-4 text-sm">No rooms yet.</p>
+              ) : (
+                <ul className="border-line divide-line mt-4 grid grid-cols-2 divide-y border-y sm:grid-cols-3">
+                  {(rooms ?? []).map((room) => {
+                    const record = room as Record<string, unknown>;
+                    return (
+                      <li
+                        key={getId(room as { id?: string; _id?: string })}
+                        className="tabular border-line py-3 text-sm"
+                      >
+                        {String(record.roomNumber ?? record.number ?? '')}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
-            <div>
-              <Label htmlFor="invStart">Start date</Label>
-              <Input
-                id="invStart"
-                type="date"
-                value={invStart}
-                onChange={(e) => setInvStart(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="invEnd">End date</Label>
-              <Input
-                id="invEnd"
-                type="date"
-                value={invEnd}
-                onChange={(e) => setInvEnd(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="invRooms">Available rooms per day</Label>
-              <Input
-                id="invRooms"
-                type="number"
-                value={invRooms}
-                onChange={(e) => setInvRooms(e.target.value)}
-              />
-            </div>
-            <Button
-              disabled={!selectedRoomTypeId || !invStart || !invEnd}
-              onClick={() =>
-                initInventoryMutation.mutate({
-                  propertyId,
-                  roomTypeId: selectedRoomTypeId,
-                  startDate: invStart,
-                  endDate: invEnd,
-                  totalRooms: parseInt(invRooms, 10),
-                })
-              }
+          </div>
+        )}
+
+        {tab === 'inventory' && (
+          <div className="max-w-lg">
+            <Fieldset
+              title="Initialize inventory"
+              description="Open up a date range for a room type, with the number of rooms available each night."
             >
-              Initialize inventory
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+              <div>
+                <Label htmlFor="invRoomType">Room type</Label>
+                <Select
+                  id="invRoomType"
+                  value={selectedRoomTypeId}
+                  onChange={(e) => setSelectedRoomTypeId(e.target.value)}
+                >
+                  <option value="">Select room type</option>
+                  {roomTypeOptions.map((rt) => (
+                    <option key={getId(rt)} value={getId(rt)}>
+                      {rt.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="invStart">Start date</Label>
+                  <Input
+                    id="invStart"
+                    type="date"
+                    value={invStart}
+                    onChange={(e) => setInvStart(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="invEnd">End date</Label>
+                  <Input
+                    id="invEnd"
+                    type="date"
+                    min={invStart || undefined}
+                    value={invEnd}
+                    onChange={(e) => setInvEnd(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="invRooms">Available rooms per day</Label>
+                <Input
+                  id="invRooms"
+                  type="number"
+                  min={1}
+                  value={invRooms}
+                  onChange={(e) => setInvRooms(e.target.value)}
+                />
+              </div>
+              <Button
+                disabled={
+                  !selectedRoomTypeId || !invStart || !invEnd || initInventoryMutation.isPending
+                }
+                onClick={() =>
+                  initInventoryMutation.mutate({
+                    propertyId,
+                    roomTypeId: selectedRoomTypeId,
+                    startDate: invStart,
+                    endDate: invEnd,
+                    totalRooms: parseInt(invRooms, 10),
+                  })
+                }
+              >
+                {initInventoryMutation.isPending ? 'Initializing…' : 'Initialize inventory'}
+              </Button>
+
+              {initInventoryMutation.isError && (
+                <Alert variant="error">
+                  {initInventoryMutation.error instanceof Error
+                    ? initInventoryMutation.error.message
+                    : 'Could not initialize inventory.'}
+                </Alert>
+              )}
+            </Fieldset>
+          </div>
+        )}
+      </div>
+    </Container>
   );
 }

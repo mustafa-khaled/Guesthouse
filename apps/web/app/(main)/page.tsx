@@ -22,7 +22,7 @@ export default async function HomePage() {
     <>
       <Hero />
       <ExperiencePaths />
-      <SuitesSection />
+      <SuitesSection properties={properties} />
       <WellnessPackages />
       <SpaSection />
       <GuestStories />

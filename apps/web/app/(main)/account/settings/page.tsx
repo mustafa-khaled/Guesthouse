@@ -1,32 +1,63 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import ProfileForm from '@/components/ProfileForm';
 import PasswordForm from '@/components/PasswordForm';
+import { AccountNav } from '@/components/shared/account-nav';
+import { Container } from '@/components/ui/container';
+import { PageHeader } from '@/components/ui/page-header';
 
 export const metadata: Metadata = {
   title: 'Account settings',
 };
 
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-line border-t pt-6">
+      <div className="grid gap-6 md:grid-cols-12 md:gap-8">
+        <div className="md:col-span-4">
+          <h2 className="font-serif text-xl leading-snug">{title}</h2>
+          <p className="text-muted mt-1.5 text-sm leading-relaxed">{description}</p>
+        </div>
+        <div className="md:col-span-8">{children}</div>
+      </div>
+    </section>
+  );
+}
+
 export default function AccountSettingsPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
-      <Link href="/account" className="mb-6 inline-block text-sm text-green-700 hover:underline">
-        ← Back to account
-      </Link>
+    <Container className="py-12 md:py-16">
+      <PageHeader
+        folio="—"
+        title="Account settings"
+        description="Your login details and the name we use when we write to you."
+        backHref="/account"
+        backLabel="Account"
+      />
 
-      <h1 className="mb-8 text-2xl font-bold">Account settings</h1>
-
-      <div className="space-y-12">
-        <div className="rounded-lg bg-white p-8 shadow">
-          <ProfileForm />
-        </div>
-
-        <hr />
-
-        <div className="rounded-lg bg-white p-8 shadow">
-          <PasswordForm />
-        </div>
+      <div className="mt-6">
+        <AccountNav />
       </div>
-    </div>
+
+      <div className="mt-10 max-w-3xl space-y-10">
+        <Section title="Your details" description="The name and email tied to your account.">
+          <ProfileForm />
+        </Section>
+
+        <Section
+          title="Password"
+          description="Choose something memorable. At least six characters."
+        >
+          <PasswordForm />
+        </Section>
+      </div>
+    </Container>
   );
 }

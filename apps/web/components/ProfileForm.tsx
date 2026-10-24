@@ -32,27 +32,27 @@ export default function ProfileForm() {
   }
 
   return (
-    <div>
-      <h2 className="mb-6 text-2xl font-bold text-gray-800">Your account settings</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div>
-          <Label htmlFor="email">Email address</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save settings'}
-        </Button>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <Label htmlFor="name">Name</Label>
+        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+      </div>
+      <div>
+        <Label htmlFor="email">Email address</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <p className="text-muted mt-1.5 text-xs">
+          Changing this may require you to verify the new address.
+        </p>
+      </div>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Saving…' : 'Save changes'}
+      </Button>
+    </form>
   );
 }

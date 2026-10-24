@@ -1,73 +1,78 @@
+import Link from 'next/link';
 import { Container } from '@/components/ui/container';
 import { footerLinks, site } from '@/lib/content';
 
+const columns = [
+  { title: 'Stay', links: footerLinks.stay },
+  { title: 'Wellness', links: footerLinks.wellness },
+  { title: 'Help', links: footerLinks.help },
+];
+
+function FooterLink({ href, label }: { href: string; label: string }) {
+  const className = 'focus-ring text-muted hover:text-brand text-sm transition-colors duration-200';
+
+  if (href.startsWith('#') || href.startsWith('mailto:')) {
+    return (
+      <a href={href} className={className}>
+        {label}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {label}
+    </Link>
+  );
+}
+
 export function Footer() {
   return (
-    <footer className="border-matcha-border bg-matcha-surface border-t py-16">
-      <Container>
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <p className="text-matcha-heading font-serif text-2xl font-medium">{site.name}</p>
-            <p className="text-matcha-body mt-3 max-w-xs text-sm leading-relaxed">
-              A warm sanctuary for rest, renewal, and unhurried luxury.
-            </p>
-            <div className="text-matcha-body mt-6 space-y-1 text-sm">
-              <p>{site.phone}</p>
-              <p>{site.email}</p>
+    <footer className="border-line bg-surface border-t">
+      <Container className="py-16 md:py-20">
+        <div className="grid gap-12 md:grid-cols-12 md:gap-8">
+          <div className="md:col-span-5">
+            <p className="text-ink font-serif text-3xl leading-none md:text-4xl">{site.name}</p>
+            <p className="text-muted mt-5 max-w-xs text-sm leading-relaxed">{site.description}</p>
+
+            <div className="text-muted mt-8 space-y-1.5 text-sm">
+              <p>
+                <a href={`tel:${site.phone.replace(/[^+\d]/g, '')}`} className="hover:text-brand">
+                  {site.phone}
+                </a>
+              </p>
+              <p>
+                <a href={`mailto:${site.email}`} className="hover:text-brand">
+                  {site.email}
+                </a>
+              </p>
+              <p>{site.location}</p>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-matcha-heading text-sm font-medium uppercase tracking-wide">
-              Stay
-            </h3>
-            <ul className="mt-4 space-y-2">
-              {footerLinks.stay.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-matcha-body hover:text-matcha-brand text-sm">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-matcha-heading text-sm font-medium uppercase tracking-wide">
-              Wellness
-            </h3>
-            <ul className="mt-4 space-y-2">
-              {footerLinks.wellness.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-matcha-body hover:text-matcha-brand text-sm">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-matcha-heading text-sm font-medium uppercase tracking-wide">
-              Help
-            </h3>
-            <ul className="mt-4 space-y-2">
-              {footerLinks.help.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-matcha-body hover:text-matcha-brand text-sm">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-7">
+            {columns.map((column) => (
+              <div key={column.title}>
+                <h3 className="text-ink font-sans text-xs font-medium uppercase tracking-[0.16em]">
+                  {column.title}
+                </h3>
+                <ul className="mt-4 space-y-2.5">
+                  {column.links.map((link) => (
+                    <li key={`${column.title}-${link.label}`}>
+                      <FooterLink href={link.href} label={link.label} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="border-matcha-border text-matcha-body mt-12 flex flex-col gap-3 border-t pt-8 text-sm md:flex-row md:items-center md:justify-between">
+        <div className="border-line text-muted mt-14 flex flex-col gap-3 border-t pt-6 text-xs md:mt-16 md:flex-row md:items-center md:justify-between">
           <p>
             © {new Date().getFullYear()} {site.name}. All rights reserved.
           </p>
-          <p>Built with TypeUI Matcha · Next.js</p>
+          <p>Concierge replies within one business day.</p>
         </div>
       </Container>
     </footer>

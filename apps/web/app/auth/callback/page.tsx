@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { clientFetch } from '@/lib/api/client';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
 import Spinner from '@/components/Spinner';
 
 export default function AuthCallbackPage() {
@@ -39,21 +42,26 @@ export default function AuthCallbackPage() {
     completeAuth();
   }, [router, refreshUser]);
 
-  if (error) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <p className="text-red-600">{error}</p>
-        <a href="/login" className="mt-4 inline-block text-green-700 hover:underline">
-          Back to login
-        </a>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col items-center py-24">
-      <Spinner />
-      <p className="mt-4 text-gray-600">Completing sign in...</p>
-    </div>
+    <Container className="flex min-h-[60vh] max-w-md flex-col items-start justify-center py-20">
+      {error ? (
+        <>
+          <h1 className="text-title">We could not finish signing you in</h1>
+          <Alert variant="error" className="mt-5 w-full">
+            {error}
+          </Alert>
+          <Button href="/login" className="mt-6">
+            Back to login
+          </Button>
+        </>
+      ) : (
+        <>
+          <Spinner className="!p-0" />
+          <p className="text-muted mt-4 text-sm" role="status">
+            Completing sign in…
+          </p>
+        </>
+      )}
+    </Container>
   );
 }

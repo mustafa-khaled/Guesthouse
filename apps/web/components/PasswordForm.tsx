@@ -37,24 +37,25 @@ export default function PasswordForm() {
   }
 
   return (
-    <div>
-      <h2 className="mb-6 text-2xl font-bold text-gray-800">Password change</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label htmlFor="password-current">Current password</Label>
-          <Input
-            id="password-current"
-            type="password"
-            value={passwordCurrent}
-            onChange={(e) => setPasswordCurrent(e.target.value)}
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <Label htmlFor="password-current">Current password</Label>
+        <Input
+          id="password-current"
+          type="password"
+          autoComplete="current-password"
+          value={passwordCurrent}
+          onChange={(e) => setPasswordCurrent(e.target.value)}
+          required
+        />
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <Label htmlFor="password">New password</Label>
           <Input
             id="password"
             type="password"
+            autoComplete="new-password"
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -66,16 +67,17 @@ export default function PasswordForm() {
           <Input
             id="password-confirm"
             type="password"
+            autoComplete="new-password"
             minLength={6}
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
             required
           />
         </div>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Updating...' : 'Save password'}
-        </Button>
-      </form>
-    </div>
+      </div>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Updating…' : 'Save password'}
+      </Button>
+    </form>
   );
 }

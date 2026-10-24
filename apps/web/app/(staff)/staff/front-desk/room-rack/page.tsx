@@ -1,11 +1,15 @@
 'use client';
 
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { DoorOpen } from 'lucide-react';
 import { frontDeskQueries } from '@/queries/staff.queries';
-import { useSelectedProperty } from '@/features/staff/use-selected-property';
+import { useSelectedProperty } from '@/features/properties/use-selected-property';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Container } from '@/components/ui/container';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/ui/page-header';
+import { Select } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -26,48 +30,59 @@ export default function RoomRackPage() {
 
   if (isLoading) return <Spinner />;
 
-  if (isError) {
-    return (
-      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
-        {error instanceof Error ? error.message : 'Failed to load room rack'}
-      </div>
-    );
-  }
-
   const rows = (data ?? []) as RoomRackRow[];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Room Rack</h1>
-          <p className="text-sm text-gray-500">Current room status and assignments</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            className="h-10 rounded-md border border-gray-300 px-3 text-sm"
-            value={propertyId}
-            onChange={(e) => setPropertyId(e.target.value)}
-          >
-            {properties.map((property) => (
-              <option key={getId(property)} value={getId(property)}>
-                {property.name}
-              </option>
-            ))}
-          </select>
-          <Link href="/staff/front-desk">
-            <Button variant="outline">Back to Front Desk</Button>
-          </Link>
-        </div>
-      </div>
+    <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+      <PageHeader
+        folio="—"
+        title="Room rack"
+        description="Where every room stands right now — clean, occupied, out of order, or waiting for the floor team."
+        backHref="/staff/front-desk"
+        backLabel="Front desk"
+        actions={
+          properties.length > 1 ? (
+            <div className="w-56">
+              <Select
+                aria-label="Selected property"
+                value={propertyId}
+                onChange={(e) => setPropertyId(e.target.value)}
+              >
+                {properties.map((property) => (
+                  <option key={getId(property)} value={getId(property)}>
+                    {property.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          ) : undefined
+        }
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Rooms ({rows.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {isError && (
+        <Alert variant="error" className="mt-8" title="We could not load the room rack">
+          {error instanceof Error ? error.message : 'Please refresh the page and try again.'}
+        </Alert>
+      )}
+
+      <div className="mt-8">
+        <div className="border-line flex flex-wrap items-baseline justify-between gap-3 border-b pb-3">
+          <h2 className="font-serif text-xl leading-snug">All rooms</h2>
+          <span className="text-muted tabular text-xs">{rows.length} rooms</span>
+        </div>
+
+        <div className="mt-6">
           {rows.length === 0 ? (
-            <p className="text-sm text-gray-500">No room data available.</p>
+            <EmptyState
+              icon={<DoorOpen />}
+              title="No rooms to show"
+              description="Add rooms to this property from the inventory screen and they will appear here."
+              action={
+                <Button href="/admin/properties" variant="secondary">
+                  Manage properties
+                </Button>
+              }
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -82,11 +97,11 @@ export default function RoomRackPage() {
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={getId(row as { id?: string; _id?: string }) || String(row.number)}>
-                    <TableCell className="font-medium">
+                    <TableCell className="text-ink font-medium">
                       {getRefLabel(row.room as never) ||
                         String(row.number ?? row.roomNumber ?? '—')}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-muted">
                       {getRefLabel(row.roomType as never) || String(row.roomTypeName ?? '—')}
                     </TableCell>
                     <TableCell>
@@ -96,10 +111,10 @@ export default function RoomRackPage() {
                         '—'
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-muted">
                       {getRefLabel(row.guest as never) || getRefLabel(row.guestId as never)}
                     </TableCell>
-                    <TableCell className="text-gray-500">
+                    <TableCell className="text-muted">
                       {String(row.notes ?? row.housekeepingNotes ?? '—')}
                     </TableCell>
                   </TableRow>
@@ -107,8 +122,8 @@ export default function RoomRackPage() {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </Container>
   );
 }

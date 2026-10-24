@@ -1,13 +1,16 @@
-export default function Spinner() {
+import { cn } from '@/lib/utils';
+
+export default function Spinner({ className }: { className?: string }) {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label="Loading"
-      className="flex items-center justify-center py-20"
-    >
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-green-200 border-t-green-600" />
-      <span className="sr-only">Loading...</span>
+    <div role="status" className="flex items-center justify-center p-4">
+      <div
+        aria-hidden
+        className={cn(
+          'border-brand/20 border-t-brand h-8 w-8 animate-spin rounded-full border-2',
+          className,
+        )}
+      />
+      <span className="sr-only">Loading</span>
     </div>
   );
 }

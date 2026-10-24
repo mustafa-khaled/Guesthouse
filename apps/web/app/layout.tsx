@@ -1,22 +1,51 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3001'),
   title: {
-    template: '%s | Guesthouse',
-    default: 'Guesthouse | Hotel Booking & Management',
+    template: '%s | Serene Stays',
+    default: 'Serene Stays — A garden retreat for rest and renewal',
   },
-  description: 'Book stays and manage your guesthouse properties',
+  description:
+    'Suites, garden spa rituals, and unhurried wellness packages in a warm sanctuary designed for rest and renewal.',
+  openGraph: {
+    title: 'Serene Stays',
+    description:
+      'Suites, garden spa rituals, and unhurried wellness packages in a warm sanctuary designed for rest and renewal.',
+    type: 'website',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#f6f2e8',
+  colorScheme: 'light',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet" />
+        <link
+          rel="preload"
+          href="/fonts/newsreader-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/instrument-sans-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
-      <body className="antialiased">
+      <body className="bg-surface text-ink min-h-screen antialiased">
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
         <Providers>{children}</Providers>
       </body>
     </html>

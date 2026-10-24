@@ -2,9 +2,13 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { ScrollText } from 'lucide-react';
 import { adminQueries } from '@/queries/admin.queries';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Container } from '@/components/ui/container';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/ui/page-header';
 import {
   Table,
   TableBody,
@@ -27,94 +31,91 @@ export default function AdminAuditLogsPage() {
 
   if (isLoading) return <Spinner />;
 
-  if (isError) {
-    return (
-      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
-        {error instanceof Error ? error.message : 'Failed to load audit logs'}
-      </div>
-    );
-  }
-
   const logs = data?.data ?? [];
   const pagination = data?.pagination;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
-        <p className="text-sm text-gray-500">System activity and change history</p>
-      </div>
+    <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+      <PageHeader
+        folio="—"
+        title="Audit logs"
+        description="A durable record of who changed what, and when. Useful when something needs explaining."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Activity Log
-            {pagination ? ` (${pagination.total})` : ''}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {logs.length === 0 ? (
-            <p className="text-sm text-gray-500">No audit logs found.</p>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Resource</TableHead>
-                    <TableHead>Resource ID</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>IP</TableHead>
+      {isError && (
+        <Alert variant="error" className="mt-8" title="We could not load the audit log">
+          {error instanceof Error ? error.message : 'Please refresh the page and try again.'}
+        </Alert>
+      )}
+
+      <div className="mt-8">
+        {logs.length === 0 ? (
+          <EmptyState
+            icon={<ScrollText />}
+            title="Nothing logged yet"
+            description="Administrative actions will be recorded here as they happen."
+          />
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Resource</TableHead>
+                  <TableHead>Resource ID</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>IP</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log: AuditLog) => (
+                  <TableRow key={getId(log)}>
+                    <TableCell className="text-muted tabular whitespace-nowrap text-xs">
+                      {log.createdAt ? formatDate(log.createdAt) : '—'}
+                    </TableCell>
+                    <TableCell className="text-ink font-medium">{log.action}</TableCell>
+                    <TableCell>{log.resource}</TableCell>
+                    <TableCell className="text-muted font-mono text-xs">
+                      {log.resourceId?.slice(0, 12) ?? '—'}
+                    </TableCell>
+                    <TableCell className="text-muted">{getRefLabel(log.userId as never)}</TableCell>
+                    <TableCell className="text-muted font-mono text-xs">
+                      {log.ipAddress || '—'}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.map((log: AuditLog) => (
-                    <TableRow key={getId(log)}>
-                      <TableCell className="whitespace-nowrap">
-                        {log.createdAt ? formatDate(log.createdAt) : '—'}
-                      </TableCell>
-                      <TableCell className="font-medium">{log.action}</TableCell>
-                      <TableCell>{log.resource}</TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {log.resourceId?.slice(0, 12) ?? '—'}
-                      </TableCell>
-                      <TableCell>{getRefLabel(log.userId as never)}</TableCell>
-                      <TableCell className="text-gray-500">{log.ipAddress || '—'}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                ))}
+              </TableBody>
+            </Table>
 
-              {pagination && pagination.totalPages > 1 && (
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-sm text-gray-500">
-                    Page {pagination.page} of {pagination.totalPages}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!pagination.hasPrevPage || isFetching}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!pagination.hasNextPage || isFetching}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
+            {pagination && pagination.totalPages > 1 && (
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-muted tabular text-xs">
+                  Page {pagination.page} of {pagination.totalPages} · {pagination.total} entries
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={!pagination.hasPrevPage || isFetching}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={!pagination.hasNextPage || isFetching}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
                 </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </Container>
   );
 }

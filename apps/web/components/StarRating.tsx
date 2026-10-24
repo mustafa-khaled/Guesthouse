@@ -12,25 +12,29 @@ export default function StarRating({
   onChange,
 }: StarRatingProps) {
   return (
-    <div className="flex gap-0.5">
+    <div className="flex items-center gap-0.5" aria-hidden={!interactive}>
       {Array.from({ length: maxStars }, (_, i) => {
         const starValue = i + 1;
         const filled = starValue <= Math.round(rating);
+        const tone = filled ? 'text-brand' : 'text-line-strong/50';
+
         if (interactive && onChange) {
           return (
             <button
               key={i}
               type="button"
               onClick={() => onChange(starValue)}
-              className={`text-lg ${filled ? 'text-green-500' : 'text-gray-300'} hover:text-green-400`}
-              aria-label={`Rate ${starValue} stars`}
+              className={`focus-ring rounded-[2px] px-0.5 text-xl leading-none transition-colors duration-150 ${tone} hover:text-brand-deep`}
+              aria-label={`Rate ${starValue} ${starValue === 1 ? 'star' : 'stars'}`}
+              aria-pressed={filled}
             >
               ★
             </button>
           );
         }
+
         return (
-          <span key={i} className={`text-sm ${filled ? 'text-green-500' : 'text-gray-300'}`}>
+          <span key={i} className={`text-sm leading-none ${tone}`}>
             ★
           </span>
         );

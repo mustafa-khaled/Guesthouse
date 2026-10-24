@@ -19,71 +19,90 @@ Active design system for this project. Treat every token and component rule as b
 
 ## Color tokens
 
-| Token           | CSS variable            | Hex                      | Usage                               |
-| --------------- | ----------------------- | ------------------------ | ----------------------------------- |
-| Surface         | `--matcha-surface`      | `#F6F2E8`                | Page and content backgrounds        |
-| Section Surface | `--matcha-section`      | `#DBF2D0`                | Spa/wellness highlight sections     |
-| Brand           | `--matcha-brand`        | `#314535`                | Primary actions, nav, brand anchors |
-| Brand Medium    | `--matcha-brand-medium` | `#AEC2A4`                | Card fills, quiet accents, borders  |
-| Heading         | `--matcha-heading`      | `#2B3A2E`                | Display and section headings        |
-| Body            | `--matcha-body`         | `#4A5547`                | Paragraphs, labels, UI copy         |
-| Border          | `--matcha-border`       | `#C8D4BC`                | Dividers, card borders              |
-| Shadow          | `--matcha-shadow`       | `rgba(43, 58, 46, 0.08)` | Card elevation                      |
+Semantic tokens live in `apps/web/app/globals.css`. Use the Tailwind utilities (`bg-surface`,
+`text-ink`, `border-line`, `bg-brand`), never raw hex in components.
+
+| Token          | CSS variable       | Hex       | Usage                                 |
+| -------------- | ------------------ | --------- | ------------------------------------- |
+| Surface        | `--surface`        | `#F6F2E8` | Page background (oat)                 |
+| Surface raised | `--surface-raised` | `#FCFAF4` | Cards, inputs, lifted panels (paper)  |
+| Brand          | `--brand`          | `#314535` | Primary actions, footer CTA (matcha)  |
+| Brand deep     | `--brand-deep`     | `#243428` | Hover / pressed brand                 |
+| Brand soft     | `--brand-soft`     | `#DBF2D0` | Quiet highlight blocks, selected rows |
+| Ink            | `--ink`            | `#222E25` | Headings and primary copy (bark)      |
+| Ink muted      | `--ink-muted`      | `#55654D` | Secondary copy, labels (fern)         |
+| Line           | `--line`           | `#C8D4BC` | Hairlines, borders                    |
+| Line strong    | `--line-strong`    | `#A9B99F` | Hover borders, stronger rules         |
+
+Status tokens: `--success`, `--warning`, `--danger`, `--info`, each with a `*-tint` background.
+Primary buttons are `text-surface-raised` on `bg-brand` (~9:1) — never `text-white`, never
+`text-ink` on brand.
 
 ## Typography
 
-- **Headings / display:** Noto Serif, medium weight (500), measured not bold
-- **Body / UI:** Noto Sans, regular (400) and medium (500) for emphasis
-- **Scale:** 14 / 16 / 18 / 24 / 32 / 40 / 48px
-- **Line height:** 1.6–1.7 for body; 1.2–1.3 for headings
-- **Labels:** uppercase tracking-wide at 12–13px for section eyebrows
+- **Display:** Newsreader 400/500 (self-hosted, `public/fonts`). `--text-display` hero,
+  `--text-title` page titles, `--text-heading` sections. Measured, never bold.
+- **UI:** Instrument Sans 400/500/600. Body, labels, tables, buttons.
+- **Scale:** 12 / 14 / 16 / 18 / 20 / 24 / 32 / 40 / 56 / 88px via the clamp tokens.
+- **Line height:** 1.6–1.7 body; 1.02–1.15 display/headings.
+- **Labels:** sentence case. Numbers use `.tabular`.
 
 ## Spacing and shape
 
-- **Grid:** 8px baseline (8, 16, 24, 32, 48, 64, 80, 96)
-- **Section padding:** 64px mobile, 96px desktop vertical; 24px horizontal mobile, 32px desktop
+- **Grid:** 8px baseline (4, 8, 12, 16, 24, 32, 48, 64, 80, 96)
+- **Section padding:** `py-20` mobile, `md:py-28` desktop; container gutters 20/32/40px
 - **Border radius:** 4px on cards, inputs, buttons (crisp, not pill)
-- **Shadows:** light only — `0 1px 3px var(--matcha-shadow), 0 4px 12px var(--matcha-shadow)`
-- **Sections:** same surface color; separate with 1px dividers, not alternating backgrounds
+- **Shadows:** `--shadow-soft` only; `--shadow-lift` on hover, never at rest
+- **Sections:** same surface, separated by 1px `--line` hairlines — not alternating backgrounds
+
+## Signature elements
+
+- **Chapter folios:** large Newsreader numerals (01–08) on a hairline replace uppercase eyebrows.
+  Mark them `aria-hidden`; the heading carries the meaning. Portal screens use `—`.
+- **Motion:** one orchestrated moment (hero image settles from 1.04 over 900ms). All UI transitions
+  are 150–250ms `ease-out`. `prefers-reduced-motion` removes animation; nothing hides until it runs.
 
 ## Components
 
 ### Buttons
 
-- Primary: brand background, white text, 4px radius, min-height 48px, gentle raise on hover
-- Secondary: transparent with brand border, brand text
-- Ghost: brand text only, underline on hover
-- Focus: 2px brand outline offset 2px
+- Primary: `bg-brand text-surface-raised`, 4px radius, min-height 48px (`sm` 40px), hover `bg-brand-deep`
+- Secondary: transparent, `border-line`, `text-ink`, hover brand border + text
+- Ghost: brand text, `bg-brand-soft/60` on hover
+- Focus: `focus-ring` utility (2px brand outline, 2px offset)
 
 ### Cards
 
-- White or brand-medium tint background
-- 1px border `--matcha-border`
-- 4px radius, light shadow
-- Padding 24px (32px on desktop feature cards)
+- `bg-surface-raised`, 1px `--line`, 4px radius
+- Prefer hairline section blocks over boxed cards; when a card is used, vary size and image ratio
+- Padding 24px (32px on feature cards)
 
 ### Inputs
 
-- White background, 1px border, 4px radius
+- `bg-surface-raised`, 1px `--line`, 4px radius
 - Min height 48px for touch
-- Focus ring: 2px brand
+- Focus ring: 2px brand; invalid: `aria-[invalid=true]:border-danger`
 
 ### Navigation
 
-- Sticky top, surface background with subtle bottom border
-- Links: body color, brand on hover/active
-- CTA button in nav uses primary button style
+- Sticky top, `bg-surface/92` with backdrop blur and a bottom hairline
+- Links: muted, brand on hover/active
+- Nav CTA uses the primary button at `sm` size
 
 ## Anti-patterns
 
-- No pill buttons, no heavy gradients, no gold accents
-- No dark mode toggle — Matcha is warm light only
-- No alternating section background colors except intentional `--matcha-section` blocks
-- Do not use Geist or system fonts — use Noto Serif + Noto Sans only
+- No pill buttons, gradients, gold accents, glassmorphism
+- No dark mode — warm light only
+- No cream + terracotta, near-black + acid accent, or purple gradient palettes
+- No uppercase eyebrow above every heading (use the folio)
+- No colouring one word of every headline
+- No identical rounded-card rows; no `text-white` / `text-ink` on brand
+- Do not use Geist or system fonts — Newsreader + Instrument Sans only
 
 ## Implementation in this repo
 
-- Tokens live in `src/app/globals.css` as CSS custom properties
-- Shared primitives in `src/components/ui/`
-- Page sections in `src/components/sections/`
-- Use Tailwind `@theme inline` to map tokens to utility classes
+- Tokens live in `apps/web/app/globals.css` (`:root` + `@theme inline`)
+- Brand rationale and the do-not list: `apps/web/BRAND.md`
+- Shared primitives in `apps/web/components/ui/`
+- Marketing sections in `apps/web/components/sections/`
+- Cross-persona shells in `apps/web/components/shared/`

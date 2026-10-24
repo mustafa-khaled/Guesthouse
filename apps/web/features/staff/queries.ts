@@ -59,10 +59,14 @@ export const frontDeskQueries = {
 };
 
 export const housekeepingQueries = {
-  dashboard: () =>
+  dashboard: (propertyId: string) =>
     queryOptions({
-      queryKey: ['housekeeping', 'dashboard'] as const,
-      queryFn: () => clientFetch<{ data: Record<string, unknown> }>('/v1/housekeeping/dashboard'),
+      queryKey: ['housekeeping', 'dashboard', propertyId] as const,
+      queryFn: () =>
+        clientFetch<{ data: Record<string, unknown> }>(
+          `/v1/housekeeping/dashboard?propertyId=${encodeURIComponent(propertyId)}`,
+        ),
+      enabled: !!propertyId,
       select: (res) => res.data,
     }),
 

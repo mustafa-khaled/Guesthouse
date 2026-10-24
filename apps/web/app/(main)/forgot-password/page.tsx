@@ -4,19 +4,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { clientFetch } from '@/lib/api/client';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthShell } from '@/components/shared/auth-shell';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
       await clientFetch('/auth/forgot-password', {
@@ -26,7 +29,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
       toast.success('Reset link sent if the email exists');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to send reset email');
+      setError(err instanceof Error ? err.message : 'We could not send the reset email.');
     } finally {
       setIsSubmitting(false);
     }
@@ -34,57 +37,52 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16">
-        <Card>
-          <CardHeader>
-            <CardTitle>Check your email</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              If an account exists for {email}, a password reset link has been sent.
-            </p>
-            <Link
-              href="/login"
-              className="mt-4 inline-block text-sm text-green-700 hover:underline"
-            >
-              Back to login
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <AuthShell
+        title="Check your email"
+        description="If the address is with us, a reset link is already on its way."
+        footer={
+          <Link href="/login" className="text-brand text-sm underline-offset-4 hover:underline">
+            Back to login
+          </Link>
+        }
+      >
+        <Alert variant="success" title="Request received">
+          If an account exists for {email}, a password reset link has been sent.
+        </Alert>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <Card>
-        <CardHeader>
-          <CardTitle>Forgot your password?</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Sending...' : 'Send reset link'}
-            </Button>
-          </form>
-          <p className="mt-4 text-center text-sm">
-            <Link href="/login" className="text-green-700 hover:underline">
-              Back to login
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell
+      title="Forgot your password?"
+      description="Enter the email you use for Serene Stays and we will send a quiet way back in."
+      footer={
+        <Link href="/login" className="text-brand text-sm underline-offset-4 hover:underline">
+          Back to login
+        </Link>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && <Alert variant="error">{error}</Alert>}
+
+        <div>
+          <Label htmlFor="email">Email address</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? 'Sending…' : 'Send reset link'}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

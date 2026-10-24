@@ -2,10 +2,14 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { Building2 } from 'lucide-react';
 import { adminQueries } from '@/queries/admin.queries';
-import { Button } from '@/components/ui/button';
+import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/ui/page-header';
 import {
   Table,
   TableBody,
@@ -23,73 +27,75 @@ export default function AdminPropertiesPage() {
 
   if (isLoading) return <Spinner />;
 
-  if (isError) {
-    return (
-      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
-        {error instanceof Error ? error.message : 'Failed to load properties'}
-      </div>
-    );
-  }
-
   const properties = data?.data ?? [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
-        <p className="text-sm text-gray-500">Manage guesthouse listings</p>
-        <Link href="/admin/properties/new" className="mt-3 inline-block">
-          <Button>Create property</Button>
-        </Link>
-      </div>
+    <Container className="max-w-none px-0 sm:px-0 lg:px-0">
+      <PageHeader
+        folio="—"
+        title="Properties"
+        description="Every house in the collection — listings, inventory, and how each one is presented."
+        actions={<Button href="/admin/properties/new">New property</Button>}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Properties ({properties.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {properties.length === 0 ? (
-            <p className="text-sm text-gray-500">No properties found.</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
+      {isError && (
+        <Alert variant="error" className="mt-8" title="We could not load properties">
+          {error instanceof Error ? error.message : 'Please refresh the page and try again.'}
+        </Alert>
+      )}
+
+      <div className="mt-8">
+        {properties.length === 0 ? (
+          <EmptyState
+            icon={<Building2 />}
+            title="No properties yet"
+            description="Create the first property to start taking bookings."
+            action={<Button href="/admin/properties/new">Create property</Button>}
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {properties.map((property: Property) => (
+                <TableRow key={getId(property)}>
+                  <TableCell className="text-ink font-medium">{property.name}</TableCell>
+                  <TableCell className="text-muted">
+                    {[property.address?.city, property.address?.country]
+                      .filter(Boolean)
+                      .join(', ') || '—'}
+                  </TableCell>
+                  <TableCell className="tabular">
+                    {property.starRating ? `${property.starRating} ★` : '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={property.isActive !== false ? 'success' : 'danger'} dot>
+                      {property.isActive !== false ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Link
+                      href={`/admin/properties/${getId(property)}`}
+                      className="focus-ring text-brand text-sm underline-offset-4 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {properties.map((property: Property) => (
-                  <TableRow key={getId(property)}>
-                    <TableCell className="font-medium">{property.name}</TableCell>
-                    <TableCell>
-                      {[property.address?.city, property.address?.country]
-                        .filter(Boolean)
-                        .join(', ') || '—'}
-                    </TableCell>
-                    <TableCell>{property.starRating ? `${property.starRating} ★` : '—'}</TableCell>
-                    <TableCell>
-                      <Badge variant={property.isActive !== false ? 'success' : 'danger'}>
-                        {property.isActive !== false ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/admin/properties/${getId(property)}`}>
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+    </Container>
   );
 }
