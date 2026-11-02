@@ -5,15 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, LogOut } from 'lucide-react';
 import { accountNav, filterNavForRole, isNavItemActive, workspaceNav } from '@/lib/navigation';
+import { initials } from '@/lib/identity';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-
-function initials(name?: string) {
-  if (!name) return 'SS';
-  const parts = name.trim().split(/\s+/).slice(0, 2);
-  const letters = parts.map((part) => part[0]?.toUpperCase() ?? '').join('');
-  return letters || 'SS';
-}
 
 /**
  * Signed-in identity chip. A disclosure, not a menu widget: the panel is plain

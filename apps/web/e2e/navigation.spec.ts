@@ -49,6 +49,13 @@ test.describe('site navigation', () => {
     await expect(sheet).toBeHidden();
   });
 
+  test('the staff portal has an entry point', async ({ page }) => {
+    await page.goto('/staff');
+
+    await expect(page).toHaveURL(/\/login\?redirect=%2Fstaff$/);
+    await expect(page.getByRole('heading', { level: 1, name: /log in/i })).toBeVisible();
+  });
+
   test('the 404 page keeps the site chrome', async ({ page }) => {
     await page.goto('/nonexistent-page-xyz');
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { User, Role } from '@guesthouse/shared';
 import { hasMinimumRole } from '@guesthouse/shared';
 import { clientFetch } from '@/lib/api/client';
@@ -27,6 +28,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const refreshUser = useCallback(async () => {
     try {
@@ -62,9 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    await clientFetch('/auth/logout', { method: 'POST' });
-    setUser(null);
-  }, []);
+    try {
+      await clientFetch('/auth/logout', { method: 'POST' });
+    } finally {
+      // Clear local identity and cached server data even if the request failed,
+      // so a shared terminal never shows the previous user's stay.
+      setUser(null);
+      queryClient.clear();
+    }
+  }, [queryClient]);
 
   const hasRole = useCallback(
     (role: Role) => {

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountNav,
+  adminNav,
   filterNavForRole,
   guestNav,
   isNavItemActive,
+  staffNav,
   workspaceNav,
   type NavItem,
 } from '@/lib/navigation';
@@ -58,6 +60,19 @@ describe('filterNavForRole', () => {
 });
 
 describe('navigation config', () => {
+  it('keeps the admin dashboard exact so sections stand on their own', () => {
+    const dashboard = adminNav[0];
+    expect(isNavItemActive('/admin', dashboard)).toBe(true);
+    expect(isNavItemActive('/admin/properties', dashboard)).toBe(false);
+  });
+
+  it('keeps front of house current while working inside it', () => {
+    const frontDesk = staffNav[0];
+    expect(isNavItemActive('/staff/front-desk', frontDesk)).toBe(true);
+    expect(isNavItemActive('/staff/front-desk/room-rack', frontDesk)).toBe(true);
+    expect(isNavItemActive('/staff/bookings', frontDesk)).toBe(false);
+  });
+
   it('points every guest link at a real route, not a homepage fragment', () => {
     for (const entry of [...guestNav, ...accountNav]) {
       expect(entry.href.startsWith('/')).toBe(true);

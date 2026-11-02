@@ -6,19 +6,15 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { site } from '@/lib/content';
-
-export interface PortalNavItem {
-  href: string;
-  label: string;
-}
+import { isNavItemActive, type NavItem } from '@/lib/navigation';
+import { PortalAccount } from '@/components/shared/portal-account';
 
 export interface PortalShellProps {
   /** Small label above the wordmark, e.g. "Operations" */
   eyebrow: string;
   navLabel: string;
-  items: PortalNavItem[];
+  items: NavItem[];
   children: React.ReactNode;
-  footer?: React.ReactNode;
 }
 
 function Wordmark({ eyebrow }: { eyebrow: string }) {
@@ -37,7 +33,7 @@ function NavList({
   navLabel,
   onNavigate,
 }: {
-  items: PortalNavItem[];
+  items: NavItem[];
   navLabel: string;
   onNavigate?: () => void;
 }) {
@@ -47,11 +43,7 @@ function NavList({
     <nav aria-label={navLabel} className="flex-1 px-3 py-4">
       <ul className="space-y-0.5">
         {items.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== '/admin' &&
-              item.href !== '/staff/front-desk' &&
-              pathname.startsWith(`${item.href}/`));
+          const isActive = isNavItemActive(pathname, item);
 
           return (
             <li key={item.href}>
@@ -90,7 +82,7 @@ function ShellFooter() {
   );
 }
 
-export function PortalShell({ eyebrow, navLabel, items, children, footer }: PortalShellProps) {
+export function PortalShell({ eyebrow, navLabel, items, children }: PortalShellProps) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -149,7 +141,7 @@ export function PortalShell({ eyebrow, navLabel, items, children, footer }: Port
           <Wordmark eyebrow={eyebrow} />
         </div>
         <NavList items={items} navLabel={navLabel} />
-        {footer}
+        <PortalAccount />
         <ShellFooter />
       </aside>
 
@@ -195,7 +187,7 @@ export function PortalShell({ eyebrow, navLabel, items, children, footer }: Port
             </button>
           </div>
           <NavList items={items} navLabel={navLabel} onNavigate={() => setOpen(false)} />
-          {footer}
+          <PortalAccount />
           <ShellFooter />
         </div>
       )}
