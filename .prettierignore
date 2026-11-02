@@ -4,3 +4,7 @@ dist
 coverage
 pnpm-lock.yaml
 *.min.js
+
+# Vendored third-party skills: keep upstream bytes intact so re-installs diff cleanly
+.agents/skills/unslop
+.agents/skills/ui-ux-pro-max
