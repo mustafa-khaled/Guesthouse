@@ -22,13 +22,6 @@ export const photography = {
   garden: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b',
 };
 
-export const navLinks = [
-  { label: 'Suites', href: '/#suites' },
-  { label: 'Spa', href: '/#spa' },
-  { label: 'Packages', href: '/#packages' },
-  { label: 'Experiences', href: '/#experiences' },
-];
-
 export const stats = [
   { value: '12', label: 'Signature suites' },
   { value: '18', label: 'Treatment rooms' },
@@ -107,28 +100,6 @@ export const trustItems = [
       'From the garden-to-table kitchen to botanical spa treatments, nature is our co-host and compass.',
   },
 ];
-
-export const footerLinks = {
-  stay: [
-    { label: 'Suites', href: '/#suites' },
-    { label: 'Book a stay', href: '/search' },
-    { label: 'Our houses', href: '/search' },
-    { label: 'Gift cards', href: '/#packages' },
-  ],
-  wellness: [
-    { label: 'Garden spa', href: '/#spa' },
-    { label: 'Yoga & meditation', href: '/#experiences' },
-    { label: 'Wellness packages', href: '/#packages' },
-    { label: 'Guest stories', href: '/#stories' },
-  ],
-  help: [
-    { label: 'FAQs', href: '/#faq' },
-    { label: 'Contact us', href: 'mailto:hello@serenestays.com' },
-    { label: 'Cancellation policy', href: '/terms' },
-    { label: 'Privacy policy', href: '/privacy' },
-    { label: 'Terms of stay', href: '/terms' },
-  ],
-};
 
 export const experiencePaths = [
   {

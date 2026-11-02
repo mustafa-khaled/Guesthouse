@@ -93,12 +93,12 @@ export function SuitesSection({ properties = [] }: { properties?: Property[] }) 
       title="Rooms that hold the light"
       description="Each stay is a quiet composition of light, texture, and unhurried comfort — closer to a home than a hotel."
       aside={
-        <a
-          href="/search"
+        <Link
+          href="/properties"
           className="focus-ring text-brand hover:text-brand-deep mt-4 inline-flex text-sm underline-offset-4 hover:underline"
         >
           View all stays →
-        </a>
+        </Link>
       }
     >
       <div className="grid gap-10 md:grid-cols-12 md:gap-8">

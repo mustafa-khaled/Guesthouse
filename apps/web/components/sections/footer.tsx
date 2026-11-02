@@ -1,12 +1,9 @@
 import Link from 'next/link';
 import { Container } from '@/components/ui/container';
-import { footerLinks, site } from '@/lib/content';
+import { site } from '@/lib/content';
+import { footerNav } from '@/lib/navigation';
 
-const columns = [
-  { title: 'Stay', links: footerLinks.stay },
-  { title: 'Wellness', links: footerLinks.wellness },
-  { title: 'Help', links: footerLinks.help },
-];
+const columns = footerNav;
 
 function FooterLink({ href, label }: { href: string; label: string }) {
   const className = 'focus-ring text-muted hover:text-brand text-sm transition-colors duration-200';
@@ -57,7 +54,7 @@ export function Footer() {
                   {column.title}
                 </h3>
                 <ul className="mt-4 space-y-2.5">
-                  {column.links.map((link) => (
+                  {column.items.map((link) => (
                     <li key={`${column.title}-${link.label}`}>
                       <FooterLink href={link.href} label={link.label} />
                     </li>

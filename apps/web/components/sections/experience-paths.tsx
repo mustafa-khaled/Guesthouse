@@ -12,6 +12,14 @@ export function ExperiencePaths() {
       folio="02"
       title="What are you seeking?"
       description="Choose an intention, and we will guide you to the suites, rituals, and packages that fit your escape."
+      aside={
+        <Link
+          href="/experiences"
+          className="focus-ring text-brand hover:text-brand-deep mt-4 inline-flex text-sm underline-offset-4 hover:underline"
+        >
+          Browse all experiences →
+        </Link>
+      }
     >
       <div className="grid gap-14 md:grid-cols-12 md:gap-8">
         {experiencePaths.map((path, index) => (

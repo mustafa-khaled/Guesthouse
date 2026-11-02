@@ -1,7 +1,9 @@
+import Link from 'next/link';
+import { SpaMenu } from '@/components/sections/spa-menu';
 import { buttonClass } from '@/components/ui/button';
 import { Photo } from '@/components/ui/photo';
 import { Section } from '@/components/ui/section';
-import { photography, spaTreatments } from '@/lib/content';
+import { photography } from '@/lib/content';
 
 export function SpaSection() {
   return (
@@ -11,6 +13,14 @@ export function SpaSection() {
       folio="05"
       title="Rituals of stillness"
       description="Warm stone, eucalyptus air, and unhurried care. Every treatment is designed to slow the pace of the day."
+      aside={
+        <Link
+          href="/spa"
+          className="focus-ring text-brand hover:text-brand-deep mt-4 inline-flex text-sm underline-offset-4 hover:underline"
+        >
+          View the full menu →
+        </Link>
+      }
     >
       <div className="grid gap-10 md:grid-cols-12 md:gap-12">
         <div className="md:col-span-5">
@@ -28,26 +38,7 @@ export function SpaSection() {
 
         <div className="md:col-span-7">
           <p className="text-brand text-xs uppercase tracking-[0.16em]">The menu</p>
-          <ul className="border-line mt-3 border-t">
-            {spaTreatments.map((treatment) => (
-              <li key={treatment.name} className="border-line border-b py-6">
-                <div className="flex items-baseline gap-4">
-                  <h3 className="font-serif text-xl leading-tight md:text-2xl">{treatment.name}</h3>
-                  <span aria-hidden className="border-line mb-1.5 flex-1 border-b border-dotted" />
-                  <span className="text-muted tabular shrink-0 text-xs">{treatment.duration}</span>
-                  <span className="tabular w-16 shrink-0 text-right font-serif text-xl">
-                    {treatment.price}
-                  </span>
-                </div>
-                <p className="text-muted mt-2 max-w-md text-sm leading-relaxed">
-                  {treatment.description}
-                </p>
-                <p className="text-brand mt-3 text-[11px] uppercase tracking-[0.16em]">
-                  {treatment.category}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <SpaMenu limit={2} className="mt-3" />
 
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
             <a href="#book-panel" className={buttonClass({ variant: 'secondary' })}>

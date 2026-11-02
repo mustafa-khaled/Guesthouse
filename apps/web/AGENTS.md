@@ -42,6 +42,8 @@ apps/web/
 
 Path alias `@/*` → `apps/web/`.
 
+Navigation lives in `lib/navigation.ts` (`guestNav`, `accountNav`, `adminNav`, `staffNav`, `workspaceNav`, `footerNav`). Add routes there, never as ad-hoc arrays in layouts. `isNavItemActive` owns the active-state rule (`exact` for hubs, prefix match for sections).
+
 ## Commands
 
 `pnpm dev` (port 3001), `build`, `lint`, `typecheck`, `test`, `test:e2e`.
