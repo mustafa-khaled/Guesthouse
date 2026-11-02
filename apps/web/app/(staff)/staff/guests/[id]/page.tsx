@@ -48,8 +48,10 @@ export default function StaffGuestDetailPage({ params }: { params: Promise<{ id:
         folio="—"
         title={`${guest.firstName} ${guest.lastName}`}
         description={guest.email}
-        backHref="/staff/guests"
-        backLabel="Guests"
+        breadcrumb={[
+          { label: 'Guests', href: '/staff/guests' },
+          { label: `${guest.firstName} ${guest.lastName}` },
+        ]}
       />
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-12">

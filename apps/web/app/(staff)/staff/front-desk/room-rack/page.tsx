@@ -38,8 +38,7 @@ export default function RoomRackPage() {
         folio="—"
         title="Room rack"
         description="Where every room stands right now — clean, occupied, out of order, or waiting for the floor team."
-        backHref="/staff/front-desk"
-        backLabel="Front desk"
+        breadcrumb={[{ label: 'Front desk', href: '/staff/front-desk' }, { label: 'Room rack' }]}
         actions={
           properties.length > 1 ? (
             <div className="w-56">

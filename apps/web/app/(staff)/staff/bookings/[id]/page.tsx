@@ -212,8 +212,10 @@ export default function StaffBookingDetailPage({ params }: { params: Promise<{ i
         folio="—"
         title={booking.confirmationNumber || `Booking ${getId(booking).slice(-8)}`}
         description={`${getRefLabel(booking.guestId as never)} · ${formatDate(booking.checkIn)} – ${formatDate(booking.checkOut)}`}
-        backHref="/staff/bookings"
-        backLabel="Bookings"
+        breadcrumb={[
+          { label: 'Bookings', href: '/staff/bookings' },
+          { label: booking.confirmationNumber || `Booking ${getId(booking).slice(-8)}` },
+        ]}
         actions={
           <>
             {booking.status === 'pending' && (

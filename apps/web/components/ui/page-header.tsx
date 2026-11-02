@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/breadcrumb';
 import { cn } from '@/lib/utils';
 
 export interface PageHeaderProps {
   title: string;
   description?: string;
   folio?: string;
+  /** Hierarchy trail for nested screens. Takes precedence over the back link. */
+  breadcrumb?: BreadcrumbItem[];
   backHref?: string;
   backLabel?: string;
   actions?: React.ReactNode;
@@ -16,6 +19,7 @@ export function PageHeader({
   title,
   description,
   folio,
+  breadcrumb,
   backHref,
   backLabel = 'Back',
   actions,
@@ -29,14 +33,18 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0">
-        {backHref && (
-          <Link
-            href={backHref}
-            className="focus-ring text-muted hover:text-brand mb-5 inline-flex items-center gap-2 text-sm transition-colors"
-          >
-            <ArrowLeft aria-hidden className="h-4 w-4" strokeWidth={1.5} />
-            {backLabel}
-          </Link>
+        {breadcrumb && breadcrumb.length > 0 ? (
+          <Breadcrumb items={breadcrumb} className="mb-5" />
+        ) : (
+          backHref && (
+            <Link
+              href={backHref}
+              className="focus-ring text-muted hover:text-brand mb-5 inline-flex items-center gap-2 text-sm transition-colors"
+            >
+              <ArrowLeft aria-hidden className="h-4 w-4" strokeWidth={1.5} />
+              {backLabel}
+            </Link>
+          )
         )}
         {folio && (
           <p aria-hidden className="text-brand/35 tabular mb-2 font-serif text-2xl leading-none">

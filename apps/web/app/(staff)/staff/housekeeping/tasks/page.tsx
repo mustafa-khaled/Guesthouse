@@ -112,8 +112,10 @@ export default function HousekeepingTasksPage() {
         folio="—"
         title="All tasks"
         description="Every cleaning and upkeep task on the board, filtered by where it stands."
-        backHref="/staff/housekeeping"
-        backLabel="Housekeeping"
+        breadcrumb={[
+          { label: 'Housekeeping', href: '/staff/housekeeping' },
+          { label: 'All tasks' },
+        ]}
         actions={
           <div className="w-48">
             <Select

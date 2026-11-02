@@ -45,8 +45,11 @@ export default function NewPropertyPage() {
         folio="—"
         title="Create a property"
         description="Start with the essentials. Rooms, images, and rates come next."
-        backHref="/admin/properties"
-        backLabel="Properties"
+        breadcrumb={[
+          { label: 'Operations', href: '/admin' },
+          { label: 'Properties', href: '/admin/properties' },
+          { label: 'New property' },
+        ]}
       />
 
       {createMutation.isError && (

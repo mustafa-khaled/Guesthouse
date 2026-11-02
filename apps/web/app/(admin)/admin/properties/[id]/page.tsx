@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/ui/page-header';
+import { PropertyTabs } from '@/components/shared/property-tabs';
 import { Textarea } from '@/components/ui/textarea';
 import Spinner from '@/components/Spinner';
 import { ImageUpload } from '@/components/ui/ImageUpload';
@@ -77,14 +78,14 @@ export default function AdminPropertyDetailPage({ params }: { params: Promise<{ 
         folio="—"
         title={property.name}
         description="Edit the details guests see, and the settings that shape every booking."
-        backHref="/admin/properties"
-        backLabel="Properties"
-        actions={
-          <Button href={`/admin/properties/${id}/inventory`} variant="secondary">
-            Manage inventory
-          </Button>
-        }
+        breadcrumb={[
+          { label: 'Operations', href: '/admin' },
+          { label: 'Properties', href: '/admin/properties' },
+          { label: property.name },
+        ]}
       />
+
+      <PropertyTabs propertyId={id} className="mt-6" />
 
       {updateMutation.isError && (
         <Alert variant="error" className="mt-6">

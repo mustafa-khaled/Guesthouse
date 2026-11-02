@@ -8,6 +8,7 @@ import { CalendarDays, Receipt } from 'lucide-react';
 import { bookingQueries, folioQueries } from '@/queries/bookings.queries';
 import { bookingMutations, bookingDateMutations } from '@/mutations/bookings.mutations';
 import { BookingStatusBadge } from '@/components/shared/StatusBadge';
+import { AccountNav } from '@/components/shared/account-nav';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
@@ -102,10 +103,17 @@ export default function BookingDetailPage() {
         folio="—"
         title={booking.confirmationNumber || getId(booking)}
         description={`${getPropertyName(booking.propertyId)} · ${formatDate(booking.checkIn)} – ${formatDate(booking.checkOut)}`}
-        backHref="/account/bookings"
-        backLabel="My bookings"
+        breadcrumb={[
+          { label: 'Account', href: '/account' },
+          { label: 'My bookings', href: '/account/bookings' },
+          { label: booking.confirmationNumber || getId(booking) },
+        ]}
         actions={<BookingStatusBadge status={booking.status} />}
       />
+
+      <div className="mt-6">
+        <AccountNav />
+      </div>
 
       <div className="mt-10 grid gap-10 md:grid-cols-12 md:gap-12">
         <div className="md:col-span-7">

@@ -274,6 +274,18 @@
   }
 }
 
+/* Route settle — a short rise as each page arrives. */
+@keyframes page-settle {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .hero-media img {
   animation: hero-settle 900ms var(--ease-soft) both;
 }
@@ -302,10 +314,15 @@
   animation: sheet-in 220ms var(--ease-soft) both;
 }
 
+.page-settle {
+  animation: page-settle 260ms var(--ease-soft) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-media img,
   .hero-rise,
-  .animate-sheet-in {
+  .animate-sheet-in,
+  .page-settle {
     animation: none;
   }
 }

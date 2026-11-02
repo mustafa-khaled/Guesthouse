@@ -164,8 +164,11 @@ export default function AdminReportTypePage({ params }: { params: Promise<{ type
         folio="—"
         title={title}
         description="Choose a property and a date range. Reports are calculated live from booking and payment data."
-        backHref="/admin/reports"
-        backLabel="All reports"
+        breadcrumb={[
+          { label: 'Operations', href: '/admin' },
+          { label: 'Reports', href: '/admin/reports' },
+          { label: title },
+        ]}
       />
 
       <section className="border-line mt-8 border-t pt-6" aria-labelledby="report-filters">

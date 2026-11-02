@@ -13,6 +13,7 @@ import { Container } from '@/components/ui/container';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/ui/page-header';
+import { PropertyTabs } from '@/components/shared/property-tabs';
 import { Select } from '@/components/ui/select';
 import Spinner from '@/components/Spinner';
 import { getId } from '@/lib/utils';
@@ -145,9 +146,15 @@ export default function AdminInventoryPage({ params }: { params: Promise<{ id: s
         folio="—"
         title={`${property?.name ?? 'Property'} — inventory`}
         description="Room types, rate plans, physical rooms, and the daily inventory that makes them bookable."
-        backHref={`/admin/properties/${propertyId}`}
-        backLabel="Property"
+        breadcrumb={[
+          { label: 'Operations', href: '/admin' },
+          { label: 'Properties', href: '/admin/properties' },
+          { label: property?.name ?? 'Property', href: `/admin/properties/${propertyId}` },
+          { label: 'Inventory' },
+        ]}
       />
+
+      <PropertyTabs propertyId={propertyId} className="mt-6" />
 
       <nav aria-label="Inventory sections" className="border-line mt-6 border-b">
         <ul className="-mx-1 flex items-center gap-6 overflow-x-auto px-1">

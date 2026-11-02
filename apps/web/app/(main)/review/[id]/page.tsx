@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { reviewMutations } from '@/mutations/bookings.mutations';
+import { AccountNav } from '@/components/shared/account-nav';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { Input } from '@/components/ui/input';
@@ -45,7 +46,16 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         folio="—"
         title="Share your experience"
         description="A few honest lines help the next guest know what to expect — and help us keep improving."
+        breadcrumb={[
+          { label: 'Account', href: '/account' },
+          { label: 'My bookings', href: '/account/bookings' },
+          { label: 'Share your experience' },
+        ]}
       />
+
+      <div className="mt-6">
+        <AccountNav />
+      </div>
 
       <form onSubmit={handleSubmit} className="mt-10 space-y-6">
         <fieldset>
