@@ -34,12 +34,15 @@ export function Navbar() {
     setOpen(false);
   }, [pathname]);
 
+  const isHome = pathname === '/';
+
   return (
     <>
       <header
         className={cn(
-          'border-line bg-surface/92 sticky top-0 z-50 border-b backdrop-blur-md transition-shadow duration-200',
-          scrolled && 'shadow-[0_1px_0_rgb(34_46_37_/_0.06)]',
+          'border-line bg-surface/92 sticky top-0 z-50 border-b backdrop-blur-md transition-all duration-300',
+          scrolled && 'shadow-[0_1px_0_rgb(37_37_37_/_0.06)]',
+          isHome && !scrolled && 'pointer-events-none -translate-y-full opacity-0',
         )}
       >
         <Container

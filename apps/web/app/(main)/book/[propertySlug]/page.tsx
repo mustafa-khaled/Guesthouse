@@ -78,7 +78,7 @@ function StepRail({ stepIndex }: { stepIndex: number }) {
                 className={cn(
                   'flex h-5 w-5 items-center justify-center rounded-full border text-[10px]',
                   done
-                    ? 'border-brand bg-brand text-surface-raised'
+                    ? 'border-brand bg-brand text-ink'
                     : active
                       ? 'border-brand text-brand'
                       : 'border-line',

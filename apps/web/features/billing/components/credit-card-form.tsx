@@ -59,15 +59,15 @@ export function CreditCardForm({ clientSecret, onReady, onError }: CreditCardFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="rounded border border-[var(--matcha-border)] bg-white px-3 py-4">
+      <div className="border-line bg-raised rounded border px-3 py-4">
         <CardElement
           options={{
             style: {
               base: {
                 fontSize: '16px',
-                color: '#2B3A2E',
-                fontFamily: 'Noto Sans, sans-serif',
-                '::placeholder': { color: '#4A5547' },
+                color: '#252525',
+                fontFamily: 'Instrument Sans, ui-sans-serif, system-ui, sans-serif',
+                '::placeholder': { color: '#6e6862' },
               },
             },
           }}

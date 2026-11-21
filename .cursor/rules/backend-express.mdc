@@ -1,7 +1,0 @@
----
-description: Module-first Express layout; HTTP and Mongo are adapters
-globs: apps/api/**/*.ts,apps/worker/**/*.ts
-alwaysApply: false
----
-
-Follow `.agents/rules/backend-module-boundaries.md`. For new capabilities read `express-module-architect` and `express-feature-builder`.

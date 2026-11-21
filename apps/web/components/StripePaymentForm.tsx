@@ -89,7 +89,7 @@ export default function StripePaymentForm({
     appearance: {
       theme: 'stripe',
       variables: {
-        colorPrimary: '#314535',
+        colorPrimary: '#c49c74',
         borderRadius: '4px',
       },
     },

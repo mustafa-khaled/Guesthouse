@@ -8,25 +8,26 @@ source of truth and this page as the reasoning.
 A garden retreat for rest and renewal. Warm, quiet, editorial — a printed hotel monograph rather
 than a booking funnel. Copy is unhurried and concrete; never luxury-vague, never salesy.
 
-## Palette — "Refine Matcha"
+## Palette — "Sandstone & Caramel"
 
-Light only. No dark mode, no accent colour, no gradients.
+Light only. No dark mode, no harsh gradients.
 
 | Token              | Hex       | Role                                    |
 | ------------------ | --------- | --------------------------------------- |
-| `--surface`        | `#F6F2E8` | Page background (oat)                   |
-| `--surface-raised` | `#FCFAF4` | Cards, inputs, anything lifted (paper)  |
-| `--brand`          | `#314535` | Primary actions, footer CTA (matcha)    |
-| `--brand-deep`     | `#243428` | Hover / pressed brand                   |
-| `--brand-soft`     | `#DBF2D0` | Quiet highlight blocks, selected states |
-| `--ink`            | `#222E25` | Headings and primary copy (bark)        |
-| `--ink-muted`      | `#55654D` | Secondary copy, labels (fern)           |
-| `--line`           | `#C8D4BC` | Hairline dividers and borders           |
-| `--line-strong`    | `#A9B99F` | Hover borders, stronger rules           |
+| `--surface`        | `#F6F6F6` | Page background (ash white)             |
+| `--surface-raised` | `#FFFFFF` | Cards, inputs, anything lifted (paper)  |
+| `--brand`          | `#C49C74` | Primary actions, CTA (warm camel/sand)  |
+| `--brand-deep`     | `#B0885E` | Hover / pressed brand                   |
+| `--brand-soft`     | `#F5EFE8` | Quiet highlight blocks, selected states |
+| `--brand-text`     | `#885B2D` | Accessible brand text for links         |
+| `--ink`            | `#252525` | Headings and primary copy (charcoal)    |
+| `--ink-muted`      | `#6E6862` | Secondary copy, labels (warm graphite)  |
+| `--line`           | `#CCCCCC` | Hairline dividers and borders (silver)  |
+| `--line-strong`    | `#C9BEB3` | Hover borders, warm rules (sandstone)   |
 
 Status colours (`--success`, `--warning`, `--danger`, `--info`) each ship with a `*-tint` partner
-for badge backgrounds. Body copy on oat is `#222E25` (~12:1); muted copy is `#55654D` (~5.6:1);
-primary buttons are paper on matcha (~9:1).
+for badge backgrounds. Body copy on ash white is `#252525` (~14.2:1); muted copy is `#6E6862` (~5.1:1);
+primary buttons are charcoal on warm camel (~6.1:1, WCAG AA).
 
 ## Type
 

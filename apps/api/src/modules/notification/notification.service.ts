@@ -221,54 +221,54 @@ class NotificationService {
   }): string {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+        <h1 style="color: #252525; border-bottom: 2px solid #C49C74; padding-bottom: 10px;">
           Booking Confirmed
         </h1>
         
         <p>Dear ${data.guestName},</p>
         <p>Thank you for your reservation. Your booking has been confirmed.</p>
         
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h2 style="color: #2c3e50; margin-top: 0;">Confirmation Number: ${data.confirmationNumber}</h2>
+        <div style="background: #F6F6F6; padding: 20px; border-radius: 4px; margin: 20px 0; border: 1px solid #CCCCCC;">
+          <h2 style="color: #252525; margin-top: 0;">Confirmation Number: ${data.confirmationNumber}</h2>
           
-          <h3 style="color: #3498db;">${data.propertyName}</h3>
-          <p style="color: #666;">${data.propertyAddress}</p>
+          <h3 style="color: #885B2D;">${data.propertyName}</h3>
+          <p style="color: #6E6862;">${data.propertyAddress}</p>
           
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Room Type:</strong></td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${data.roomType}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;"><strong>Room Type:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;">${data.roomType}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Check-in:</strong></td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${data.checkIn} from ${data.checkInTime}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;"><strong>Check-in:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;">${data.checkIn} from ${data.checkInTime}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Check-out:</strong></td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${data.checkOut} by ${data.checkOutTime}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;"><strong>Check-out:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;">${data.checkOut} by ${data.checkOutTime}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Nights:</strong></td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${data.nights}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;"><strong>Nights:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;">${data.nights}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Guests:</strong></td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${data.guests}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;"><strong>Guests:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;">${data.guests}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;"><strong>Rooms:</strong></td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #ddd;">${data.rooms}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;"><strong>Rooms:</strong></td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #CCCCCC;">${data.rooms}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0;"><strong>Total:</strong></td>
-              <td style="padding: 8px 0; font-size: 18px; color: #27ae60;"><strong>${data.currency} ${data.totalAmount.toFixed(2)}</strong></td>
+              <td style="padding: 8px 0; font-size: 18px; color: #252525;"><strong>${data.currency} ${data.totalAmount.toFixed(2)}</strong></td>
             </tr>
           </table>
         </div>
         
         <p>We look forward to welcoming you!</p>
         
-        <p style="color: #666; font-size: 12px; margin-top: 30px;">
+        <p style="color: #6E6862; font-size: 12px; margin-top: 30px;">
           If you have any questions, please contact us.
         </p>
       </div>
@@ -370,7 +370,7 @@ class NotificationService {
   }): string {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+        <h1 style="color: #252525; border-bottom: 2px solid #C49C74; padding-bottom: 10px;">
           How was your stay?
         </h1>
         
@@ -379,7 +379,7 @@ class NotificationService {
         <p>We'd love to hear about your experience!</p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${data.reviewUrl}" style="background: #3498db; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-size: 16px;">
+          <a href="${data.reviewUrl}" style="background: #C49C74; color: #252525; font-weight: 600; padding: 15px 30px; text-decoration: none; border-radius: 4px; font-size: 16px; display: inline-block;">
             Leave a Review
           </a>
         </div>

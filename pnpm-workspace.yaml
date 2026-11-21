@@ -8,6 +8,9 @@ allowBuilds:
   mongodb-memory-server: true
   '@scarf/scarf': true
   msgpackr-extract: true
+  '@sentry/cli': set this to true or false
+  sharp: set this to true or false
+  unrs-resolver: set this to true or false
 
 onlyBuiltDependencies:
   - sharp

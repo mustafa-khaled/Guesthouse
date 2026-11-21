@@ -1,8 +1,8 @@
 {
-  "slug": "matcha",
-  "name": "Matcha — Refine",
+  "slug": "sandstone-caramel",
+  "name": "Sandstone & Caramel — Refine",
   "variant": "registry",
-  "description": "Warm light hotel system: oat and paper surfaces, matcha green, Newsreader display over Instrument Sans UI, hairline sections, chapter folios, one orchestrated hero motion.",
+  "description": "Warm editorial luxury hotel system: ash white and pure white surfaces, warm camel sand accent, architectural charcoal typography, Newsreader display over Instrument Sans UI, hairline sections, chapter folios.",
   "brandSheet": "apps/web/BRAND.md",
   "tokens": "apps/web/app/globals.css",
   "fonts": ["Newsreader", "Instrument Sans"],

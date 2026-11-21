@@ -32,7 +32,7 @@ export default function GlobalError({
           <div className="mt-8 flex flex-wrap gap-3">
             <button
               onClick={reset}
-              className="bg-brand text-surface-raised hover:bg-brand-deep focus-ring inline-flex min-h-12 items-center rounded-[4px] px-6 text-sm font-medium transition-colors duration-200"
+              className="bg-brand text-ink hover:bg-brand-deep focus-ring inline-flex min-h-12 items-center rounded-[4px] px-6 text-sm font-medium transition-colors duration-200"
             >
               Try again
             </button>

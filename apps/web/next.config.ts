@@ -5,6 +5,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../..'),
+  cacheComponents: true,
   images: {
     loader: 'custom',
     loaderFile: './lib/image-loader.ts',

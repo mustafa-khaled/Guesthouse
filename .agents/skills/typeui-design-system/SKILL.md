@@ -24,19 +24,19 @@ Semantic tokens live in `apps/web/app/globals.css`. Use the Tailwind utilities (
 
 | Token          | CSS variable       | Hex       | Usage                                 |
 | -------------- | ------------------ | --------- | ------------------------------------- |
-| Surface        | `--surface`        | `#F6F2E8` | Page background (oat)                 |
-| Surface raised | `--surface-raised` | `#FCFAF4` | Cards, inputs, lifted panels (paper)  |
-| Brand          | `--brand`          | `#314535` | Primary actions, footer CTA (matcha)  |
-| Brand deep     | `--brand-deep`     | `#243428` | Hover / pressed brand                 |
-| Brand soft     | `--brand-soft`     | `#DBF2D0` | Quiet highlight blocks, selected rows |
-| Ink            | `--ink`            | `#222E25` | Headings and primary copy (bark)      |
-| Ink muted      | `--ink-muted`      | `#55654D` | Secondary copy, labels (fern)         |
-| Line           | `--line`           | `#C8D4BC` | Hairlines, borders                    |
-| Line strong    | `--line-strong`    | `#A9B99F` | Hover borders, stronger rules         |
+| Surface        | `--surface`        | `#F6F6F6` | Page background (ash white)           |
+| Surface raised | `--surface-raised` | `#FFFFFF` | Cards, inputs, lifted panels (paper)  |
+| Brand          | `--brand`          | `#C49C74` | Primary actions, CTA (warm camel)     |
+| Brand deep     | `--brand-deep`     | `#B0885E` | Hover / pressed brand                 |
+| Brand soft     | `--brand-soft`     | `#F5EFE8` | Quiet highlight blocks, selected rows |
+| Brand text     | `--brand-text`     | `#885B2D` | Accessible links and text accents     |
+| Ink            | `--ink`            | `#252525` | Headings and primary copy (charcoal)  |
+| Ink muted      | `--ink-muted`      | `#6E6862` | Secondary copy, labels (graphite)     |
+| Line           | `--line`           | `#CCCCCC` | Hairlines, borders (silver)           |
+| Line strong    | `--line-strong`    | `#C9BEB3` | Hover borders, rules (sandstone)      |
 
 Status tokens: `--success`, `--warning`, `--danger`, `--info`, each with a `*-tint` background.
-Primary buttons are `text-surface-raised` on `bg-brand` (~9:1) — never `text-white`, never
-`text-ink` on brand.
+Primary buttons are `text-ink` on `bg-brand` (~6.1:1, WCAG AA compliant).
 
 ## Typography
 

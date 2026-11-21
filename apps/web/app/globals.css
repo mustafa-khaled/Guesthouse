@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './home-design.css';
 
 /* ------------------------------------------------------------------
    Typefaces — self-hosted, latin subset
@@ -32,41 +33,42 @@
    Brand tokens
 ------------------------------------------------------------------- */
 :root {
-  --surface: #f6f2e8;
-  --surface-raised: #fcfaf4;
-  --brand: #314535;
-  --brand-deep: #243428;
-  --brand-soft: #dbf2d0;
-  --ink: #222e25;
-  --ink-muted: #55654d;
-  --line: #c8d4bc;
-  --line-strong: #a9b99f;
+  --surface: #f6f6f6;
+  --surface-raised: #ffffff;
+  --brand: #c49c74;
+  --brand-deep: #b0885e;
+  --brand-soft: #f5efe8;
+  --brand-text: #885b2d;
+  --ink: #252525;
+  --ink-muted: #6e6862;
+  --line: #cccccc;
+  --line-strong: #c9beb3;
 
   --success: #2f5a3d;
-  --success-tint: #e3efdd;
-  --warning: #6e5318;
-  --warning-tint: #f3e9d2;
-  --danger: #7e3a33;
-  --danger-tint: #f6e3df;
+  --success-tint: #edf4ea;
+  --warning: #855b14;
+  --warning-tint: #faf2e3;
+  --danger: #8a3830;
+  --danger-tint: #faebe8;
   --info: #35566b;
-  --info-tint: #e3ecf1;
+  --info-tint: #eaf1f5;
 
-  --focus: #314535;
+  --focus: #c49c74;
   --radius: 4px;
-  --shadow-soft: 0 1px 2px rgb(34 46 37 / 0.05), 0 10px 30px -18px rgb(34 46 37 / 0.28);
-  --shadow-lift: 0 2px 4px rgb(34 46 37 / 0.06), 0 24px 50px -28px rgb(34 46 37 / 0.36);
+  --shadow-soft: 0 1px 2px rgb(37 37 37 / 0.05), 0 10px 30px -18px rgb(37 37 37 / 0.25);
+  --shadow-lift: 0 2px 4px rgb(37 37 37 / 0.06), 0 24px 50px -28px rgb(37 37 37 / 0.32);
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Legacy aliases — keeps older screens working during the migration */
   --matcha-surface: var(--surface);
   --matcha-section: var(--brand-soft);
   --matcha-brand: var(--brand);
-  --matcha-brand-medium: #aec2a4;
+  --matcha-brand-medium: #c9beb3;
   --matcha-heading: var(--ink);
   --matcha-body: var(--ink-muted);
   --matcha-border: var(--line);
   --matcha-white: var(--surface-raised);
-  --matcha-shadow: rgb(34 46 37 / 0.08);
+  --matcha-shadow: rgb(37 37 37 / 0.08);
 }
 
 @theme inline {
@@ -76,6 +78,7 @@
   --color-brand: var(--brand);
   --color-brand-deep: var(--brand-deep);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-text: var(--brand-text);
   --color-ink: var(--ink);
   --color-muted: var(--ink-muted);
   --color-line: var(--line);
@@ -94,7 +97,7 @@
   --color-matcha-surface: var(--surface);
   --color-matcha-section: var(--brand-soft);
   --color-matcha-brand: var(--brand);
-  --color-matcha-brand-medium: #aec2a4;
+  --color-matcha-brand-medium: #c9beb3;
   --color-matcha-heading: var(--ink);
   --color-matcha-body: var(--ink-muted);
   --color-matcha-border: var(--line);
@@ -171,7 +174,7 @@
   }
 
   dialog::backdrop {
-    background: rgb(34 46 37 / 0.45);
+    background: rgb(37 37 37 / 0.45);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -220,7 +223,7 @@
   transform: translateY(-160%);
   border-radius: var(--radius);
   background: var(--brand);
-  color: var(--surface-raised);
+  color: var(--ink);
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;

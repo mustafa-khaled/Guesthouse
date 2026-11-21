@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Container } from '@/components/ui/container';
 import { site } from '@/lib/content';
 import { footerNav } from '@/lib/navigation';
@@ -24,6 +27,8 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 }
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname === '/') return null;
   return (
     <footer className="border-line bg-surface border-t">
       <Container className="py-16 md:py-20">

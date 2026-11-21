@@ -7,13 +7,13 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-brand text-surface-raised hover:bg-brand-deep',
-        default: 'bg-brand text-surface-raised hover:bg-brand-deep',
-        secondary: 'border-line text-ink hover:border-brand hover:text-brand border bg-transparent',
-        outline: 'border-line text-ink hover:border-brand hover:text-brand border bg-transparent',
-        ghost: 'text-brand hover:bg-brand-soft/60',
+        primary: 'bg-brand text-ink hover:bg-brand-deep',
+        default: 'bg-brand text-ink hover:bg-brand-deep',
+        secondary: 'border-line text-ink hover:border-brand hover:text-ink border bg-transparent',
+        outline: 'border-line text-ink hover:border-brand hover:text-ink border bg-transparent',
+        ghost: 'text-ink hover:bg-brand-soft/60',
         destructive: 'bg-danger text-surface-raised hover:bg-danger/90',
-        link: 'text-brand hover:text-brand-deep h-auto min-h-0 rounded-none px-0 py-0 underline-offset-4 hover:underline',
+        link: 'text-brand-text hover:text-ink h-auto min-h-0 rounded-none px-0 py-0 underline-offset-4 hover:underline',
       },
       size: {
         default: 'min-h-12 px-6',

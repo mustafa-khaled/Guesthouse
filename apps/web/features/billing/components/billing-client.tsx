@@ -155,7 +155,7 @@ export function BillingClient() {
                 stripe={stripePromise}
                 options={{
                   clientSecret: setupQuery.data.clientSecret,
-                  appearance: { variables: { colorPrimary: '#314535', borderRadius: '4px' } },
+                  appearance: { variables: { colorPrimary: '#c49c74', borderRadius: '4px' } },
                 }}
               >
                 <CreditCardForm

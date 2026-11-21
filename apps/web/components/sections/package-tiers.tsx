@@ -22,7 +22,7 @@ export function PackageTiers({ className }: PackageTiersProps) {
           )}
         >
           {pkg.highlighted && (
-            <span className="bg-brand text-surface-raised mb-4 inline-flex self-start rounded-[3px] px-2 py-0.5 text-[11px] font-medium">
+            <span className="bg-brand text-ink mb-4 inline-flex self-start rounded-[3px] px-2 py-0.5 text-[11px] font-medium">
               Recommended
             </span>
           )}

@@ -27,7 +27,7 @@ export function PackageComparison({ className }: PackageComparisonProps) {
                 )}
               >
                 {pkg.highlighted && (
-                  <span className="bg-brand text-surface-raised mb-3 inline-flex rounded-[3px] px-2 py-0.5 text-[11px] font-medium">
+                  <span className="bg-brand text-ink mb-3 inline-flex rounded-[3px] px-2 py-0.5 text-[11px] font-medium">
                     Recommended
                   </span>
                 )}

@@ -129,36 +129,33 @@ export function SuitesSection({ properties = [] }: { properties?: Property[] }) 
 
 export function ConciergeCta() {
   return (
-    <section className="bg-brand text-surface-raised">
+    <section className="bg-ink text-surface">
       <Container className="py-20 md:py-24">
         <div className="grid gap-12 md:grid-cols-12 md:gap-8">
           <div className="md:col-span-7">
-            <p aria-hidden className="text-surface-raised/25 font-serif text-5xl leading-none">
+            <p aria-hidden className="text-surface/25 font-serif text-5xl leading-none">
               07
             </p>
-            <h2 className="text-surface-raised mt-4 max-w-xl font-serif text-4xl leading-[1.05] md:text-5xl">
+            <h2 className="text-surface mt-4 max-w-xl font-serif text-4xl leading-[1.05] md:text-5xl">
               Not sure yet? Let us plan your stay.
             </h2>
-            <p className="text-surface-raised/70 mt-5 max-w-lg text-pretty text-base leading-relaxed">
+            <p className="text-surface/75 mt-5 max-w-lg text-pretty text-base leading-relaxed">
               Tell us what you are celebrating. Our concierge will suggest the right suite, the
               rituals worth keeping, and a pace that suits you.
             </p>
             <a
               href={`mailto:${site.email}`}
               className={buttonClass({
-                variant: 'secondary',
-                className:
-                  'border-surface-raised/30 text-surface-raised hover:bg-surface-raised hover:text-brand mt-8',
+                variant: 'primary',
+                className: 'mt-8',
               })}
             >
               Speak with concierge
             </a>
           </div>
 
-          <div className="border-surface-raised/20 self-end border-t pt-6 md:col-span-4 md:col-start-9">
-            <p className="text-surface-raised/60 text-xs uppercase tracking-[0.16em]">
-              Direct lines
-            </p>
+          <div className="border-surface/20 self-end border-t pt-6 md:col-span-4 md:col-start-9">
+            <p className="text-surface/60 text-xs uppercase tracking-[0.16em]">Direct lines</p>
             <p className="mt-3 text-sm">
               <a href={`tel:${site.phone.replace(/[^+\d]/g, '')}`} className="hover:underline">
                 {site.phone}
@@ -169,7 +166,7 @@ export function ConciergeCta() {
                 {site.email}
               </a>
             </p>
-            <p className="text-surface-raised/50 mt-4 text-xs">Replies within one business day.</p>
+            <p className="text-surface/50 mt-4 text-xs">Replies within one business day.</p>
           </div>
         </div>
       </Container>
